@@ -2,7 +2,9 @@
 #define GBUFFER32BGRA_H
 
 #include <base.h>
+//#include "C:\My Documents\Projects-cpp\Base\base.h"
 #include <targa.h>
+//#include "C:\My Documents\Projects-cpp\Base\targa.h"
 //#include <gradient.h>
 
 using namespace std;
@@ -44,13 +46,14 @@ namespace ExpertMultimediaBase {
 		bool Save(string sFileNow);
 		bool SaveRaw(string sFileNow);
 		GBuffer32BGRA();
-	    GBuffer32BGRA(int iWidthNow, int iHeightNow, int iBytesPPNow);
-		GBuffer32BGRA(int iWidthNow, int iHeightNow, int iBytesPPNow, bool bInitializeBuffer);
+	    GBuffer32BGRA(int iSetWidth, int iSetHeight, int iSetBytesPP);
+		GBuffer32BGRA(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bInitializeBuffer);
 		~GBuffer32BGRA();
-		void Init(int iWidthNow, int iHeightNow, int iBytesPPNow);
-		void Init(int iWidthNow, int iHeightNow, int iBytesPPNow, bool bInitializeBuffer);
+		void Init(int iSetWidth, int iSetHeight, int iSetBytesPP);
+		void Init(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bInitializeBuffer);
         bool CopyTo(GBuffer32BGRA* gbBlankNonNullObjectToSet);
 		bool CopyTo(GBuffer32BGRA &gbBlankNonNullObjectToSet);
+		bool CopyToByDataRef(GBuffer32BGRA &gbBlankNonNullObjectToSet);
 		GBuffer32BGRA* Copy();
 		bool SetBrushColor(byte r, byte g, byte b, byte a);
 		bool SetBrushColor(byte r, byte g, byte b);
@@ -73,12 +76,13 @@ namespace ExpertMultimediaBase {
 				Pixel &pixelStart, Pixel* pixelEndOrNull, float fPrecisionIncrement);
 		void DrawSubpixelLine(FPOINT &pointStart, FPOINT &pointEnd,
 				Pixel &pixelStart, Pixel* pixelEndOrNull, float fPrecisionIncrement);
-		void DrawSubPixArc(float xCenter, float yCenter,
+		void DrawSubpixelArc(float xCenter, float yCenter,
 				float fRadius, float fWidthMultiplier, float fRotate,
 				float fDegStart, float fDegEnd,
 				Pixel &pixelColor,
 				float fPrecisionIncrement,float fPushSpiralPixPerRotation);
 		bool Fill(byte byGrayVal);
+		bool IsLoaded();
 		bool IsLike(GBuffer32BGRA &gbDest);
 		bool NeedsToCrop(GBuffer32BGRA &gbDest, int xDest, int yDest);
 		//bool DrawToSmallerWithoutVoidAreasElseCancel(GBuffer32BGRA gbDest, int xSrc, int ySrc, int iDrawMode);

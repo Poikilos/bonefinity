@@ -1,6 +1,7 @@
 #ifndef ANIM32BGRA_H
 #define ANIM32BGRA_H
 #include <gbuffer32bgra.h>
+//#include "C:\My Documents\Projects-cpp\Base\gbuffer32bgra.h"
 
 using namespace std;
 //using System.Drawing.Text;
@@ -32,6 +33,7 @@ namespace ExpertMultimediaBase {
 		Effect* Copy();
 		bool CopyTo(Effect& fxReturn);
 		Effect();
+		int IFrames();
 	private:
 		void Init();
 	};
@@ -49,14 +51,14 @@ namespace ExpertMultimediaBase {
 		GBuffer32BGRA* gbarrAnim;
 		string sFuncNow;
 		string sLastErr;
-		GBuffer32BGRA* gbFrame;
 	public:
+		GBuffer32BGRA gbFrame;//TODO: make this read only if using .net/mono
 		bool bLoop;
 		long lFramesCached;
 		//private string sPathFile="";
 		bool bFileSequence;//if true, use sFileBaseName+digits+"."+sExt, and sPathFile is first frame
 		int iSeqDigitCountMin;//, 0 if variable (i.exn. frame1.png...frame10.png)
-		long lFrameNow;
+		long lFrame;
 		long lFrames;
 		int iEffects;
 		int iMaxEffects;
@@ -64,8 +66,8 @@ namespace ExpertMultimediaBase {
 		Anim32BGRA();
 		~Anim32BGRA();
 		Anim32BGRA* Copy();
-		Anim32BGRA* CopyAsGrey();
-		Anim32BGRA* CopyAsGrey(int iChannelOffset);
+		Anim32BGRA* CopyAsGray();
+		Anim32BGRA* CopyAsGray(int iChannelOffset);
 		bool SaveSeq(string sSetFileBaseName, string sSetFileExt);
 		string Dump(bool bDumpVars);
 		string Dump();
@@ -87,11 +89,13 @@ namespace ExpertMultimediaBase {
 		bool CopyFrameFromInternalBitmap();
 		bool SaveInternalBitmap(string sFileName);
 		bool GotoFrame(long lFrameX);
+		bool GotoFrame(int iFrameX);
 		bool GotoNextFrame();
 		bool GotoNextFrame(bool bLoop);
 		bool DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest, long lFrame);
 		bool DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest);
 		int MinDigitsRequired(int iNumber);
+		bool LastFrame();
 		string PathFileOfSeqFrame(long lFrameTarget);
 		bool SplitFromImage32(string sFile, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool SplitFromImage32(string sFileImage, int iCellWidth, int iCellHeight, int iRows, int iColumns);
@@ -105,6 +109,7 @@ namespace ExpertMultimediaBase {
 		int Width();
 		int Height();
 		bool DrawToLargerWithoutCropElseCancel(GBuffer32BGRA &gbDest, int xDest, int yDest, int iDrawMode);
+		int IFrames();
 	};//end class Anim32BGRA;
 	
 	class Clip {
@@ -112,7 +117,7 @@ namespace ExpertMultimediaBase {
 		int iParent; //index of parent Anim32BGRA in animarr
 		long lFrameStart;
 		long lFrames;
-		long lFrameNow;
+		long lFrame;
 		Effect* effectarr; //remember to also process animarr[iParent].effectarr[]
 		int iEffects;
 		Clip();

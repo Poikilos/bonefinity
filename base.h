@@ -10,6 +10,7 @@
 #include <string>
 #include <exception>
 #include <dotnetfake.h>
+//#include "C:\My Documents\Projects-cpp\Base\dotnetfake.h"
 #include <SDL/SDL.h>
 
 using namespace std;
@@ -228,8 +229,8 @@ namespace ExpertMultimediaBase {
 		Pixel();
 		Pixel(byte red, byte green, byte blue, byte alpha);
 		void Set(byte red, byte green, byte blue, byte alpha);
-		void Set(Uint32 dwPixel);
-		void Set(Uint32* dwPixel);
+		void Set(Uint32& dwPixel);
+		//void Set(Uint32* dwPixel);
 	};
 
 	class Variable {
@@ -366,8 +367,9 @@ namespace ExpertMultimediaBase {
 		float HitRectHeightRatio();
 		Mass2d();
 		void SetPixCenter(int xPixNonScaled, int yPixNonScaled);
-		void Init(int iHeight, int iWidth, float fPixPerMeter);
-		void Init(int iHeight, int iWidth);
+		void Init(int Width, int Height, float fPixPerMeter);
+		void Init(int Width, int Height);
+		void Init(int Width, int Meight, bool bWithSamePixPerMeterAsAPreviousInitialization);
 		void SetHitRect(float Top, float Left, float Bottom, float Right);
 	};
 	class Gradient {

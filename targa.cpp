@@ -6,6 +6,7 @@
 #include <fstream>
 #include <memory>
 #include <targa.h>
+//#include "C:\My Documents\Projects-cpp\Base\targa.h"
 
 using namespace std;
 

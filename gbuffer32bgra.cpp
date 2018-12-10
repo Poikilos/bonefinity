@@ -2,6 +2,7 @@
 #define GBUFFER32BGRA_CPP
 
 #include <gbuffer32bgra.h>
+//#include "C:\My Documents\Projects-cpp\Base\gbuffer32bgra.h"
 
 using namespace std;
 
@@ -67,13 +68,15 @@ namespace ExpertMultimediaBase {
 			//}
 			//bmpLoaded.UnlockBits(bmpdata);
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"Load(\""+sFile+"\")");
+		catch (exception& exn) {
 			bGood=false;
+			if (&sFile==null) sFile="null";
+			ShowException(exn, "gbuffer32bgra.Load(\""+sFile+"\")");
 		}
 		catch (...) {
-			ShowUnknownException("Load(\""+sFile+"\")");
 			bGood=false;
+			if (&sFile==null) sFile="null";
+			ShowUnknownException("gbuffer32bgra.Load(\""+sFile+"\")");
 		}
 		bFirstRun=false;
 		return bGood;
@@ -94,13 +97,15 @@ namespace ExpertMultimediaBase {
 			//if (!bBufferAsPointerNotCopy)
 			//	targaLoaded.Close();
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"Save(\""+sFileNow+"\")");
+		catch (exception& exn) {
 			bGood=false;
+			if (&sFile==null) sFile="null";
+			ShowException(exn, "gbuffer32bgra.Save(\""+sFileNow+"\")");
 		}
 		catch (...) {
-			ShowUnknownException("Save(\""+sFileNow+"\")");
 			bGood=false;
+			if (&sFile==null) sFile="null";
+			ShowUnknownException("gbuffer32bgra.Save(\""+sFileNow+"\")");
 		}
 		return bGood;
 	}//end Save
@@ -119,37 +124,37 @@ namespace ExpertMultimediaBase {
 				ShowError("Failed to save raw data to file","SaveRaw("+sFileNow+")");
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"SaveRaw("+sFileNow+")");
+		catch (exception& exn) {
 			bGood=false;
+			ShowException(exn, "gbuffer32bgra.SaveRaw("+sFileNow+")");
 		}
 		catch (...) {
-			ShowUnknownException("SaveRaw("+sFileNow+")");
 			bGood=false;
+			ShowUnknownException("gbuffer32bgra.SaveRaw("+sFileNow+")");
 		}
 		return bGood;
 	}//end SaveRaw
-	GBuffer32BGRA::GBuffer32BGRA(int iWidthNow, int iHeightNow, int iBytesPPNow) {
+	GBuffer32BGRA::GBuffer32BGRA(int iSetWidth, int iHeightNow, int iSetBytesPP) {
 		InitNull();
-		Init(iWidthNow, iHeightNow, iBytesPPNow, true);
+		Init(iSetWidth, iHeightNow, iSetBytesPP, true);
 	}
-	GBuffer32BGRA::GBuffer32BGRA(int iWidthNow, int iHeightNow, int iBytesPPNow, bool bInitializeBuffer) {
+	GBuffer32BGRA::GBuffer32BGRA(int iSetWidth, int iHeightNow, int iSetBytesPP, bool bInitializeBuffer) {
 		InitNull();
-		Init(iWidthNow, iHeightNow, iBytesPPNow, bInitializeBuffer);
+		Init(iSetWidth, iHeightNow, iSetBytesPP, bInitializeBuffer);
 	}
 	GBuffer32BGRA::~GBuffer32BGRA() {
         if (!bBufferAsPointerNotCopy) {
 			SafeFree(byarrData);
 		}
 	}
-	void GBuffer32BGRA::Init(int iWidthNow, int iHeightNow, int iBytesPPNow) {
-		Init(iWidthNow,iHeightNow,iBytesPPNow,true);
+	void GBuffer32BGRA::Init(int iSetWidth, int iHeightNow, int iSetBytesPP) {
+		Init(iSetWidth,iHeightNow,iSetBytesPP,true);
 	}
-	void GBuffer32BGRA::Init(int iWidthNow, int iHeightNow, int iBytesPPNow, bool bInitializeBuffer) {
+	void GBuffer32BGRA::Init(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bInitializeBuffer) {
 		static bool bFirstRun=true;
-		iWidth=iWidthNow;
-		iHeight=iHeightNow;
-		iBytesPP=iBytesPPNow;
+		iWidth=iSetWidth;
+		iHeight=iSetHeight;
+		iBytesPP=iSetBytesPP;
 		iStride=iWidth*iBytesPP;
 		iBytesTotal=iStride*iHeight;
 		if (bFirstRun) Console.Write("GBuffer32BGRA::Init");
@@ -160,10 +165,10 @@ namespace ExpertMultimediaBase {
 				SafeFree(byarrData);
 				if (bFirstRun) Console.Write("allocate...");
 				byarrData=(byte*)malloc(iBytesTotal);
-				if (bFirstRun) Console.Write("done GBuffer32BGRA::Init...");
+				if (bFirstRun) Console.Write("done gbuffer32bgra.Init...");
 			}
 			catch (...) {
-				ShowError("Couldn't allocate memory","GBuffer32BGRA::Init("+ToString(iWidthNow)+","+ToString(iHeightNow)+","+ToString(iBytesPPNow)+","+ToString(bInitializeBuffer)+")");
+				ShowError("Couldn't allocate memory",".Init("+ToString(iSetWidth)+","+ToString(iSetHeight)+","+ToString(iSetBytesPP)+","+ToString(bInitializeBuffer)+")");
 			}
 		}
 		bFirstRun=false;
@@ -182,20 +187,25 @@ namespace ExpertMultimediaBase {
 			gbBlankNonNullObjectToSet->Init(iWidth,iHeight,iBytesPP);
 			memcpy(gbBlankNonNullObjectToSet->byarrData,byarrData,iBytesTotal);
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"GBuffer32BGRA::Copy()");
+		catch (exception& exn) {
 			bGood=false;
+			ShowException(exn, "gbuffer32bgra.Copy()");
 		}
 		catch (...) {
-			ShowUnknownException("GBuffer32BGRA::Copy()");
 			bGood=false;
+			ShowUnknownException("gbuffer32bgra.Copy()");
 		}
 		return bGood;
-
 	}//end CopyTo(*)
 	bool GBuffer32BGRA::CopyTo(GBuffer32BGRA &gbBlankNonNullObjectToSet) {
 		return CopyTo(&gbBlankNonNullObjectToSet);
 	}//end CopyTo(&)
+	bool GBuffer32BGRA::CopyToByDataRef(GBuffer32BGRA &gbBlankNonNullObjectToSet) {
+		bool bGood=true;
+		gbBlankNonNullObjectToSet.Init(iWidth,iHeight,iBytesPP,false);
+		gbBlankNonNullObjectToSet.byarrData=byarrData;
+		return bGood;
+	}
 	bool GBuffer32BGRA::SetBrushColor(byte r, byte g, byte b, byte a) {
 		string sFuncNow="SetBrushColor(r,g,b,a)";
 		bool bGood=true;
@@ -213,9 +223,9 @@ namespace ExpertMultimediaBase {
 	        byarrBrush32Copied64[6]=byarrBrush[2];
 	        byarrBrush32Copied64[7]=byarrBrush[3];
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			sFuncNow="set brush color rgba";
-			ShowAndDeleteException(carrExn,sFuncNow);
+			ShowException(exn,sFuncNow);
 			bGood=false;
 		}
 		catch (...) {
@@ -246,8 +256,8 @@ namespace ExpertMultimediaBase {
 				}
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"SetBrushColor("+sHexCode+")","can't interpret specified hex color code");
+		catch (exception& exn) {
+			ShowException(exn,"SetBrushColor("+sHexCode+")","can't interpret specified hex color code");
 			bGood=false;
 		}
 		catch (...) {
@@ -294,31 +304,31 @@ namespace ExpertMultimediaBase {
 		bool bGood=true;
 		int xNow;
 		int yNow;
-		int iWidthNow;
-		int iHeightNow;
+		int iSetWidth;
+		int iSetHeight;
 		try {
 			xNow=rectDest.X;
 			yNow=rectDest.Y;
-			iWidthNow=rectDest.Width;
-			iHeightNow=rectHole.Y-rectDest.Y;
-			bool bTest=DrawRectFilled(xNow, yNow, iWidthNow, iHeightNow);//top full width
+			iSetWidth=rectDest.Width;
+			iSetHeight=rectHole.Y-rectDest.Y;
+			bool bTest=DrawRectFilled(xNow, yNow, iSetWidth, iSetHeight);//top full width
 			if (bTest==false) bGood=false;
-			yNow+=rectHole.Height+iHeightNow;
-			//would need to change iHeightNow here if asymmetrical
-			bTest=DrawRectFilled(xNow, yNow, iWidthNow, iHeightNow);//bottom full width
+			yNow+=rectHole.Height+iSetHeight;
+			//would need to change iSetHeight here if asymmetrical
+			bTest=DrawRectFilled(xNow, yNow, iSetWidth, iSetHeight);//bottom full width
 			if (bTest==false) bGood=false;
 			yNow-=rectHole.Height;
-			iWidthNow=rectHole.X-rectDest.X;
-			iHeightNow=rectHole.Height;
-			bTest=DrawRectFilled(xNow, yNow, iWidthNow, iHeightNow);//left remaining height
+			iSetWidth=rectHole.X-rectDest.X;
+			iSetHeight=rectHole.Height;
+			bTest=DrawRectFilled(xNow, yNow, iSetWidth, iSetHeight);//left remaining height
 			if (bTest==false) bGood=false;
-			xNow+=rectHole.Width+iWidthNow;
-			//would need to change iWidthNow here if asymmetrical
-			bTest=DrawRectFilled(xNow, yNow, iWidthNow, iHeightNow);//right remaining height
+			xNow+=rectHole.Width+iSetWidth;
+			//would need to change iSetWidth here if asymmetrical
+			bTest=DrawRectFilled(xNow, yNow, iSetWidth, iSetHeight);//right remaining height
 			if (bTest==false) bGood=false;
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"DrawRectBorderSym");
+		catch (exception& exn) {
+			ShowException(exn,"DrawRectBorderSym");
 			bGood=false;
 		}
 		catch (...) {
@@ -344,7 +354,6 @@ namespace ExpertMultimediaBase {
 		else return DrawRectBorderSym(rectOuter, rectInner);
 	}//DrawRectBorder
 	bool GBuffer32BGRA::DrawRectFilled(int xDest, int yDest, int iRectWidth, int iRectHeight) {
-		string sFuncNow="DrawRectFilled";
 		if ((iRectWidth<1)||(iRectHeight<1)) return false;
 		bool bGood=true;
 		try {
@@ -371,18 +380,17 @@ namespace ExpertMultimediaBase {
 			}
 
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,sFuncNow);
+		catch (exception& exn) {
+			ShowException(exn,"DrawRectFilled");
 			bGood=false;
 		}
 		catch (...) {
-			ShowUnknownException(sFuncNow);
+			ShowUnknownException("DrawRectFilled");
 			bGood=false;
 		}
 		return bGood;
 	} //DrawRectFilled
 	bool GBuffer32BGRA::DrawVertLine(int xDest, int yDest, int iPixelCopies) {
-		string sFuncNow="DrawVertLine";
 		if (iPixelCopies<1) return false;
 		bool bGood=true;
 		try {
@@ -396,18 +404,17 @@ namespace ExpertMultimediaBase {
 				lpDestNow+=iStride;
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,sFuncNow);
+		catch (exception& exn) {
+			ShowException(exn,"DrawVertLine");
 			bGood=false;
 		}
 		catch (...) {
-			ShowUnknownException(sFuncNow);
+			ShowUnknownException("DrawVertLine");
 			bGood=false;
 		}
 		return bGood;
 	}//DrawVertLine
 	bool GBuffer32BGRA::DrawHorzLine(int xDest, int yDest, int iPixelCopies) {
-		string sFuncNow="DrawHorzLine";
 		if (iPixelCopies<1) return false;
 		bool bGood=true;
 		try {
@@ -423,13 +430,13 @@ namespace ExpertMultimediaBase {
 				*((UInt32*)lpDestNow) = *((UInt32*)lpSrc);
 			}
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			bGood=false;
-			ShowAndDeleteException(carrExn,sFuncNow);
+			ShowException(exn,"DrawHorzLine");
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException(sFuncNow);
+			ShowUnknownException("DrawHorzLine");
 		}
 		return bGood;
 	}//end DrawHorzLine
@@ -449,9 +456,9 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		catch (...) {
-			FakeException("Exception drawing subpixel by dwColor.");
+			ShowUnknownException("DrawAlphaPix using RGB bytes");
 		}
-	}//DrawAlphaPix
+	}//
 	void GBuffer32BGRA::DrawSubpixelDot(float xDot, float yDot, Pixel &pixelColor) {
 		try {
 			//TODO: finish this (finish subpixel accuracy)
@@ -484,10 +491,13 @@ namespace ExpertMultimediaBase {
 			DrawAlphaPix(xMin,yMax,pixelColor.r,pixelColor.g,pixelColor.b,SafeByte(pixelColor.a*xNormal*yEccentric));
 			DrawAlphaPix(xMax,yMax,pixelColor.r,pixelColor.g,pixelColor.b,SafeByte(pixelColor.a*xEccentric*yEccentric));
 		}
-		catch (string sExn) {
-			if (ShowError()) cerr<<"Exception drawing subpixel by color:"<<sExn<<endl;
+		catch (exception& exn) {
+			ShowException(exn,"DrawSubpixelDot by rgb pixel");
 		}
-	}//end DrawSubpixelDot(LPTARGA float xDot, float yDot, byte r, byte g, byte b, byte a) {
+		catch (...) {
+			ShowUnknownException("DrawSubpixelDot by rgb pixel");
+		}
+	}//end DrawSubpixelDot
 	void GBuffer32BGRA::DrawSubpixelDot(float xDot, float yDot, byte* lpbySrcPixel) {
 		try {
 			bool bMake=false;
@@ -507,11 +517,11 @@ namespace ExpertMultimediaBase {
 				lpbySrcPixel=NULL;
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"DrawSubpixelDot from source pixel");
+		catch (exception& exn) {
+			ShowException(exn,"DrawSubpixelDot from pixel pointer");
 		}
 		catch (...) {
-			ShowUnknownException("DrawSubpixelDot from source pixel");
+			ShowUnknownException("DrawSubpixelDot from pixel pointer");
 		}
 	}//end DrawSubpixelDot(float xDot, float yDot, byte* lpbySrcPixel)
 	void GBuffer32BGRA::DrawSubpixelLine(float xStart, float yStart, float xEnd, float yEnd,
@@ -558,7 +568,7 @@ namespace ExpertMultimediaBase {
 		DrawSubpixelLine(pointStart.x, pointStart.y, pointEnd.x, pointEnd.y,
 			pixelStart, pixelEndOrNull, fPrecisionIncrement);
 	}//DrawSubpixelLine
-	void GBuffer32BGRA::DrawSubPixArc(float xCenter, float yCenter,
+	void GBuffer32BGRA::DrawSubpixelArc(float xCenter, float yCenter,
 			float fRadius, float fWidthMultiplier, float fRotate,
 			float fDegStart, float fDegEnd,
 			Pixel &pixelColor,
@@ -589,7 +599,7 @@ namespace ExpertMultimediaBase {
 			cerr<<"In DrawSubpixelArc: loop overflow!"<<endl;
 			iErrors++;
 		}
-	}//DrawSubPixArc
+	}//DrawSubpixelArc
 	bool GBuffer32BGRA::Fill(byte byGrayVal) {
 		bool bGood=false;
 		int iNow=0;
@@ -606,18 +616,21 @@ namespace ExpertMultimediaBase {
 				ShowError("null buffer! {"+ToString(iWidth)+"x"+ToString(iHeight)+"x"+ToString(iBytesPP*8)+"}","GBuffer32BGRA::Fill");
 			}
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
             bGood=false;
-			ShowAndDeleteException(carrExn,"DrawSubpixelDot from source pixel");
+			ShowException(exn,"Fill");
 		}
 		catch (...) {
             bGood=false;
-			ShowUnknownException("DrawSubpixelDot from source pixel");
+			ShowUnknownException("Fill");
 		}
 		return bGood;
+	}//end Fill
+	bool GBuffer32BGRA::IsLoaded() {
+		return byarrData!=null;
 	}
 	bool GBuffer32BGRA::IsLike(GBuffer32BGRA &gbDest) {
-		return gbDest.iBytesPP=iBytesPP
+		return gbDest.iBytesPP==iBytesPP
 			&& gbDest.iStride==iStride
 			&& gbDest.iHeight==iHeight
 			&& gbDest.iBytesTotal==iBytesTotal;
@@ -699,7 +712,7 @@ namespace ExpertMultimediaBase {
 									lpSrcPix+=4; lpDestPix+=4;//assumes 32-bit
 								}
 								else {
-	                                fCookedAlpha=(float)lpSrcPix[3]/255.0f;
+									fCookedAlpha=(float)lpSrcPix[3]/255.0f;
 									*lpDestPix=BYROUNDF(((float)(*lpSrcPix-*lpDestPix))*fCookedAlpha+*lpDestPix); //B
 									lpSrcPix++; lpDestPix++;
 									*lpDestPix=BYROUNDF(((float)(*lpSrcPix-*lpDestPix))*fCookedAlpha+*lpDestPix); //G
@@ -751,11 +764,13 @@ namespace ExpertMultimediaBase {
 				}
 			}//end if does not need to crop
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"GBuffer32BGRA::DrawToLargerWithoutCropElseCancel");
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"GBuffer32BGRA.DrawToLargerWithoutCropElseCancel");
 		}
 		catch (...) {
-			ShowUnknownException("GBuffer32BGRA::DrawToLargerWithoutCropElseCancel");
+            bGood=false;
+			ShowUnknownException("GBuffer32BGRA.DrawToLargerWithoutCropElseCancel");
 		}
 		if (bFirstRun) Console.WriteLine(bGood?"DrawToLargerWithoutCropElseCancel Success...":"DrawToLargerWithoutCropElseCancel failed...");
 		bFirstRun=false;
@@ -810,16 +825,16 @@ namespace ExpertMultimediaBase {
 				}
 			}//end if bGood
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"OverlayNoClipToBigCopyAlpha(...)");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"RawOverlayNoClipToBig");
 		}
 		catch (...) {
-			ShowUnknownException("OverlayNoClipToBigCopyAlpha(...)");
-			bGood=false;
+            bGood=false;
+			ShowUnknownException("RawOverlayNoClipToBig");
 		}
 		return bGood;
-	}
+	}//end RawOverlayNoClipToBig
 	/// <summary>
 	/// Gradient version of Alpha overlay
 	/// </summary>
@@ -853,13 +868,15 @@ namespace ExpertMultimediaBase {
 				ShowError("Error shading","OverlayNoClipToBig gradient to "+ipDest.ToString());
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"OverlayNoClipToBig gradient to "+ipDest.ToString());
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+            if (&ipDest==null) ShowException(exn,"OverlayNoClipToBig gradient to NULL point");
+			else ShowException(exn,"OverlayNoClipToBig gradient to "+ipDest.ToString());
 		}
 		catch (...) {
-			ShowUnknownException("OverlayNoClipToBig gradient to "+ipDest.ToString());
-			bGood=false;
+            bGood=false;
+            if (&ipDest==null) ShowUnknownException("OverlayNoClipToBig gradient to NULL point");
+			else ShowUnknownException("OverlayNoClipToBig gradient to "+ipDest.ToString());
 		}
 		return bGood;
 	}//end OverlayNoClipToBig
@@ -895,13 +912,13 @@ namespace ExpertMultimediaBase {
 				ShowError("Error copying graphics buffer data","OverlayNoClipToBigCopyAlpha(...) gradient");
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"OverlayNoClipToBigCopyAlpha(...) gradient");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"OverlayNoClipToBigCopyAlpha gradient");
 		}
 		catch (...) {
-			ShowUnknownException("OverlayNoClipToBigCopyAlpha(...) gradient");
-			bGood=false;
+            bGood=false;
+			ShowUnknownException("OverlayNoClipToBigCopyAlpha gradient");
 		}
 		return bGood;
 	} //end OverlayNoClipToBigCopyAlpha gradient
@@ -932,13 +949,13 @@ namespace ExpertMultimediaBase {
 				ShowError("Error copying graphics buffer data","OverlayNoClipToBigCopyAlpha(...)");
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"OverlayNoClipToBigCopyAlpha(...)");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"OverlayNoClipToBigCopyAlpha(...)");
 		}
 		catch (...) {
+            bGood=false;
 			ShowUnknownException("OverlayNoClipToBigCopyAlpha(...)");
-			bGood=false;
 		}
 		return bGood;
 	} //end OverlayNoClipToBigCopyAlpha
@@ -960,7 +977,7 @@ namespace ExpertMultimediaBase {
 				iSrcByte+=iBytesPPOffset;
 			}
 		}
-		catch (char* sExn) {
+		catch (exception& exn) {
 			string sMsg="{\n";
 			sMsg+="  iByteInPixel:"; sMsg+=ToString(iByteInPixel);
 				//+"; iDestCharPitch:"+iDestCharPitch.ToString()
@@ -970,7 +987,7 @@ namespace ExpertMultimediaBase {
 				//+"; xNow:"+xNow.ToString()
 			sMsg+="; iSrcByte:"; sMsg+=ToString(iSrcByte);
 			sMsg+="; iDestByte:"+ToString(iDestByte) +"}";
-			ShowAndDeleteException(sExn,"MaskFromChannel()",sMsg);
+			ShowException(exn,"MaskFromChannel()",sMsg);
 			bGood=false;
 		}
 		catch (...) {
@@ -1006,7 +1023,7 @@ namespace ExpertMultimediaBase {
 				iSrcByte+=iBytesPPOffset;
 			}
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			string sLastErr="make sure source bitmap is 24-bit or 32-bit {\n";
 				//+"  "+"iByteInPixel:"+iByteInPixel.ToString()
 				//+"; iDestCharPitch:"+iDestCharPitch.ToString()
@@ -1016,7 +1033,7 @@ namespace ExpertMultimediaBase {
 				//+"; xNow:"+xNow.ToString()
 			sLastErr+="; iSrcByte:"+ToString(iSrcByte);
 			sLastErr+="; iDestByte:"+ToString(iDestByte) +"}";
-			ShowAndDeleteException(carrExn,"MaskFromValue()",sLastErr);
+			ShowException(exn,"MaskFromValue()",sLastErr);
 			bGood=false;
 		}
 		catch (...) {
@@ -1145,13 +1162,13 @@ namespace ExpertMultimediaBase {
 			}
 			bGood=true;
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"InterpolatePixel");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"InterpolatePixel");
 		}
 		catch (...) {
+            bGood=false;
 			ShowUnknownException("InterpolatePixel");
-			bGood=false;
 		}
 		return bGood;
 	}//end InterpolatePixel
@@ -1233,13 +1250,13 @@ namespace ExpertMultimediaBase {
 				fMultiplier=(fDecayTotal/255.0f)*(fPixNow/fMaxPix);
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"EffectMoBlurSimModWidth(...)");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"EffectMoBlurSimModWidth");
 		}
 		catch (...) {
-			ShowUnknownException("EffectMoBlurSimModWidth(...)");
-			bGood=false;
+            bGood=false;
+			ShowUnknownException("EffectMoBlurSimModWidth");
 		}
 		return bGood;
 	}//EffectMoBlurSimModWidth
@@ -1307,13 +1324,13 @@ namespace ExpertMultimediaBase {
 				ShowError("Error calculating skew data.","EffectSkewModWidth(...)");
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"EffectSkewModWidth(...)");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"EffectSkewModWidth");
 		}
 		catch (...) {
-			ShowUnknownException("EffectSkewModWidth(...)");
-			bGood=false;
+            bGood=false;
+			ShowUnknownException("EffectSkewModWidth");
 		}
 		return bGood;
 	}//end EffectSkewModWidth
@@ -1326,13 +1343,13 @@ namespace ExpertMultimediaBase {
 				iSrcByte++;
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"EffectLightenOnly plain source");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"EffectLightenOnly regular");
 		}
 		catch (...) {
-			ShowUnknownException("EffectLightenOnly plain source");
-			bGood=false;
+            bGood=false;
+			ShowUnknownException("EffectLightenOnly regular");
 		}
 		return bGood;
 	}//end EffectLightenOnly
@@ -1351,13 +1368,13 @@ namespace ExpertMultimediaBase {
 				iSrcByte++;
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"EffectLightenOnly multiplied source");
-			bGood=false;
+		catch (exception& exn) {
+            bGood=false;
+			ShowException(exn,"EffectLightenOnly multiplied source");
 		}
 		catch (...) {
+            bGood=false;
 			ShowUnknownException("EffectLightenOnly multiplied source");
-			bGood=false;
 		}
 		return bGood;
 	}//end EffectLightenOnly

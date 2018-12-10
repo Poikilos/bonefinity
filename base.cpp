@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <base.h>
+//#include "C:\My Documents\Projects-cpp\Base\base.h"
 
 using namespace std;
 
@@ -811,20 +812,20 @@ namespace ExpertMultimediaBase {
 		r=red;
 		a=alpha;
 	}
-	void Pixel::Set(Uint32 dwPixel) {
+	void Pixel::Set(Uint32& dwPixel) {
 		byte* byPixel=(byte*)&dwPixel;
 		b=byPixel[0]; //dwPixel>>3;
 		g=byPixel[1]; //(dwPixel>>2)&&0x000000ff;
 		r=byPixel[2]; //(dwPixel>>1)&&0x000000ff;
 		a=byPixel[3]; //(dwPixel)&&0x000000ff;
 	}
-	void Pixel::Set(Uint32* dwPixel) {
-		byte* byPixel=(byte*)dwPixel;
-		b=byPixel[0]; //dwPixel>>3;
-		g=byPixel[1]; //(dwPixel>>2)&&0x000000ff;
-		r=byPixel[2]; //(dwPixel>>1)&&0x000000ff;
-		a=byPixel[3]; //(dwPixel)&&0x000000ff;
-	}
+	//void Pixel::Set(Uint32* dwPixel) {
+	//	byte* byPixel=(byte*)dwPixel;
+	//	b=byPixel[0]; //dwPixel>>3;
+	//	g=byPixel[1]; //(dwPixel>>2)&&0x000000ff;
+	//	r=byPixel[2]; //(dwPixel>>1)&&0x000000ff;
+	//	a=byPixel[3]; //(dwPixel)&&0x000000ff;
+	//}
 	//TODO uncomment: #endregion simple classes
 	
 	//TODO uncomment: #region scripting
@@ -1779,34 +1780,38 @@ namespace ExpertMultimediaBase {
 	float Mass2d::HitRectHeightRatio() {
 		return rectHitDetectPixelRatios.bottom-rectHitDetectPixelRatios.top;
 	}
-	void Mass2d::Init(int Height, int Width) {
-		Init(Height,Width,100);
+	void Mass2d::Init(int Width, int Height) {
+		Init(Height,Width,100.0f);
 	}
-	void Mass2d::SetPixCenter(int xPixNonScaled, int yPixNonScaled) {
-	    xCenterRelNonScaled=xPixNonScaled;
-	    yCenterRelNonScaled=yPixNonScaled;
-	}
-	void Mass2d::Init(int iHeight, int iWidth, float fPixPerMeter) {
-		SetPixCenter(IROUNDF((float)iWidth/2.0f),IROUNDF((float)iHeight/2.0f));
+	void Mass2d::Init(int Width, int Height, float fPixPerMeter) {
+		SetPixCenter(IROUNDF((float)Width/2.0f),IROUNDF((float)Height/2.0f));
 		rectOriginal.left=0;
 		rectOriginal.top=0;
-		rectOriginal.bottom=iHeight;
-		rectOriginal.right=iWidth;
+		rectOriginal.bottom=Height;
+		rectOriginal.right=Width;
 		rectRender.left=0;
 		rectRender.top=0;
-		rectRender.bottom=iHeight;
-		rectRender.right=iWidth;
+		rectRender.bottom=Height;
+		rectRender.right=Width;
 		rectHitDetectPixelBased.left=0;
 		rectHitDetectPixelBased.top=0;
-		rectHitDetectPixelBased.bottom=iHeight;
-		rectHitDetectPixelBased.right=iWidth;
+		rectHitDetectPixelBased.bottom=Height;
+		rectHitDetectPixelBased.right=Width;
 		rectHitDetectPixelRatios.left=0;
 		rectHitDetectPixelRatios.top=0;
 		rectHitDetectPixelRatios.bottom=1.0f;
 		rectHitDetectPixelRatios.right=1.0f;
-		//xSize=iWidth;
-		//ySize=iHeight;
+		//xSize=Width;
+		//ySize=Height;
 		fPixelsPerMeter=fPixPerMeter;
+	}
+	void Mass2d::Init(int Width, int Height, bool bWithSamePixPerMeterAsAPreviousInitialization) {
+		if (bWithSamePixPerMeterAsAPreviousInitialization) Init(Height,Width,fPixelsPerMeter);
+		else Init(Width,Height);
+	}
+	void Mass2d::SetPixCenter(int xPixNonScaled, int yPixNonScaled) {
+	    xCenterRelNonScaled=xPixNonScaled;
+	    yCenterRelNonScaled=yPixNonScaled;
 	}
 	void Mass2d::SetHitRect(float Top, float Left, float Bottom, float Right) {
 		rectHitDetectPixelBased.left=Left;
@@ -1819,7 +1824,7 @@ namespace ExpertMultimediaBase {
 		rectHitDetectPixelRatios.right=Right/(float)rectOriginal.right;
 	}
 	Mass2d::Mass2d() {
-		Init(0,0,100);
+		Init(0,0,100.0f);
 		fScale=1.0f;
 	}
 	bool Gradient::Shade(byte* byarrDest, Uint32 dwDestLoc, byte bySrcValue) {

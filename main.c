@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <SDL/SDL.h>
+
 #include <sprite.cpp>
 #include <world.cpp>
 #include <anim32bgra.cpp>
@@ -13,13 +14,14 @@
 #include <byter.cpp>
 #include <base.cpp>
 #include <dotnetfake.cpp>
+
 using namespace std;
 
 namespace ExpertMultimediaBase {
 
 //using namespace ExpertMultimediaBase;
 
-	using namespace std;
+	//using namespace std;
 
 	typedef unsigned short USHORT;
 	typedef unsigned short WORD;
@@ -36,9 +38,9 @@ namespace ExpertMultimediaBase {
 
 	/*
 	 PLEASE NOTE: the program will require SDL.dll which is located in
-	              dev-c++'s dll directory. You have to copy it to you
-				  program's home directory or the path.
-	 */
+				dev-c++'s dll directory. You have to copy it to you
+				program's home directory or the path.
+	*/
 
 	SDL_Surface *screen=NULL;
 	Anim32BGRA animTest;
@@ -50,6 +52,7 @@ namespace ExpertMultimediaBase {
 	int iSetScreenW=640;
 	int iSetScreenH=480;
 	int iSetScreenBytesPP=4;
+	
 
 	static bool Init() {
 		Console.Write("Loading data...");
@@ -71,24 +74,24 @@ namespace ExpertMultimediaBase {
 		string sTemp;
 		string sName="test";
 		ofNow<<sName<<" dump:"<<endl;
-		int i1stDim=vsNow.Indeces(sName);
-		ofNow<<i1stDim<<" indeces found in dimension 1 in data \""<<vsNow.GetForcedString(sName)<<"\""<<endl;
-		for (int i1st=0; i1st<i1stDim; i1st++) {
-			int i2ndDimNow=vsNow.Indeces(sName,i1st);
-			ofNow<<i2ndDimNow<<" indeces found in dimension 2 at dimension 1 index "<<i1st<<endl;
-			if (i2ndDimNow==0) {
+		int i1stDimLen=vsNow.Indeces(sName);
+		ofNow<<i1stDimLen<<" indeces found for dimension 1 in data \""<<vsNow.GetForcedString(sName)<<"\""<<endl;
+		for (int i1st=0; i1st<i1stDimLen; i1st++) {
+			int i2ndDimLenNow=vsNow.Indeces(sName,i1st);
+			ofNow<<i2ndDimLenNow<<" indeces found for dimension 2 at dimension 1 index "<<i1st<<endl;
+			if (i2ndDimLenNow==0) {
                 pvNow=vsNow.PointerOf(sName);
 				if (pvNow!=null) bGood=pvNow->Get(sTemp,i1st);
-				else bGood=false;
+				else { bGood=false; sTemp="(VAR NAME NOT FOUND)"; }
 				ofNow<<sTemp<<endl;
 			}
 			else {
-				for (int i2nd=0; i2nd<i2ndDimNow; i2nd++) {
+				for (int i2nd=0; i2nd<i2ndDimLenNow; i2nd++) {
 					pvNow=vsNow.PointerOf(sName);
 					if (pvNow!=null) bGood=pvNow->Get(sTemp,i1st,i2nd);
-					else bGood=false;
+					else { bGood=false; sTemp="(VAR NAME NOT FOUND)"; }
 					ofNow<<sTemp;
-					if (i2nd+1<i2ndDimNow) ofNow<<", ";
+					if (i2nd+1<i2ndDimLenNow) ofNow<<", ";
 				}
 				ofNow<<endl;
 			}
@@ -317,81 +320,77 @@ namespace ExpertMultimediaBase {
 		if (bFirstRun) Console.WriteLine("Done.");
 	    SDL_Delay(1);//TODO: remove this and do timing outside of iterate
 	}//end Iterate
-
-
-//	int main(int argc, char *argv[]) {
 }//end namespace
 using namespace ExpertMultimediaBase;
+//int main(int argc, char *argv[]) {
 int main(int iArgs, char** lpsArg) {
-		Console.Write("Initializing display...");
-	    if (SDL_Init (SDL_INIT_VIDEO) < 0) {
-			string sMsg="Couldn't initialize SDL: ";
-			string sTemp="";
-			sTemp.assign(SDL_GetError());
-			sMsg+=sTemp;
-			if (ShowError()) cerr<<sMsg<<endl;
-	        exit (1);
-	    }
-	    atexit(SDL_Quit);
+	Console.Write("Initializing display...");
+    if (SDL_Init (SDL_INIT_VIDEO) < 0) {
+		string sMsg="Couldn't initialize SDL: ";
+		string sTemp="";
+		sTemp.assign(SDL_GetError());
+		sMsg+=sTemp;
+		if (ShowError()) cerr<<sMsg<<endl;
+        exit (1);
+    }
+    atexit(SDL_Quit);
 
-		Console.WriteLine("Done.");
-		Console.Write("Setting video mode...");
-	    screen=SDL_SetVideoMode(iSetScreenW, iSetScreenH, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF);//commented for debugonly: | SDL_RESIZABLE);//SDL_FULLSCREEN
-	    if (screen==NULL) {
-			Console.WriteLine("Fail!");
-			string sMsg="Couldn't set "+ToString(iSetScreenW)+"x"
-			    +ToString(iSetScreenH)+"x"
-			    +ToString(iSetScreenBytesPP*8);
-			sMsg+=" video mode: ";
-			string sTemp="";
-			sTemp.assign(SDL_GetError());
-			sMsg+=sTemp;
-			cerr<<sMsg<<endl;
-			ShowError(sMsg,"main init");
-	        exit(2);
-	    }
-		else Console.WriteLine("Done.");
-	    //SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
-		Init();
-	    bDone=false;
-	    iTickLastIteration=SDL_GetTicks();
-	    while (!bDone) {
-			if (bFirstRun) Console.WriteLine("Entered main event loop.");
-	        SDL_Event event;
-			int iSetWidth;
-			int iSetHeight;
-			static bool bFirstResize=true;
-	        while (SDL_PollEvent (&event)) {
-	            switch (event.type) {
-	            case SDL_KEYDOWN:
-	                break;
-	            case SDL_QUIT:
-	                bDone=true;
-	                break;
-				case SDL_VIDEORESIZE:
-					/* commented for debug only
-					iSetWidth=event.resize.w;
-					iSetHeight=event.resize.h;
-					if ( abs(iSetWidth -gbScreen.iWidth)>2
-						 || abs(iSetHeight-gbScreen.iHeight)>2 ) {
-						if (bFirstResize) Console.Write("Resizing screen...");
-						screen=SDL_SetVideoMode(iSetWidth, iSetHeight, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);//, SDL_OPENGL)
-						gbScreen.Init(iSetWidth,iSetHeight,gbScreen.iBytesPP,true);
-						if (bFirstResize) Console.WriteLine("Done");
-						bFirstResize=false;
-					}
-					*/
-					break;
-	            default:
-	                break;
-	            }
-	        }
-	        Iterate();
-			bFirstRun=false;
-	    }//end while !bDone
-	    Shutdown();
-	    return 0;
-	}
-
-
+	Console.WriteLine("Done.");
+	Console.Write("Setting video mode...");
+    screen=SDL_SetVideoMode(iSetScreenW, iSetScreenH, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF);//commented for debugonly: | SDL_RESIZABLE);//SDL_FULLSCREEN
+    if (screen==NULL) {
+		Console.WriteLine("Fail!");
+		string sMsg="Couldn't set "+ToString(iSetScreenW)+"x"
+		    +ToString(iSetScreenH)+"x"
+		    +ToString(iSetScreenBytesPP*8);
+		sMsg+=" video mode: ";
+		string sTemp="";
+		sTemp.assign(SDL_GetError());
+		sMsg+=sTemp;
+		cerr<<sMsg<<endl;
+		ShowError(sMsg,"main init");
+        exit(2);
+    }
+	else Console.WriteLine("Done.");
+    //SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
+	Init();
+    bDone=false;
+    iTickLastIteration=SDL_GetTicks();
+    while (!bDone) {
+		if (bFirstRun) Console.WriteLine("Entered main event loop.");
+        SDL_Event event;
+		int iSetWidth;
+		int iSetHeight;
+		static bool bFirstResize=true;
+        while (SDL_PollEvent (&event)) {
+            switch (event.type) {
+            case SDL_KEYDOWN:
+                break;
+            case SDL_QUIT:
+                bDone=true;
+                break;
+			case SDL_VIDEORESIZE:
+				/* commented for debug only
+				iSetWidth=event.resize.w;
+				iSetHeight=event.resize.h;
+				if ( abs(iSetWidth -gbScreen.iWidth)>2
+					 || abs(iSetHeight-gbScreen.iHeight)>2 ) {
+					if (bFirstResize) Console.Write("Resizing screen...");
+					screen=SDL_SetVideoMode(iSetWidth, iSetHeight, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);//, SDL_OPENGL)
+					gbScreen.Init(iSetWidth,iSetHeight,gbScreen.iBytesPP,true);
+					if (bFirstResize) Console.WriteLine("Done");
+					bFirstResize=false;
+				}
+				*/
+				break;
+            default:
+                break;
+            }
+        }
+        Iterate();
+		bFirstRun=false;
+    }//end while !bDone
+    Shutdown();
+    return 0;
+}//end main (using ExpertMultimediaBase [see above for part of it])
 #endif

@@ -2,6 +2,7 @@
 #define DOTNETFAKE_CPP
 
 #include <dotnetfake.h>
+//#include "C:\My Documents\Projects-cpp\Base\dotnetfake.h"
 
 using namespace std;
 
@@ -34,37 +35,39 @@ namespace ExpertMultimediaBase {
 			sMsg="check if open";
 			if (bFirstRun) Console.Write(sMsg+"...");
 			bReturn=fsNow.is_open();
-			sMsg=((bReturn)?"(yes) ":"(no) ")+ToString("closing");
+			sMsg=((bReturn)?"(yes) ":"(no) ")+(string)("closing");
 			if (bFirstRun) Console.Write(sMsg+"...");
 			fsNow.close();
 			if (bFirstRun) Console.Write("done File.Exists...");
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			bReturn=false;
-			ShowAndDeleteException(carrExn,"File.Exists",sMsg);
+			cout<<"Exception error in File.Exists check"<<endl;//avoids base.cpp -- ShowException(exn,"File.Exists",sMsg);
 		}
 		catch (...) {
 			bReturn=false;
-			ShowUnknownException("File.Exists",sMsg);
+			cout<<"Unknown exception error in File.Exists check"<<endl;//avoids base.cpp -- ShowUnknownException("File.Exists",sMsg);
 		}
 		bFirstRun=false;
 		return bReturn;
 	}//end File.Exists
 	void CONSOLE_FAKENAMESPACE_CLASS::Write(string val) {
+		bool bGood=true;
 		try {
 			if (iConsoleLinesWritten==iConsoleLinesMax) {
 				cout<<"Too many console messages ("<<iConsoleLinesWritten<<")"<<endl
 					<<"--this is the last message that will be shown:"<<endl;
 			}
-			if (iConsoleLinesWritten<=iConsoleLinesMax) {
+			if (iConsoleLinesWritten<=iConsoleLinesMax)
 				cout<<val<<flush;
-			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Console::Write");
+		catch (exception& exn) {
+			bGood=false;
+			cout<<"Exception error in Console.Write"<<endl;//avoids base.cpp -- ShowException(exn,"File.Exists",sMsg);
 		}
 		catch (...) {
-			ShowUnknownException("Console::Write");
+			bGood=false;
+			cout<<"Unknown exception error in Console.Write"<<endl;//avoids base.cpp -- ShowUnknownException("File.Exists",sMsg);
 		}
 		iConsoleLinesWritten++;
 	}//end Console::Write

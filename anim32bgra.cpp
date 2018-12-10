@@ -1,6 +1,7 @@
 #ifndef ANIM32BGRA_CPP
 #define ANIM32BGRA_CPP
 #include <anim32bgra.h>
+//#include "C:\My Documents\Projects-cpp\Base\anim32bgra.h"
 
 using namespace std;
 //using System;
@@ -10,6 +11,14 @@ using namespace std;
 //using System.Drawing.Text;
 
 namespace ExpertMultimediaBase {
+
+	void SafeFree(Anim32BGRA*& animarrX) {
+		try {
+			if (animarrX!=null) delete [] animarrX;
+			animarrX=null;
+		}
+		catch (...) { }
+	}
 	//PathFileOfSeqFrame(sSetFileBaseName, sSetFileExt, lFrameTarget, iDigitsMin)
 	string PathFileOfSeqFrame(string sSetFileBaseName, string sSetFileExt, long lFrameTarget, int iDigitsMin) {
 		static bool bFirstRun=true;
@@ -32,19 +41,21 @@ namespace ExpertMultimediaBase {
 			sReturn+="."+sSetFileExt;
 			if (bFirstRun) Console.Write("done...");//Console.Write("returning \""+sReturn+"\"...");
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Base::PathFileOfSeqFrame");
-			sReturn="";
+		catch (exception& exn) {
+			ShowException(exn, "Anim32BGRA.PathFileOfSeqFrame");
 		}
 		catch (...) {
-            ShowUnknownException("Base::PathFileOfSeqFrame");
-            sReturn="";
+            ShowUnknownException("Anim32BGRA.PathFileOfSeqFrame");
 		}
 		bFirstRun=false;
 		return sReturn;
 	}
 
 
+	Clip::Clip() {
+		effectarr=null;
+	}
+	
 	Effect* Effect::Copy() {
 		Effect* fxReturn=null;
 		try {
@@ -62,8 +73,8 @@ namespace ExpertMultimediaBase {
 			fxReturn->lFrames=lFrames;
 			fxReturn->sScript=sScript;
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Effect::Copy");
+		catch (exception& exn) {
+			ShowException(exn, "Effect::Copy");
 		}
 		catch (...) {
             ShowUnknownException("Effect::Copy");
@@ -113,6 +124,8 @@ namespace ExpertMultimediaBase {
 		gbarrAnim=null;
 		effectarr=null;
 		iMaxEffects=200;//debug hard-coded limitation
+		//targaLoaded.InitNull(); //compiler already called constructor
+		gbFrame.InitNull();
 	}
 	Anim32BGRA::~Anim32BGRA() {
 		SafeDeleteAnim();
@@ -134,7 +147,7 @@ namespace ExpertMultimediaBase {
 			//animReturn->sPathFile=sPathFile;
 			animReturn->bFileSequence=bFileSequence;//if use sFileBaseName+digits+"."+sExt, and sPathFile is first frame
 			animReturn->iSeqDigitCountMin=iSeqDigitCountMin;//, 0 if variable (i.exn. frame1.png...frame10.png)
-			animReturn->lFrameNow=lFrameNow;
+			animReturn->lFrame=lFrame;
 			animReturn->lFrames=lFrames;
 			animReturn->iEffects=iEffects;
 			animReturn->iMaxEffects=iMaxEffects;
@@ -146,7 +159,7 @@ namespace ExpertMultimediaBase {
 				}
 			}
 			else ShowError("Uncached anim not yet implemented","Anim32BGRA::Copy");
-			animReturn->gbFrame=&animReturn->gbarrAnim[lFrameNow];
+			animReturn->gbarrAnim[lFrame].CopyToByDataRef(animReturn->gbFrame);
 			if (iEffects>0) {
 				animReturn->effectarr=new Effect[iMaxEffects];
 				for (int i=0; i<iEffects; i++) {
@@ -154,23 +167,23 @@ namespace ExpertMultimediaBase {
 				}
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Anim32BGRA::Copy");
+		catch (exception& exn) {
+			ShowException(exn, "Anim32BGRA::Copy");
 		}
 		catch (...) {
             ShowUnknownException("Anim32BGRA::Copy");
 		}
 		return animReturn;
 	}//end Copy
-	Anim32BGRA* Anim32BGRA::CopyAsGrey() {
-		return CopyAsGrey(-1);
+	Anim32BGRA* Anim32BGRA::CopyAsGray() {
+		return CopyAsGray(-1);
 	}
 	/// <summary>
 	/// Makes a new Anim32BGRA object from any channel (or the value) of this one.
 	/// </summary>
 	/// <param name="iChannelOffset">Pick a channel to copy.  Set to -1 to take average of RGB.</param>
 	/// <returns></returns>
-	Anim32BGRA* Anim32BGRA::CopyAsGrey(int iChannelOffset) {
+	Anim32BGRA* Anim32BGRA::CopyAsGray(int iChannelOffset) {
 		Anim32BGRA* animReturn=null;
 		try {
 			animReturn=new Anim32BGRA();
@@ -183,7 +196,7 @@ namespace ExpertMultimediaBase {
 			//animReturn->sPathFile=sPathFile;
 			animReturn->bFileSequence=bFileSequence;//if use sFileBaseName+digits+"."+sExt, and sPathFile is first frame
 			animReturn->iSeqDigitCountMin=iSeqDigitCountMin;//, 0 if variable (i.exn. frame1.png...frame10.png)
-			animReturn->lFrameNow=lFrameNow;
+			animReturn->lFrame=lFrame;
 			animReturn->lFrames=lFrames;
 			animReturn->iEffects=iEffects;
 			animReturn->iMaxEffects=iMaxEffects;
@@ -201,8 +214,8 @@ namespace ExpertMultimediaBase {
 					}
 				}
 			}
-			else ShowError("Uncached Anim32BGRA not yet implemented","Anim32BGRA::CopyAsGrey");
-			animReturn->gbFrame=&animReturn->gbarrAnim[lFrameNow];
+			else ShowError("Uncached Anim32BGRA not yet implemented","Anim32BGRA::CopyAsGray");
+			animReturn->gbarrAnim[lFrame].CopyToByDataRef(animReturn->gbFrame);
 			if (iEffects>0) {
 				animReturn->effectarr=new Effect[iMaxEffects];
 				for (int index=0; index<iEffects; index++) {
@@ -211,32 +224,21 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		catch (exception& exn) {
-			ShowException(exn, "Anim32BGRA::CopyAsGrey");
-		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Anim32BGRA::CopyAsGrey");
+			ShowException(exn, "Anim32BGRA::CopyAsGray");
 		}
 		catch (...) {
-            ShowUnknownException("Anim32BGRA::CopyAsGrey");
+            ShowUnknownException("Anim32BGRA::CopyAsGray");
 		}
 		return animReturn;
-	}//end CopyAsGrey
+	}//end CopyAsGray
 	bool Anim32BGRA::SaveSeq(string sSetFileBaseName, string sSetFileExt) {
 		bool bGood=true;
-		try { //first write debug file
-			sFileExt=sSetFileExt;
-			sFileBaseName=sSetFileBaseName; //StringToFile(sSetFileBaseName+".txt", Dump(true));
-		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"save sequence info file");
-		}
-		catch (...) {
-            ShowUnknownException("save sequence info file");
-		}
+		sFileExt=sSetFileExt;
+		sFileBaseName=sSetFileBaseName; //StringToFile(sSetFileBaseName+".txt", Dump(true));
 		for (long lFrameSave=0; lFrameSave<lFrames; lFrameSave++) {
 			if (!SaveSeqFrame(lFrameSave)) {
 				bGood=false;
-				ShowError("Couldn't save frame "+ExpertMultimediaBase::PathFileOfSeqFrame(sSetFileBaseName, sSetFileExt, lFrameNow, iSeqDigitCountMin), "SaveSeq");
+				ShowError("Couldn't save frame "+ExpertMultimediaBase::PathFileOfSeqFrame(sSetFileBaseName, sSetFileExt, lFrame, iSeqDigitCountMin), "SaveSeq");
 			}
 		}
 		return bGood;
@@ -249,7 +251,7 @@ namespace ExpertMultimediaBase {
 			try {
 				sReturn+="{lFrames:"+ToString(lFrames)
 					+"; lFramesCached:"+ToString(lFramesCached)
-					+"; lFrameNow:"+ToString(lFrameNow)
+					+"; lFrame:"+ToString(lFrame)
 					+"; sFileExt:"+sFileExt
 					//+"; sPathFile:"+sPathFile
 					+"; sFileBaseName:"+sFileBaseName
@@ -257,29 +259,29 @@ namespace ExpertMultimediaBase {
 					+"; iEffects:"+ToString(iEffects)
 					+"; iMaxEffects:"+ToString(iMaxEffects)
 					+"; iSeqDigitCountMin:"+ToString(iSeqDigitCountMin);
-				if (gbFrame!=null) {
-					if (gbFrame->iBytesTotal>0) {
+				if (gbFrame.byarrData!=null) {
+					if (gbFrame.iBytesTotal>0) {
 						try {
-						sReturn+="; gbFrame->iBytesTotal:"+ToString(gbFrame->iBytesTotal)
-							+"; gbFrame->iWidth:"+ToString(gbFrame->iWidth)
-							+"; gbFrame->iHeight:"+ToString(gbFrame->iHeight)
-							+"; gbFrame->iWidth:"+ToString(gbFrame->iWidth)
-							+"; gbFrame->iBytesPP:"+ToString(gbFrame->iBytesPP)
-							+"; gbFrame->iStride:"+ToString(gbFrame->iStride);
+						sReturn+="; gbFrame.iBytesTotal:"+ToString(gbFrame.iBytesTotal)
+							+"; gbFrame.iWidth:"+ToString(gbFrame.iWidth)
+							+"; gbFrame.iHeight:"+ToString(gbFrame.iHeight)
+							+"; gbFrame.iWidth:"+ToString(gbFrame.iWidth)
+							+"; gbFrame.iBytesPP:"+ToString(gbFrame.iBytesPP)
+							+"; gbFrame.iStride:"+ToString(gbFrame.iStride);
 						}
-						catch (char* carrExn) {
-							ShowAndDeleteException(carrExn,"Anim32BGRA::Dump("+ToString(bDumpVars)+") while accessing gbFrame");
+						catch (exception& exn) {
+							ShowException(exn,"Anim32BGRA::Dump("+ToString(bDumpVars)+") while accessing gbFrame");
 						}
 						catch (...) {
 				            ShowUnknownException("Anim32BGRA::Dump("+ToString(bDumpVars)+") while accessing gbFrame");
 						}
 					}
 				}
-				else sReturn="gbFrame:null";
+				else sReturn="gbFrame.byarrData:null";
 				sReturn+=";}";
 			}
-			catch (char* carrExn) {
-				ShowAndDeleteException(carrExn,"Anim32BGRA::Dump("+ToString(bDumpVars)+")");
+			catch (exception& exn) {
+				ShowException(exn, "Anim32BGRA::Dump("+ToString(bDumpVars)+")");
 			}
 			catch (...) {
 	            ShowUnknownException("Anim32BGRA::Dump("+ToString(bDumpVars)+")");
@@ -291,7 +293,7 @@ namespace ExpertMultimediaBase {
             bFirstRun=false;
 			return Dump();
 		}
-	}//end ToString(bDumpVars);
+	}//end Dump(bDumpVars);
 	string Anim32BGRA::Dump() {
 		string sReturn="Anim32BGRA{";
 		sReturn+="lFrames:";
@@ -300,7 +302,7 @@ namespace ExpertMultimediaBase {
 	}
 	bool Anim32BGRA::SaveCurrentSeqFrame() {
 		bool bGood=CopyFrameToInternalBitmap();
-		if (bGood) bGood=SaveInternalBitmap(ExpertMultimediaBase::PathFileOfSeqFrame(sFileBaseName, sFileExt, lFrameNow, iSeqDigitCountMin));
+		if (bGood) bGood=SaveInternalBitmap(ExpertMultimediaBase::PathFileOfSeqFrame(sFileBaseName, sFileExt, lFrame, iSeqDigitCountMin));
 		return bGood;
 	}
 	bool Anim32BGRA::SaveSeqFrame(long lFrameSave) {
@@ -329,18 +331,33 @@ namespace ExpertMultimediaBase {
 	bool Anim32BGRA::ResetBitmapUsingFrameNow() {
 		bool bGood=true;
 		try {
-			targaLoaded.From(gbFrame->iWidth, gbFrame->iHeight, gbFrame->iBytesPP, gbFrame->byarrData, true);
-			//targaLoaded.Save(RetroEngine.sDataFolderSlash+"1.test-blank.png");
-			//sLogLine="Saved blank test PNG for Bitmap debug";
+			if (gbFrame.byarrData==null) {
+				bGood=false;
+				ShowError("gbFrame.byarrData is null","ResetBitmapUsingFrameNow");
+			}
+			if (bGood) {
+				if ( (targaLoaded.BytesBuffer()==0)
+				   || (gbFrame.iStride!=targaLoaded.Stride())
+				   || (gbFrame.iWidth!=rectNow.Width)
+				   || (gbFrame.iHeight!=rectNow.Height)
+				   || (gbFrame.iBytesPP!=targaLoaded.Stride()/rectNow.Width)
+				   || (gbFrame.iBytesTotal!=(targaLoaded.Stride()*rectNow.Height)) ) {
+					targaLoaded.From(gbFrame.iWidth, gbFrame.iHeight, gbFrame.iBytesPP, gbFrame.byarrData, false); //true would copy pointer instead of data
+				}
+				//targaLoaded.Save(RetroEngine.sDataFolderSlash+"1.test-blank.png");
+				//sLogLine="Saved blank test PNG for Bitmap debug";
+			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"ResetBitmapUsingFrameNow");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "ResetBitmapUsingFrameNow");
 		}
 		catch (...) {
-            ShowUnknownException("ResetBitmapUsingFrameNow");
+			bGood=false;
+			ShowUnknownException("ResetBitmapUsingFrameNow");
 		}
 		return bGood;
-	}
+	}//end ResetBitmapUsingFrameNow
 	/*
 	PixelFormat PixelFormatNow() {
 		return pixelformatNow;
@@ -349,50 +366,42 @@ namespace ExpertMultimediaBase {
 	bool Anim32BGRA::CopyFrameToInternalBitmap() {
 		bool bGood=true;
 		try {
-			if (targaLoaded.BytesBuffer()<=0) bGood=ResetBitmapUsingFrameNow();
+			bGood=ResetBitmapUsingFrameNow();
 			if (!bGood) ShowError("Failed to reset internal frame image","CopyFrameToInternalBitmap()");
 			targaLoaded.ToRect(rectNowF);
 			rectNow.Set((int)rectNowF.X, (int)rectNowF.Y,
 								(int)rectNowF.Width, (int)rectNowF.Height);
-			if (  (gbFrame->iStride!=targaLoaded.Stride())
-			   || (gbFrame->iWidth!=rectNow.Width)
-			   || (gbFrame->iHeight!=rectNow.Height)
-			   || (gbFrame->iBytesPP!=targaLoaded.Stride()/rectNow.Width)
-			   || (gbFrame->iBytesTotal!=(targaLoaded.Stride()*rectNow.Height)) ) {
-				gbFrame->iStride=targaLoaded.Stride();
-				gbFrame->iWidth=rectNow.Width;
-				gbFrame->iHeight=rectNow.Height;
-				gbFrame->iBytesPP=gbFrame->iStride/gbFrame->iWidth;
-				gbFrame->iBytesTotal=gbFrame->iStride*gbFrame->iHeight;
-				gbFrame->byarrData=(byte*)malloc(gbFrame->iBytesTotal);
-			}
 			bool bReCompress=targaLoaded.IsCompressed();
 			targaLoaded.SetCompressionRLE(false);
 			byte* lpbyNow = targaLoaded.GetBufferPointer();
-			for (int iBy=0; iBy<gbFrame->iBytesTotal; iBy++) {
-				*lpbyNow=gbFrame->byarrData[iBy];
+			for (int iBy=0; iBy<gbFrame.iBytesTotal; iBy++) {
+				*lpbyNow=gbFrame.byarrData[iBy];
 				lpbyNow++;
 			}
 			if (bReCompress) targaLoaded.SetCompressionRLE(true);
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Anim32BGRA::CopyFrameToInternalBitmap()");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "Anim32BGRA::CopyFrameToInternalBitmap");
 		}
 		catch (...) {
-            ShowUnknownException("Anim32BGRA::CopyFrameToInternalBitmap()");
+			bGood=false;
+			ShowUnknownException("Anim32BGRA::CopyFrameToInternalBitmap");
 		}
 		return bGood;
-	}
+	}//end CopyFrameToInternalBitmap()
 	bool Anim32BGRA::LoadInternalBitmap(string sFile) {
 		bool bGood=true;
 		try {
 			bGood=CopyFrameFromInternalBitmap();
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"LoadInternalBitmap(\""+sFile+"\") (problem with file type or location)");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "LoadInternalBitmap(\""+sFile+"\") (problem with file type or location)");
 		}
 		catch (...) {
-            ShowUnknownException("LoadInternalBitmap(\""+sFile+"\") (problem with file type or location)");
+			bGood=false;
+			ShowUnknownException("LoadInternalBitmap(\""+sFile+"\") (problem with file type or location)");
 		}
 		return bGood;
 	}
@@ -404,6 +413,7 @@ namespace ExpertMultimediaBase {
 		if (bFirstRun) Console.Write("CountSeqFrames...");
 		long iNow=0;
 		string sMsg="";
+		bool bGood=true;
 		try {
             sFileBaseName=sSetFileBaseName;
             sFileExt=sSetFileExt;
@@ -413,12 +423,17 @@ namespace ExpertMultimediaBase {
 			}
 			if (bFirstRun) Console.Write(sMsg+"done counting...");
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"CountSeqFrames");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "CountSeqFrames");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownException("CountSeqFrames");
 		}
 		bFirstRun=false;
 		return iNow;
-	}
+	}//end CountSeqFrames
 	bool Anim32BGRA::LoadSeq(string sSetFileNameWithAsterisk) {
 		int iStar=(int)sSetFileNameWithAsterisk.find_first_of("*");
 		string sSetFileBaseName=SafeSubstring(sSetFileNameWithAsterisk,0,iStar);
@@ -498,32 +513,35 @@ namespace ExpertMultimediaBase {
 	bool Anim32BGRA::CopyFrameFromInternalBitmap() {
 		bool bGood=true;
 		try {
-			targaLoaded.ToRect(rectNowF);
-			rectNow.Set((int)rectNowF.X, (int)rectNowF.Y,
-								(int)rectNowF.Width, (int)rectNowF.Height);
-			if (  (gbFrame->iStride!=targaLoaded.Stride())
-			   || (gbFrame->iWidth!=rectNow.Width)
-			   || (gbFrame->iHeight!=rectNow.Height)
-			   || (gbFrame->iBytesPP!=targaLoaded.Stride()/rectNow.Width)
-			   || (gbFrame->iBytesTotal!=(targaLoaded.Stride()*rectNow.Height)) ) {
-				gbFrame->iStride=targaLoaded.Stride();
-				gbFrame->iWidth=rectNow.Width;
-				gbFrame->iHeight=rectNow.Height;
-				gbFrame->iBytesPP=gbFrame->iStride/gbFrame->iWidth;
-				gbFrame->iBytesTotal=gbFrame->iStride*gbFrame->iHeight;
-				gbFrame->byarrData=(byte*)malloc(gbFrame->iBytesTotal);
+			if (targaLoaded.byarrData==null) {
+				bGood=false;
+				ShowError("targa is not loaded!","Anim32BGRA::CopyFrameFromInternalBitmap");
 			}
-			byte* lpbyNow = targaLoaded.GetBufferPointer();
-			for (int iBy=0; iBy<gbFrame->iBytesTotal; iBy++) {
-				gbFrame->byarrData[iBy]=*lpbyNow;
-				lpbyNow++;
+			if (bGood) {
+				targaLoaded.ToRect(rectNowF);
+				rectNow.Set((int)rectNowF.X, (int)rectNowF.Y,
+									(int)rectNowF.Width, (int)rectNowF.Height);
+				if (  (gbFrame.iStride!=targaLoaded.Stride())
+				   || (gbFrame.iWidth!=rectNow.Width)
+				   || (gbFrame.iHeight!=rectNow.Height)
+				   || (gbFrame.iBytesPP!=targaLoaded.Stride()/rectNow.Width)
+				   || (gbFrame.iBytesTotal!=(targaLoaded.Stride()*rectNow.Height)) ) {
+					gbFrame.Init(rectNow.Width,rectNow.Height,gbFrame.iBytesPP,true);
+				}
+				byte* lpbyNow=targaLoaded.GetBufferPointer();
+				for (int iBy=0; iBy<gbFrame.iBytesTotal; iBy++) {
+					gbFrame.byarrData[iBy]=*lpbyNow;
+					lpbyNow++;
+				}
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Anim32BGRA::CopyFrameFromInternalBitmap()");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "Anim32BGRA::CopyFrameFromInternalBitmap");
 		}
 		catch (...) {
-            ShowUnknownException("Anim32BGRA::CopyFrameFromInternalBitmap()");
+			bGood=false;
+			ShowUnknownException("Anim32BGRA::CopyFrameFromInternalBitmap");
 		}
 		return bGood;
 	}//end CopyFrameFromInternalBitmap
@@ -535,18 +553,23 @@ namespace ExpertMultimediaBase {
 	bool Anim32BGRA::SaveInternalBitmap(string sFileName) {
 		bool bGood=true;
 		try {
-			targaLoaded.Save(sFileName);
+			bGood=targaLoaded.Save(sFileName);
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"SaveInternalBitmap(\""+sFileName+"\")");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "SaveInternalBitmap(\""+sFileName+"\")");
 		}
 		catch (...) {
-            ShowUnknownException("SaveInternalBitmap(\""+sFileName+"\")");
+			bGood=false;
+			ShowUnknownException("SaveInternalBitmap(\""+sFileName+"\")");
 		}
 		return bGood;
 	}
 	//bool FromFrames(byte[][] by2dFrames, long lFrames, int iBytesPPNow, int iWidthNow, int iHeightNow) {
 	//}
+	bool Anim32BGRA::GotoFrame(int iFrameX) {
+		GotoFrame((long)iFrameX);
+	}
 	bool Anim32BGRA::GotoFrame(long lFrameX) {
 		//refers to a file if a file is used.
 		bool bGood=true;
@@ -559,18 +582,18 @@ namespace ExpertMultimediaBase {
 				}
 				if (bGood) {
 					if (lFrameX<lFramesCached && lFrameX>=0) {
-						gbFrame=&gbarrAnim[lFrameX];
-						lFrameNow=lFrameX;
-						if (gbFrame==null) {
+						gbarrAnim[lFrameX].CopyToByDataRef(gbFrame);
+						lFrame=lFrameX;
+						if (gbFrame.byarrData==null) {
 							bGood=false;
 							ShowError("Null frame!","GotoFrame("+ToString(lFrameX)+")");
 						}
-						else if (gbFrame->iWidth==0) {
+						else if (gbFrame.iWidth==0) {
 							bGood=false;
-							ShowError("Bad frame data ("+ToString(gbFrame->iWidth)+"x"+ToString(gbFrame->iHeight)+"x"+ToString(gbFrame->iBytesPP*8)+")!","GotoFrame("+ToString(lFrameX)+")");
+							ShowError("Bad frame data ("+ToString(gbFrame.iWidth)+"x"+ToString(gbFrame.iHeight)+"x"+ToString(gbFrame.iBytesPP*8)+")!","GotoFrame("+ToString(lFrameX)+")");
 						}
 						else if (bFirstRun) {
-							Console.Write("GotoFrame dimensions:"+ToString(gbFrame->iWidth)+"x"+ToString(gbFrame->iHeight)+"x"+ToString(gbFrame->iBytesPP*8)+"...");
+							Console.Write("GotoFrame dimensions:"+ToString(gbFrame.iWidth)+"x"+ToString(gbFrame.iHeight)+"x"+ToString(gbFrame.iBytesPP*8)+"...");
 						}
 					}
 					else {
@@ -587,11 +610,8 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		catch (exception& exn) {
+			bGood=false;
 			ShowException(exn,"Anim32BGRA::GotoFrame("+ToString(lFrameX)+")");
-		}
-		catch (char* carrExn) {
-            bGood=false;
-			ShowAndDeleteException(carrExn,"Anim32BGRA::GotoFrame");
 		}
 		catch (...) {
             bGood=false;
@@ -601,28 +621,31 @@ namespace ExpertMultimediaBase {
 		return bGood;
 	}//end GotoFrame
 	bool Anim32BGRA::GotoNextFrame() {
-		if (lFrameNow+1==lFrames) {
+		if (lFrame+1==lFrames) {
 			if (bLoop) GotoFrame(0);
 		}
-		else GotoFrame(lFrameNow+1);
+		else GotoFrame(lFrame+1);
 	}
 	bool Anim32BGRA::GotoNextFrame(bool bSetAsLoop) {
 		bLoop=bSetAsLoop;
 		return GotoNextFrame();
 	}
-	bool Anim32BGRA::DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest, long lFrame) {
-		bool bGood=GotoFrame(lFrame);
+	bool Anim32BGRA::DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest, long lFrameX) {
+		bool bGood=GotoFrame(lFrameX);
 		if (DrawFrameOverlay(gbDest, ipDest)==false) bGood=false;
 		return bGood;
 	}
 	bool Anim32BGRA::DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest) {
 		GBuffer32BGRA gbSafeFrame;
-		if (gbFrame!=null) gbFrame->CopyTo(gbSafeFrame);
+		if (gbFrame.byarrData!=null) gbFrame.CopyTo(gbSafeFrame);
 		return OverlayNoClipToBigCopyAlpha(gbDest, ipDest, gbSafeFrame);
 	}
 	int Anim32BGRA::MinDigitsRequired(int iNumber) {
 		string sNumber=ToString(iNumber);
 		return sNumber.length();
+	}
+	bool Anim32BGRA::LastFrame() {
+		return (gbFrame.byarrData!=null && lFrame==(lFrames-1));
 	}
 	string Anim32BGRA::PathFileOfSeqFrame(long lFrameTarget) {
 		string sReturn="";
@@ -634,11 +657,11 @@ namespace ExpertMultimediaBase {
 			//sReturn=PathFileOfSeqFrame(sFileBaseName1, sSetFileExt, lFrameTarget, iSeqDigitCountMin);
 			sReturn=ExpertMultimediaBase::PathFileOfSeqFrame(sFileBaseName, sFileExt, lFrameTarget, iSeqDigitCountMin);
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Anim32BGRA::PathFileOfSeqFrame("+ToString(lFrameTarget)+")");
+		catch (exception& exn) {
+			ShowException(exn, "Anim32BGRA::PathFileOfSeqFrame("+ToString(lFrameTarget)+")");
 		}
 		catch (...) {
-            ShowUnknownException("Anim32BGRA::PathFileOfSeqFrame("+ToString(lFrameTarget)+")");
+			ShowUnknownException("Anim32BGRA::PathFileOfSeqFrame("+ToString(lFrameTarget)+")");
 		}
 		return sReturn;
 	}
@@ -665,14 +688,14 @@ namespace ExpertMultimediaBase {
 				//sLogLine="Done saving test Bitmap for debug";
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"SplitFromImage32 alternate");
+		catch (exception& exn) {
+			ShowException(exn, "SplitFromImage32 alternate");
 		}
 		catch (...) {
-            ShowUnknownException("SplitFromImage32 alternate");
+			ShowUnknownException("SplitFromImage32 alternate");
 		}
 		return bGood;
-	}//end SplitFromImage32
+	}//end SplitFromImage32 alternate
 	bool Anim32BGRA::SplitFromImage32(string sFileImage, int iCellWidth, int iCellHeight, int iRows, int iColumns) {
 		bool bGood=false;
  		try {
@@ -680,13 +703,13 @@ namespace ExpertMultimediaBase {
 			IRect irectAsMargins;
 			bGood=SplitFromImage32(sFileImage, iCellWidth, iCellHeight, iRows, iColumns, ipAsCellSpacing, irectAsMargins);
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			bGood=false;
-			ShowAndDeleteException(carrExn,"SplitFromImage32 alternate#2");
+			ShowException(exn, "SplitFromImage32 alternate#2");
 		}
 		catch (...) {
 			bGood=false;
-            ShowUnknownException("SplitFromImage32 alternate#2");
+			ShowUnknownException("SplitFromImage32 alternate#2");
 		}
 		return bGood;
 	}
@@ -707,7 +730,7 @@ namespace ExpertMultimediaBase {
 				for (int lFrameX=0; lFrameX<lFrames; lFrameX++) {
 					gbarrAnim[lFrameX].Init(iCellWidth, iCellHeight, 4); //assumes 32-bit
 				}
-				//lFrameNow=0; //not used
+				//lFrame=0; //not used
 				int iSrcByteOfCellTopLeft=irectAsMargins.top*gbSrc.iStride + irectAsMargins.left*gbSrc.iBytesPP;
 				int iSrcByteOfCellNow;
 				//int iSrcAdder=gbSrc.iStride-gbSrc.iBytesPP*iCellWidth;
@@ -733,8 +756,8 @@ namespace ExpertMultimediaBase {
 						GotoFrame(lFrameLoad);
 						for (int iLine=0; iLine<iHeight; iLine++) {
 							//TODO: finish this--make it safer:
-							memcpy(&gbFrame->byarrData[iDestByte],&gbSrc.byarrData[iSrcByte],iDestStride);
-							//if (Byter.CopyFast(gbFrame->byarrData, gbSrc.byarrData, iDestByte, iSrcByte, iDestStride)==false)
+							memcpy(&gbFrame.byarrData[iDestByte],&gbSrc.byarrData[iSrcByte],iDestStride);
+							//if (Byter.CopyFast(gbFrame.byarrData, gbSrc.byarrData, iDestByte, iSrcByte, iDestStride)==false)
 							//	bGood=false;
 							iDestByte+=iDestStride;
 							iSrcByte+=iSrcStride;
@@ -743,15 +766,12 @@ namespace ExpertMultimediaBase {
 					}
 				}
 				if (!bGood) ShowError("There was data copy error while interpreting the GBuffer32BGRA to a font, make sure the \"iCellWidth\" etc. variables are set correctly.",sFuncNow);
-				//else bGood=GreyMapFromPixMapChannel(3);
+				//else bGood=GrayMapFromPixMapChannel(3);
 				lFramesCached=lFrames;
 			}
 		}
 		catch (exception& exn) {
 			ShowException(exn,sFuncNow);
-		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,sFuncNow);
 		}
 		catch (...) {
             ShowUnknownException(sFuncNow);
@@ -782,15 +802,17 @@ namespace ExpertMultimediaBase {
 			}
 			SafeDeleteAnim();
 			gbarrAnim=gbarrNew; 
-			gbFrame=&gbarrAnim[lFrameNow];
+			gbarrAnim[lFrame].CopyToByDataRef(gbFrame);
 			bGood=true;
 			//StringToFile("X:\\anim.TranslateFrameOrder debug.txt", sDebug);
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"TransposeFramesAsMatrix");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "TransposeFramesAsMatrix");
 		}
 		catch (...) {
-            ShowUnknownException("TransposeFramesAsMatrix");
+			bGood=false;
+			ShowUnknownException("TransposeFramesAsMatrix");
 		}
 		sDebug+="Finished.";
 		//TODO: in future don't set bGood according to StringToFile
@@ -802,25 +824,25 @@ namespace ExpertMultimediaBase {
 	//bool SplitFromImage32(GBuffer32BGRA &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
 	GBuffer32BGRA* Anim32BGRA::ToOneImage(int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
 		bool bGood=true;
-		sFuncNow="ToOneImage(...)";
+		string sFuncNow="ToOneImage(...)";
 		int iFrames=iRows*iColumns;
 		lFramesCached=lFrames; //so cached anim will be accessed
 		GBuffer32BGRA* gbNew=null;
 		try {
 			//gbarrAnim=new GBuffer32BGRA[lFrames];
 			GotoFrame(0);
-			gbNew=new GBuffer32BGRA(iCellWidth*iColumns, iCellHeight*iRows, gbFrame->iBytesPP);
+			gbNew=new GBuffer32BGRA(iCellWidth*iColumns, iCellHeight*iRows, gbFrame.iBytesPP);
 			//bmpLoaded=new Bitmap(iCellWidth, iCellHeight, PixelFormatNow());
 			//for (int lFrameX=0; lFrameX<lFrames; lFrameX++) {
 			//	gbarrAnim[lFrameX]=new GBuffer32BGRA(iCellWidth, iCellHeight, 4); //assumes 32-bit
 			//}
-			lFrameNow=0; //TODO: use new var instead of class var
+			lFrame=0; //TODO: use new var instead of class var
 			int iDestByteOfCellTopLeft=irectAsMargins.top*gbNew->iStride + irectAsMargins.left*gbNew->iBytesPP;
 			int iDestByteOfCellNow;
 			int iDestByte;
 			int iSrcByte;
-			int iSrcStride=gbFrame->iStride;
-			int iHeight=gbFrame->iHeight;
+			int iSrcStride=gbFrame.iStride;
+			int iHeight=gbFrame.iHeight;
 			int iDestStride=gbNew->iStride;
 			int iCellPitchX=gbNew->iBytesPP*(iCellWidth+ipAsCellSpacing.x);
 			int iCellPitchY=gbNew->iStride*(iCellHeight+ipAsCellSpacing.y);
@@ -832,10 +854,10 @@ namespace ExpertMultimediaBase {
 					iDestByte=iDestByteOfCellNow;
 					GotoFrame(lFrameLoad);
 					//TODO: finish this: check whether next line is needed
-					//gbFrame->Save("debugToOneImage"+SequenceDigits(lFrameLoad)+".png",ImageFormat.Png);
+					//gbFrame.Save("debugToOneImage"+SequenceDigits(lFrameLoad)+".png",ImageFormat.Png);
 					for (int iLine=0; iLine<iHeight; iLine++) {
 						//TODO: finish this: make it safer:
-						memcpy(&gbNew->byarrData[iDestByte],&gbFrame->byarrData[iSrcByte], iSrcStride);
+						memcpy(&gbNew->byarrData[iDestByte],&gbFrame.byarrData[iSrcByte], iSrcStride);
 						iSrcByte+=iSrcStride;
 						iDestByte+=iDestStride;
 					}
@@ -843,15 +865,17 @@ namespace ExpertMultimediaBase {
 				}
 			}
 			if (!bGood) ShowError("There was data copy error while interpreting the GBuffer32BGRA to a font, make sure the \"iCellWidth\" etc. variables are set correctly.",sFuncNow);
-			//else bGood=GreyMapFromPixMapChannel(3);
+			//else bGood=GrayMapFromPixMapChannel(3);
 			bGood=true;
 			lFramesCached=lFrames;
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,sFuncNow);
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, sFuncNow);
 		}
 		catch (...) {
-            ShowUnknownException(sFuncNow);
+			bGood=false;
+			ShowUnknownException(sFuncNow);
 		}
 		return gbNew;
 	}//end ToOneImage
@@ -864,13 +888,13 @@ namespace ExpertMultimediaBase {
 			}
 			bGood=true;
 		}
-		catch (char* carrExn) {
-            bGood=false;
-			ShowAndDeleteException(carrExn,"SafeDeleteAnim");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "SafeDeleteAnim");
 		}
 		catch (...) {
-            bGood=false;
-            ShowUnknownException("SafeDeleteAnim");
+			bGood=false;
+			ShowUnknownException("SafeDeleteAnim");
 		}
 		return bGood;
 	}//end SafeDeleteAnim
@@ -883,24 +907,24 @@ namespace ExpertMultimediaBase {
 			}
 			bGood=true;
 		}
-		catch (char* carrExn) {
-            bGood=false;
-			ShowAndDeleteException(carrExn,"SafeDeleteEffects");
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "SafeDeleteEffects");
 		}
 		catch (...) {
-            bGood=false;
-            ShowUnknownException("SafeDeleteEffects");
+			bGood=false;
+			ShowUnknownException("SafeDeleteEffects");
 		}
 		return bGood;
 	}//end SafeDeleteEffects
 	int Anim32BGRA::Width() {
 		int iReturn=0;
-		if (gbFrame!=NULL) iReturn=gbFrame->iWidth;
+		if (gbFrame.byarrData!=NULL) iReturn=gbFrame.iWidth;
 		return iReturn;
 	}
 	int Anim32BGRA::Height() {
 		int iReturn=0;
-		if (gbFrame!=NULL) iReturn=gbFrame->iHeight;
+		if (gbFrame.byarrData!=NULL) iReturn=gbFrame.iHeight;
 		return iReturn;
 	}
 	bool Anim32BGRA::DrawToLargerWithoutCropElseCancel(GBuffer32BGRA &gbDest, int xDest, int yDest, int iDrawMode) {
@@ -908,34 +932,31 @@ namespace ExpertMultimediaBase {
 		static bool bFirstRun=true;
 		if (bFirstRun) Console.Write("DrawToLargerWithoutCropElseCancel...");
 		try {
-			if (gbFrame==null) {
+			if (gbFrame.byarrData==null) {
 				bGood=false;
-				ShowError("Tried to draw null frame["+ToString(lFrameNow)+"]","Anim32BGRA::DrawToLargerWithoutCropElseCancel");
+				ShowError("Tried to draw null frame["+ToString(lFrame)+"]","Anim32BGRA::DrawToLargerWithoutCropElseCancel");
 			}
 			else {
 				if (bFirstRun) Console.Write("calling gbFrame...");
-				bGood=gbFrame->DrawToLargerWithoutCropElseCancel(gbDest, xDest, yDest, iDrawMode);
+				bGood=gbFrame.DrawToLargerWithoutCropElseCancel(gbDest, xDest, yDest, iDrawMode);
 			}
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowException(exn, "DrawToLargerWithoutCropElseCancel");
 		}
 		catch (...) {
 			bGood=false;
+			ShowUnknownException("DrawToLargerWithoutCropElseCancel");
 		}
 		bFirstRun=false;
 		return bGood;
 	}//end DrawToLargerWithoutCropElseCancel
+	int Anim32BGRA::IFrames() {
+		return (int)lFrames;
+	}
 	//#endregion class Anim32BGRA methods
 	
-	Clip::Clip() {
-		effectarr=null;
-	}
-
-	void SafeFree(Anim32BGRA*& animarrX) {
-		try {
-			if (animarrX!=null) delete [] animarrX;
-			animarrX=null;
-		}
-		catch (...) { }
-	}
 
 }//end namespace
 #endif

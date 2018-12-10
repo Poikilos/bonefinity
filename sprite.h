@@ -2,6 +2,7 @@
 #define SPRITE_H
 
 #include <anim32bgra.h>
+//#include "C:\My Documents\Projects-cpp\Base\anim32bgra.h"
 
 using namespace std;
 
