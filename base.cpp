@@ -1,5 +1,6 @@
 #ifndef BASE_CPP
 #define BASE_CPP
+#pragma once
 
 #include <cstdlib>
 #include <iostream>
@@ -7,28 +8,47 @@
 #include <fstream>
 #include <memory>
 #include <string>
-#include <base.h>
-//#include "C:\My Documents\Projects-cpp\Base\base.h"
+#include <base.h> //#include "E:\Projects-cpp\Base\base.h"
+#include <frameworkdummy.h>
+#include <float.h>
+#include <limits.h>
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
-	class IPoint {
-		int x;
-		int y;
-		IPoint();
-	};
+	int RString_iDecimalPlacesForToString=-1;
+	int iLastErr=0; //each call of every function must reset this to track errors.
+	string sLastErr="";
+	string sLastFunc="";
+	char szHex[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+	char szAlphabetUpper[26]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+	char szAlphabetLower[26]={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+	Uint32 u32Bit[33]={0,1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
+	char cDigit[10]={'0','1','2','3','4','5','6','7','8','9'};
+	char sDigit[10][2]={"0","1","2","3","4","5","6","7","8","9"};
+	char slash[2]={'\\','\0'};
+	int iLogNow=0;
+	//end debugging
+	const int i10=10;
+	const long l10=10L;
+	const float f10=10.0f;
+	const double d10=10;
+	bool Mass3d_ToString_bFirstRun=true;
+
+	///#region globals defined in base.h
+	int iErrors=0;
+	int iMaxErrors=8000;
+	byte by3dAlphaLookup[256][256][256];
+	bool bDebug=false;//CHANGED during init to the value of the debugmode script variable
+	bool bMegaDebug=true; //true for debug only!
+	///#endregion globals defined in base.h
+
+	///#region methods
+	/*
 	IPoint::IPoint() {
 		x=0;
 		y=0;
 	}
-	class IRect() {
-		int top;
-		int left;
-		int bottom;
-		int right;
-		IRect();
-	};
 	IRect::IRect() {
 		top=0;
 		left=0;
@@ -41,7 +61,7 @@ namespace ExpertMultimediaBase {
 		y=0;
 	}
 	string IPoint::ToString() {
-		return "("+ExpertMultimediaBase::ToString(x)+","+ExpertMultimediaBase::ToString(y)+")";
+		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
 	}
 
 	FPoint::FPoint() {
@@ -49,7 +69,7 @@ namespace ExpertMultimediaBase {
 		y=0;
 	}
 	string FPoint::ToString() {
-		return "("+ExpertMultimediaBase::ToString(x)+","+ExpertMultimediaBase::ToString(y)+")";
+		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
 	}
 
 	DPoint::DPoint() {
@@ -57,7 +77,7 @@ namespace ExpertMultimediaBase {
 		y=0;
 	}
 	string DPoint::ToString() {
-		return "("+ExpertMultimediaBase::ToString(x)+","+ExpertMultimediaBase::ToString(y)+")";
+		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
 	}
 
 	IRect::IRect() {
@@ -67,7 +87,7 @@ namespace ExpertMultimediaBase {
 		right=0;
 	}
 	string IRect::ToString() {
-		return "("+ExpertMultimediaBase::ToString(left)+","+ExpertMultimediaBase::ToString(top)+")to("+ExpertMultimediaBase::ToString(right)+","+ExpertMultimediaBase::ToString(bottom)+")";
+		return "("+RString_ToString(left)+","+RString_ToString(top)+")to("+RString_ToString(right)+","+RString_ToString(bottom)+")";
 	}
 	Pixel::Pixel() {
 		Set(0,0,0,0);
@@ -81,20 +101,22 @@ namespace ExpertMultimediaBase {
 		r=red;
 		a=alpha;
 	}
-	void Pixel::Set(Uint32& dwPixel) {
-		byte* byPixel=(byte*)&dwPixel;
-		b=byPixel[0]; //dwPixel>>3;
-		g=byPixel[1]; //(dwPixel>>2)&&0x000000ff;
-		r=byPixel[2]; //(dwPixel>>1)&&0x000000ff;
-		a=byPixel[3]; //(dwPixel)&&0x000000ff;
+	void Pixel::Set(Uint32& u32Pixel) {
+		byte* byPixel=(byte*)&u32Pixel;
+		b=byPixel[0]; //u32Pixel>>3;
+		g=byPixel[1]; //(u32Pixel>>2)&&0x000000ff;
+		r=byPixel[2]; //(u32Pixel>>1)&&0x000000ff;
+		a=byPixel[3]; //(u32Pixel)&&0x000000ff;
 	}
-	//void Pixel::Set(Uint32* dwPixel) {
-	//	byte* byPixel=(byte*)dwPixel;
-	//	b=byPixel[0]; //dwPixel>>3;
-	//	g=byPixel[1]; //(dwPixel>>2)&&0x000000ff;
-	//	r=byPixel[2]; //(dwPixel>>1)&&0x000000ff;
-	//	a=byPixel[3]; //(dwPixel)&&0x000000ff;
+	//void Pixel::Set(Uint32* u32Pixel) {
+	//	byte* byPixel=(byte*)u32Pixel;
+	//	b=byPixel[0]; //u32Pixel>>3;
+	//	g=byPixel[1]; //(u32Pixel>>2)&&0x000000ff;
+	//	r=byPixel[2]; //(u32Pixel>>1)&&0x000000ff;
+	//	a=byPixel[3]; //(u32Pixel)&&0x000000ff;
 	//}
+
+
 	bool Variable::IsActive() {
 		return bActive;
 	}
@@ -153,47 +175,47 @@ namespace ExpertMultimediaBase {
 	}
 	void Variable::Set(int val) {
 		try { SetActive();
-		        sVal=ToString(val);
+				sVal=RString_ToString(val);
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Set(int)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Set(int)");
 		}
-		catch (...) { ShowUnknownException("Variable::Set(int)","value=\""+ToString(val)+"\"");
+		catch (...) { ShowUnknownExn("Variable::Set(int)","value=\""+RString_ToString(val)+"\"");
 		}
 	}
 	void Variable::Set(float val) {
 		try { SetActive();
-			sVal=ToString(val); }
-		catch (exception& exn) { ShowException(exn,"Variable::Set(float)");
+			sVal=RString_ToString(val); }
+		catch (exception& exn) { ShowExn(exn,"Variable::Set(float)");
 		}
-		catch (...) { ShowUnknownException("Variable::Set(float)","value=\""+ToString(val)+"\"");
+		catch (...) { ShowUnknownExn("Variable::Set(float)","value=\""+RString_ToString(val)+"\"");
 		}
 	}
 	void Variable::Set(string val) {
 		try {
-	        SetActive();
+			SetActive();
 			sVal=val;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Set(string)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Set(string)");
 		}
-		catch (...) { ShowUnknownException("Variable::Set(string)","value=\""+val+"\"");
+		catch (...) { ShowUnknownExn("Variable::Set(string)","value=\""+val+"\"");
 		}
 	}
 	bool Variable::Get(int &val) {
 		bool bGood=false;
 		try {
 			if (bActive) {
-	            //stringstream ssboth(s3, ios_base::in | ios_base::out);
-	            //ssboth<<sVal;
-	            //ssboth>>val;
-	            char sTemp[2048];
+				//stringstream ssboth(s3, ios_base::in | ios_base::out);
+				//ssboth+sVal;
+				//ssboth>>val;
+				char szTemp[2048];
 				val=atoi(sVal.c_str());
 				bGood=true;
 			}
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Get(int)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Get(int)");
 		}
-		catch (...) { ShowUnknownException("Variable::Get(int)");
+		catch (...) { ShowUnknownExn("Variable::Get(int)");
 		}
 		return bGood;
 	}
@@ -203,9 +225,9 @@ namespace ExpertMultimediaBase {
 			if (bActive) { val=atof(sVal.c_str()); bGood=true; }
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Get(float)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Get(float)");
 		}
-		catch (...) { ShowUnknownException("Variable::Get(float)");
+		catch (...) { ShowUnknownExn("Variable::Get(float)");
 		}
 		return bGood;
 	}
@@ -215,13 +237,12 @@ namespace ExpertMultimediaBase {
 			if (bActive) { val=sVal; bGood=true; }
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Get(string)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Get(string)");
 		}
-		catch (...) { ShowUnknownException("Variable::Get(string)");
+		catch (...) { ShowUnknownExn("Variable::Get(string)");
 		}
 		return bGood;
 	}
-
 	int Variable::Indeces() {//returns 0 if non-array.  Otherwise returns 1 or more.
 		return CountCArrayNotationFields(sVal);
 	}
@@ -230,10 +251,10 @@ namespace ExpertMultimediaBase {
 		//Variable vTemp;
 		string sTemp;
 		bool bGood=GetForcedCArrayNotationSubstring(sTemp,sVal,i1stDimension);
-		Console.Write("Checking "+sTemp+"...");
+		Console.Error.Write("Checking "+sTemp+"...");
 		int iReturn=0;
 		iReturn=CountCArrayNotationFields(sTemp);
-		Console.Write( "Found "+ToString(iReturn)+ToString("...") );
+		Console.Error.Write( "Found "+RString_ToString(iReturn)+RString_ToString("...") );
 		return iReturn;
 	}
 	bool Variable::Get(string &val, int i1stDimension) {
@@ -242,9 +263,9 @@ namespace ExpertMultimediaBase {
 			if (bActive) { bGood=Get(val,i1stDimension,0); }
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Get(string)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Get(string)");
 		}
-		catch (...) { ShowUnknownException("Variable::Get(string,i1stDim)");
+		catch (...) { ShowUnknownExn("Variable::Get(string,i1stDim)");
 		}
 		return bGood;
 	}
@@ -262,9 +283,9 @@ namespace ExpertMultimediaBase {
 			}
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::Get(string)");
+		catch (exception& exn) { ShowExn(exn,"Variable::Get(string)");
 		}
-		catch (...) { ShowUnknownException("Variable::Get(string,i1stDim,i2ndDim)");
+		catch (...) { ShowUnknownExn("Variable::Get(string,i1stDim,i2ndDim)");
 		}
 		return bGood;
 	}
@@ -275,9 +296,9 @@ namespace ExpertMultimediaBase {
 			if (bActive) { sName=val; bGood=true; }
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::SetName");
+		catch (exception& exn) { ShowExn(exn,"Variable::SetName");
 		}
-		catch (...) { ShowUnknownException("Variable::SetName");
+		catch (...) { ShowUnknownExn("Variable::SetName");
 		}
 		return bGood;
 	}
@@ -287,9 +308,9 @@ namespace ExpertMultimediaBase {
 			if (bActive) { val=sName; bGood=true; }
 			else bGood=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::GetName");
+		catch (exception& exn) { ShowExn(exn,"Variable::GetName");
 		}
-		catch (...) { ShowUnknownException("Variable::GetName");
+		catch (...) { ShowUnknownExn("Variable::GetName");
 		}
 		return bGood;
 	}
@@ -298,9 +319,9 @@ namespace ExpertMultimediaBase {
 		try {
 			if (bActive) bMatch=(sName==val);
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::IsNamed");
+		catch (exception& exn) { ShowExn(exn,"Variable::IsNamed");
 		}
-		catch (...) { ShowUnknownException("Variable::IsNamed");
+		catch (...) { ShowUnknownExn("Variable::IsNamed");
 		}
 		return bMatch;
 	}
@@ -308,9 +329,9 @@ namespace ExpertMultimediaBase {
 		try {
 			SetActiveState(false); //frees strings too
 		}
-		catch (exception& exn) { ShowException(exn,"Variable deconstructor");
+		catch (exception& exn) { ShowExn(exn,"Variable deconstructor");
 		}
-		catch (...) { ShowUnknownException("Variable deconstructor");
+		catch (...) { ShowUnknownExn("Variable deconstructor");
 		}
 	}
 	string Variable::GetForcedString() {
@@ -327,32 +348,32 @@ namespace ExpertMultimediaBase {
 		SetActive();
 		string sFuncNow="FromIniLine";
 		try {
-			if (bFirstRun) Console.Write(sFuncNow);
-			if (bFirstRun) Console.WriteLine("(\""+val+"\")");
+			if (bFirstRun) Console.Error.Write(sFuncNow);
+			if (bFirstRun) Console.Error.WriteLine("(\""+val+"\")");
 			sFuncNow+="(\""+val+"\")";
-			if (bFirstRun) Console.WriteLine("  -about to analyze \""+val+"\"");
+			if (bFirstRun) Console.Error.WriteLine("  -about to analyze \""+val+"\"");
 			int iNow=val.find_first_of("=");
 			if (iNow>=0) {
-				if (bFirstRun) Console.WriteLine("  -about to get first part from 0 to "+ToString(iNow));
+				if (bFirstRun) Console.Error.WriteLine("  -about to get first part from 0 to "+RString_ToString(iNow));
 				sName=val.substr(0,iNow);
 				if (sName=="") ShowError("  -var name string is blank \"\"!",sFuncNow);
 				if (bGood && (iNow<val.length()-1)) {
 					iNowPrev=iNow;
 					iNow++;
-					if (bFirstRun) Console.WriteLine("    -done get first part: "+sName);
-					if (bFirstRun) Console.WriteLine("    -about to get next part from "+ToString(iNow)+" length "+ToString(val.length()-iNow));
+					if (bFirstRun) Console.Error.WriteLine("	-done get first part: "+sName);
+					if (bFirstRun) Console.Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString(val.length()-iNow));
 					sVal=val.substr(iNow,val.length()-iNow);
-					if (sVal=="") ShowError("      -\"\" VALUE part is blank !",sFuncNow);
-					if (bFirstRun) Console.WriteLine("      -done getting next part");
-					//if (!bGood) ShowError("      -get VALUE part failed!",sFuncNow);
+					if (sVal=="") ShowError("	  -\"\" VALUE part is blank !",sFuncNow);
+					if (bFirstRun) Console.Error.WriteLine("	  -done getting next part");
+					//if (!bGood) ShowError("	  -get VALUE part failed!",sFuncNow);
 				}
-				else if (!bGood) ShowError("    -substr name failed!",sFuncNow);
-				else ShowError("    -(no second part found)",sFuncNow);
+				else if (!bGood) ShowError("	-substr name failed!",sFuncNow);
+				else ShowError("	-(no second part found)",sFuncNow);
 			}
 		}
-		catch (exception& exn) { ShowException(exn,"Variable::FromIniLine");
+		catch (exception& exn) { ShowExn(exn,"Variable::FromIniLine");
 		}
-		catch (...) { ShowUnknownException("Variable::FromIniLine");
+		catch (...) { ShowUnknownExn("Variable::FromIniLine");
 		}
 		return bGood;
 	}//end Variable::FromIniLine()
@@ -364,21 +385,21 @@ namespace ExpertMultimediaBase {
 		}
 		else { //if active
 			try {
-				if (bFirstRun) cout<<"Trying to save ini line:"<<endl;
+				if (bFirstRun) Console.Error.WriteLine("Trying to save ini line:");
 				val=sName;
-				if (bFirstRun) cout<<" 1."<<val<<" (after adding "<<sName<<")"<<endl;
+				if (bFirstRun) Console.Error.WriteLine(" 1."+val+" (after adding "+sName+")");
 				if (sVal.length()>0) {
 					if (sName.length()>1) {
 						val+="=";
-						if (bFirstRun) cout<<" 3."<<val<<" (after adding "<<"="<<")"<<endl;
+						if (bFirstRun) Console.Error.WriteLine(" 3."+val+" (after adding '=' sign)");
 						val+=sVal;
-						if (bFirstRun) cout<<" 3."<<val<<" (after adding "<<sVal<<")"<<endl;
+						if (bFirstRun) Console.Error.WriteLine(" 3."+val+" (after adding "+sVal+")");
 					}
 				}
 			}
-			catch (exception& exn) { ShowException(exn,"Variable::ToIniLine");
+			catch (exception& exn) { ShowExn(exn,"Variable::ToIniLine");
 			}
-			catch (...) { ShowUnknownException("Variable::ToIniLine");
+			catch (...) { ShowUnknownExn("Variable::ToIniLine");
 			}
 		}//end else active
 		return val;
@@ -387,9 +408,6 @@ namespace ExpertMultimediaBase {
 		if (bActive) return sVal.length()+sName.length()+2;//2 for '=' AND '\0'
 		else return iMaxChars+iMaxNameChars+2;//2 for '=' AND '\0'
 	}
-
-
-
 	void Variables::Init() {
 		iVars=0;
 		sFileName="";
@@ -409,10 +427,10 @@ namespace ExpertMultimediaBase {
 	bool Variables::Load(string sFile) {
 		static bool bFirstRun=true;
 		try {
-			if (bFirstRun) cout<<"About to load \""<<sFile<<"\""<<endl;//debug only
+			if (bFirstRun) Console.Error.WriteLine("About to load \""+sFile+"\"");//debug only
 			sFileName=sFile;
 			ifstream ifNow(sFile.c_str());
-			if (bFirstRun) cout<<"Done trying to load \""<<sFile<<"\""<<endl;//debug only
+			if (bFirstRun) Console.Error.WriteLine("Done trying to load \""+sFile+"\"");//debug only
 			int iChars=1;
 			bool bCheck;
 			int iMaxLine=varr[iVars].MaxChars()+varr[iVars].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
@@ -428,18 +446,18 @@ namespace ExpertMultimediaBase {
 				if ((sLine.length()>0) && sLine[0]=='\r') sLine=sLine.substr(1,sLine.length()-1);
 				iChars=sLine.length();
 				if (iChars>0) {
-	    			int iEnder=sLine.find_first_of("=");
-	    			if (iEnder<0) iEnder=sLine.length();
-	    			string sNameX=SafeSubstring(sLine,0,iEnder);
+					int iEnder=sLine.find_first_of("=");
+					if (iEnder<0) iEnder=sLine.length();
+					string sNameX=SafeSubstring(sLine,0,iEnder);
 					int iAt=IndexOf(sNameX);
 					if (iAt<0) {
 						iAt=iVars;
 						bNew=true;
 					}
 					else bNew=false;
-					if (bFirstRun) cout<<"  -about to get FromIniLine: "<<sLine<<endl;
+					if (bFirstRun) Console.Error.WriteLine("  -about to get FromIniLine: "+sLine);
 					bCheck=varr[iAt].FromIniLine(sLine);
-					if (bFirstRun) cout<<"  -done get FromIniLine"<<endl;
+					if (bFirstRun) Console.Error.WriteLine("  -done get FromIniLine");
 					if (bCheck&&bNew) {
 						iVars++;
 						iVarsNow++;
@@ -447,12 +465,12 @@ namespace ExpertMultimediaBase {
 				}//end if
 				iLines++;
 			}//end while sPtr line
-			if (bFirstRun) cout<<"Done: Read "<<iVars<<" variables from "<<iLines<<" lines in "<<sFile<<endl;
+			if (bFirstRun) Console.Error.WriteLine("Done: Read "+RString_ToString(iVars)+" variables from "+RString_ToString(iLines)+" lines in "+sFile);
 			ifNow.close();
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::Load");
+		catch (exception& exn) { ShowExn(exn,"Variables::Load");
 		}
-		catch (...) { ShowUnknownException("Variables::Load");
+		catch (...) { ShowUnknownExn("Variables::Load");
 		}
 		bFirstRun=false;
 	}//end Variables::Load
@@ -468,9 +486,9 @@ namespace ExpertMultimediaBase {
 			}
 			ofNow.close();
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::Save(...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::Save(...)");
 		}
-		catch (...) { ShowUnknownException("Variables::Save(...)");
+		catch (...) { ShowUnknownExn("Variables::Save(...)");
 		}
 	}//end Variables::Save
 	bool Variables::Save() {
@@ -497,7 +515,7 @@ namespace ExpertMultimediaBase {
 		}
 		catch (...) {
 			pvReturn=null;
-			ShowUnknownException( "variables.PointerOf", "accessing varr index "+ToString(iIndex) );
+			ShowUnknownExn( "variables.PointerOf", "accessing varr index "+RString_ToString(iIndex) );
 		}
 		return pvReturn;
 	}
@@ -509,27 +527,28 @@ namespace ExpertMultimediaBase {
 		try {
 			if (!Exists(sName)) SetOrCreate(sName,val);
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::CreateOrIgnore(...,int)");
+		catch (exception& exn) { ShowExn(exn,"Variables::CreateOrIgnore(...,int)");
 		}
-		catch (...) { ShowUnknownException("Variables::CreateOrIgnore(...,int)");
+		catch (...) {
+			ShowUnknownExn("Variables::CreateOrIgnore(...,int)");
 		}
 	}
 	void Variables::CreateOrIgnore(string sName, float val) {
 		try {
 			if (!Exists(sName)) SetOrCreate(sName,val);
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::CreateOrIgnore(...,float)");
+		catch (exception& exn) { ShowExn(exn,"Variables::CreateOrIgnore(...,float)");
 		}
-		catch (...) { ShowUnknownException("Variables::CreateOrIgnore(...,float)");
+		catch (...) { ShowUnknownExn("Variables::CreateOrIgnore(...,float)");
 		}
 	}
 	void Variables::CreateOrIgnore(string sName, string val) {
 		try {
 			if (!Exists(sName)) SetOrCreate(sName,val);
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::CreateOrIgnore(...,string)");
+		catch (exception& exn) { ShowExn(exn,"Variables::CreateOrIgnore(...,string)");
 		}
-		catch (...) { ShowUnknownException("Variables::CreateOrIgnore(...,string)");
+		catch (...) { ShowUnknownExn("Variables::CreateOrIgnore(...,string)");
 		}
 	}
 	void Variables::SetOrCreate(string sName, int val) {
@@ -544,9 +563,9 @@ namespace ExpertMultimediaBase {
 			}
 			if (bSaveEveryChange) Save();
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::SetOrCreate(...,int)");
+		catch (exception& exn) { ShowExn(exn,"Variables::SetOrCreate(...,int)");
 		}
-		catch (...) { ShowUnknownException("Variables::SetOrCreate(...,int)");
+		catch (...) { ShowUnknownExn("Variables::SetOrCreate(...,int)");
 		}
 	}//end Variables::SetOrCreate(...,int)
 	void Variables::SetOrCreate(string sName, float val) {
@@ -561,9 +580,9 @@ namespace ExpertMultimediaBase {
 			}
 			if (bSaveEveryChange) Save();
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::SetOrCreate(...,float)");
+		catch (exception& exn) { ShowExn(exn,"Variables::SetOrCreate(...,float)");
 		}
-		catch (...) { ShowUnknownException("Variables::SetOrCreate(...,float)");
+		catch (...) { ShowUnknownExn("Variables::SetOrCreate(...,float)");
 		}
 	}//end Variables::SetOrCreate(...,float)
 	void Variables::SetOrCreate(string sName, string val) {
@@ -579,9 +598,9 @@ namespace ExpertMultimediaBase {
 			}
 			if (bSaveEveryChange) Save();
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::SetOrCreate(...,string)");
+		catch (exception& exn) { ShowExn(exn,"Variables::SetOrCreate(...,string)");
 		}
-		catch (...) { ShowUnknownException("Variables::SetOrCreate(...,string)");
+		catch (...) { ShowUnknownExn("Variables::SetOrCreate(...,string)");
 		}
 	}//end Variables::SetOrCreate(...,string)
 	void Variables::GetOrCreate(int &val, string sName) {
@@ -597,9 +616,9 @@ namespace ExpertMultimediaBase {
 				if (bSaveEveryChange) Save();
 			}
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::GetOrCreate(int,...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::GetOrCreate(int,...)");
 		}
-		catch (...) { ShowUnknownException("Variables::GetOrCreate(int,...)");
+		catch (...) { ShowUnknownExn("Variables::GetOrCreate(int,...)");
 		}
 	}//end Variables::GetOrCreate(int,...)
 	void Variables::GetOrCreate(float &val, string sName) {
@@ -615,11 +634,34 @@ namespace ExpertMultimediaBase {
 				if (bSaveEveryChange) Save();
 			}
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::GetOrCreate(float,...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::GetOrCreate(float,...)");
 		}
-		catch (...) { ShowUnknownException("Variables::GetOrCreate(float,...)");
+		catch (...) { ShowUnknownExn("Variables::GetOrCreate(float,...)");
 		}
 	}//end GetOrCreate(float,...
+	void Variables::GetOrCreate(REAL &val, string sName) {
+		int iAt=IndexOf(sName);
+		bool bFound=(iAt>=0);
+		float vTemp;
+		try {
+			if (bFound) {
+				varr[iAt].Get(vTemp);
+				val=vTemp;
+			}
+			else {
+				iAt=iVars;
+				vTemp=val;
+				varr[iAt].Set(vTemp);
+				varr[iAt].SetName(sName);
+				iVars++;
+				if (bSaveEveryChange) Save();
+			}
+		}
+		catch (exception& exn) { ShowExn(exn,"Variables::GetOrCreate(REAL,...)");
+		}
+		catch (...) { ShowUnknownExn("Variables::GetOrCreate(REAL,...)");
+		}
+	}//end GetOrCreate(REAL,...
 	void Variables::GetOrCreate(string &val, string sName) {
 		int iAt=IndexOf(sName);
 		bool bFound=(iAt>=0);
@@ -633,9 +675,9 @@ namespace ExpertMultimediaBase {
 				if (bSaveEveryChange) Save();
 			}
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::GetOrCreate(string,...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::GetOrCreate(string,...)");
 		}
-		catch (...) { ShowUnknownException("Variables::GetOrCreate(string,...)");
+		catch (...) { ShowUnknownExn("Variables::GetOrCreate(string,...)");
 		}
 	}//end Variables::GetOrCreate(string,...)
 	bool Variables::Get(int &valReturn, string sName) {
@@ -647,9 +689,9 @@ namespace ExpertMultimediaBase {
 				varr[iAt].Get(valReturn);
 				bFound=true;
 			}
-			catch (exception& exn) { ShowException(exn,"Variables::Get(int,...)");
+			catch (exception& exn) { ShowExn(exn,"Variables::Get(int,...)");
 			}
-			catch (...) { ShowUnknownException("Variables::Get(int,...)");
+			catch (...) { ShowUnknownExn("Variables::Get(int,...)");
 			}
 		}
 		return bFound;
@@ -663,9 +705,9 @@ namespace ExpertMultimediaBase {
 				varr[iAt].Get(valReturn);
 				bFound=true;
 			}
-			catch (exception& exn) { ShowException(exn,"Variables::Get(float,...)");
+			catch (exception& exn) { ShowExn(exn,"Variables::Get(float,...)");
 			}
-			catch (...) { ShowUnknownException("Variables::Get(float,...)");
+			catch (...) { ShowUnknownExn("Variables::Get(float,...)");
 			}
 		}
 		return bFound;
@@ -679,9 +721,9 @@ namespace ExpertMultimediaBase {
 				varr[iAt].Get(valReturn);
 				bFound=true;
 			}
-			catch (exception& exn) { ShowException(exn,"Variables::Get(string,...)");
+			catch (exception& exn) { ShowExn(exn,"Variables::Get(string,...)");
 			}
-			catch (...) { ShowUnknownException("Variables::Get(string,...)");
+			catch (...) { ShowUnknownExn("Variables::Get(string,...)");
 			}
 		}
 		return bFound;
@@ -691,9 +733,9 @@ namespace ExpertMultimediaBase {
 		int iAt=IndexOf(sName);
 		try { if (iAt>=0) varr[iAt].Get(valReturn);
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::GetForcedInt(...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::GetForcedInt(...)");
 		}
-		catch (...) { ShowUnknownException("Variables::GetForcedInt(...)");
+		catch (...) { ShowUnknownExn("Variables::GetForcedInt(...)");
 		}
 		return valReturn;
 	}
@@ -702,9 +744,9 @@ namespace ExpertMultimediaBase {
 		int iAt=IndexOf(sName);
 		try { if (iAt>=0) varr[iAt].Get(valReturn);
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::GetForcedFloat(...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::GetForcedFloat(...)");
 		}
-		catch (...) { ShowUnknownException("Variables::GetForcedFloat(...)");
+		catch (...) { ShowUnknownExn("Variables::GetForcedFloat(...)");
 		}
 		return valReturn;
 	}
@@ -713,9 +755,9 @@ namespace ExpertMultimediaBase {
 		int iAt=IndexOf(sName);
 		try { if (iAt>=0) val=varr[iAt].GetForcedString();
 		}
-		catch (exception& exn) { ShowException(exn,"Variables::GetForcedString(...)");
+		catch (exception& exn) { ShowExn(exn,"Variables::GetForcedString(...)");
 		}
-		catch (...) { ShowUnknownException("Variables::GetForcedString(...)");
+		catch (...) { ShowUnknownExn("Variables::GetForcedString(...)");
 		}
 		return val;
 	}
@@ -727,11 +769,11 @@ namespace ExpertMultimediaBase {
 		}
 		catch (exception& exn) {
 			bTest=false;
-			ShowException(exn,"Variables::GetForcedBool(...)");
+			ShowExn(exn,"Variables::GetForcedBool(...)");
 		}
 		catch (...) {
 			bTest=false;
-			ShowUnknownException("Variables::GetForcedBool(...)");
+			ShowUnknownExn("Variables::GetForcedBool(...)");
 		}
 		return bTest;
 	}
@@ -742,7 +784,7 @@ namespace ExpertMultimediaBase {
 			try {
 				iReturn=varr[iIndex].Indeces();
 			}
-			catch (...) { ShowUnknownException("variables.Indeces(...)", "accessing varr index "+ToString(iIndex)+ToString(".")); }
+			catch (...) { ShowUnknownExn("variables.Indeces(...)", "accessing varr index "+RString_ToString(iIndex)+RString_ToString(".")); }
 		}
 		return iReturn;
 	}
@@ -753,14 +795,14 @@ namespace ExpertMultimediaBase {
 			try {
 				iReturn=varr[iIndex].Indeces(i1stDimension);
 			}
-			catch (...) { ShowUnknownException("variables.Indeces(...,"+ToString(i1stDimension)+")", "accessing varr index "+ToString(iIndex)+"."); }
+			catch (...) { ShowUnknownExn("variables.Indeces(...,"+RString_ToString(i1stDimension)+")", "accessing varr index "+RString_ToString(iIndex)+"."); }
 		}
 		return iReturn;
 	}
 	//end class Variables
-	//TODO uncomment: #endregion scripting
 
-	//TODO uncomment: #region mass3d
+	////////////////////////////////// MASS3D //////////////////////////////////////
+
 	//float Mass3d::BottomOffsetRatio() {
 		//return (zSize*.912);
 	//}
@@ -815,39 +857,45 @@ namespace ExpertMultimediaBase {
 	void Mass3d::RotateTowardDest(int iMillisecondsSinceLastCall) {
 		AngleToLimits();
 		AngleDestToLimits();
-		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
-		float xDegMove=((double)xRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
-		float yDegMove=((double)yRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
-		float zDegMove=((double)zRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
-		float fApproach=0;
+		xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
+		register float xDegMove=((double)xRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
+		register float yDegMove=((double)yRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
+		register float zDegMove=((double)zRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
 		if (xDegMove>=FANGLEDIFFPOSITIVE(xRot,xRotDest)) xRot=xRotDest;
+		else xRot=APPROACH(xRot,xRotDest,xDegMove/(xRotDest-xRot));
+		if (yDegMove>=FANGLEDIFFPOSITIVE(yRot,yRotDest)) yRot=yRotDest;
+		else yRot=APPROACH(yRot,yRotDest,yDegMove/(yRotDest-yRot));
+		if (zDegMove>=FANGLEDIFFPOSITIVE(zRot,zRotDest)) zRot=zRotDest;
+		else zRot=APPROACH(zRot,zRotDest,zDegMove/(zRotDest-zRot));
+	}//end RotateTowardDest
+	void Mass3d::RotateTowardDest(float fSeconds) {
+		AngleToLimits();
+		AngleDestToLimits();
+		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
+		float xDegMove=xRotVel*fSeconds;
+		float yDegMove=yRotVel*fSeconds;
+		float zDegMove=zRotVel*fSeconds;
+		float fApproach;
+		float xToDest=FANGLEDIFFPOSITIVE(xRot,xRotDest);
+		float yToDest=FANGLEDIFFPOSITIVE(yRot,yRotDest);
+		float zToDest=FANGLEDIFFPOSITIVE(zRot,zRotDest);
+
+		if (xDegMove>=xToDest) xRot=xRotDest;
 		else {
-	        fApproach=FANGLEDIFFPOSITIVE(xRotDest,xRot)/xDegMove;//xDegMove/360.0f;
-	        if (fApproach>1.0f) fApproach=1.0f;
-	        else if (fApproach<0.0f) fApproach=0.0f;//else if (fApproach<-1.0f) fApproach=-1.0f;
-	        //xRot=APPROACH(xRot,xRotDest,1.0f);//debug only
-	        //fApproach=.5;//debug only
+			fApproach=xDegMove/xToDest;//xDegMove/360.0f;
 			xRot=APPROACH(xRot,xRotDest,fApproach);//commented for debug only//,xDegMove/(xRotDest-xRot));
 		}
-		if (yDegMove>=FANGLEDIFFPOSITIVE(yRot,yRotDest)) yRot=yRotDest;
+		if (yDegMove>=yToDest) yRot=yRotDest;
 		else {
-	        fApproach=FANGLEDIFFPOSITIVE(yRotDest,yRot)/yDegMove;//yDegMove/360.0f;
-	        if (fApproach>1.0f) fApproach=1.0f;
-	        else if (fApproach<0.0f) fApproach=0.0f;//else if (fApproach<-1.0f) fApproach=-1.0f;
-			//yRot=APPROACH(yRot,yRotDest,fApproach);//commented for debug only//,yDegMove/(yRotDest-yRot));
-	        //fApproach=.5;//debug only
-	        yRot=APPROACH(yRot,yRotDest,fApproach);//debug only
+			fApproach=yDegMove/yToDest;//yDegMove/360.0f;
+			yRot=APPROACH(yRot,yRotDest,fApproach);//debug only
 		}
-		if (zDegMove>=FANGLEDIFFPOSITIVE(zRot,zRotDest)) zRot=zRotDest;
+		if (zDegMove>=zToDest) zRot=zRotDest;
 		else {
-	        fApproach=FANGLEDIFFPOSITIVE(zRotDest,zRot)/zDegMove;//zDegMove/360.0f;
-	        if (fApproach>1.0f) fApproach=1.0f;
-	        else if (fApproach<0.0f) fApproach=0.0f;//else if (fApproach<-1.0f) fApproach=-1.0f;
-			//zRot=APPROACH(zRot,zzRotDest,fApproach);//commented for debug only//,zDegMove/(zRotDest-zRot));
-	        //fApproach=.5;//debug only
-	        zRot=APPROACH(zRot,zRotDest,fApproach);//debug only
+			fApproach=zDegMove/zToDest;//zDegMove/360.0f;
+			zRot=APPROACH(zRot,zRotDest,fApproach);//debug only
 		}
-	}
+	}//end RotateTowardDest
 	void Mass3d::HardRotation(float xRotTo, float yRotTo, float zRotTo) {
 		xRotDest=xRotTo;xRot=xRotTo;
 		yRotDest=yRotTo;yRot=yRotTo;
@@ -863,9 +911,35 @@ namespace ExpertMultimediaBase {
 		yVel=ySpeed;
 		zVel=zSpeed;
 	}
-	//TODO uncomment: #endregion mass3d
-	
-	//TODO uncomment: #region mass2d
+	string Mass3d::ToString() {
+		return ToString(false);
+	}
+	string Mass3d::ToString(bool bShowAll) {
+		string sReturn="";
+		int iDecimalPlacesPrev=RString_iDecimalPlacesForToString;
+		RString_iDecimalPlacesForToString=1;
+		if (Mass3d_ToString_bFirstRun) {
+			Console.Error.Write("Mass3d::ToString(bShowAll="+RString_ToString(bShowAll)+")...");
+			Console.Error.Flush();
+		}
+		if (bShowAll) {
+			sReturn=RString_ToString("At(")+RString_ToString(x)+RString_ToString(",")+RString_ToString(y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")")
+			+RString_ToString(":AtVelocity")+RString_ToString("(")+RString_ToString(xVel)+RString_ToString(",")+RString_ToString(yVel)+RString_ToString(",")+RString_ToString(zVel)+RString_ToString(")")
+			+RString_ToString("\n  Rot")+RString_ToString("(")+RString_ToString(xRot)+RString_ToString(",")+RString_ToString(yRot)+RString_ToString(",")+RString_ToString(zRot)+RString_ToString(")")
+			+RString_ToString(":RotDest")+RString_ToString("(")+RString_ToString(xRotDest)+RString_ToString(",")+RString_ToString(yRotDest)+RString_ToString(",")+RString_ToString(zRotDest)+RString_ToString(")");
+		}
+		else {
+			sReturn=RString_ToString("(")+RString_ToString(x)+RString_ToString(",")+RString_ToString(y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")");
+		}
+		RString_iDecimalPlacesForToString=iDecimalPlacesPrev;
+		if (Mass3d_ToString_bFirstRun) {
+			Console.Error.Write("returning...");
+			Console.Error.Flush();
+			Mass3d_ToString_bFirstRun=false;
+		}
+		return sReturn;
+	}//end RString_ToString
+
 
 	int Mass2d::CenterXAbsScaled() {
 		return IROUNDF(FCenterXAbsScaled());
@@ -874,11 +948,11 @@ namespace ExpertMultimediaBase {
 		return IROUNDF(FCenterYAbsScaled());
 	}
 	float Mass2d::FCenterXAbsScaled() {
-	    return (float)rectRender.left+FCenterXRelScaled();
+		return (float)rectRender.left+FCenterXRelScaled();
 		//return (float)rectRender.left + ((float)rectRender.right-(float)rectRender.left) / 2.0f;
 	}
 	float Mass2d::FCenterYAbsScaled() {
-	    return (float)rectRender.top+FCenterYRelScaled();
+		return (float)rectRender.top+FCenterYRelScaled();
 		//return (float)rectRender.top + ((float)rectRender.bottom-(float)rectRender.top) / 2.0f;
 	}
 	float Mass2d::FCenterXRelScaled() {
@@ -886,7 +960,7 @@ namespace ExpertMultimediaBase {
 		//return (float)rectRender.left + ((float)rectRender.right-(float)rectRender.left) / 2.0f;
 	}
 	float Mass2d::FCenterYRelScaled() {
-	    return (float)yCenterRelNonScaled*fScale;
+		return (float)yCenterRelNonScaled*fScale;
 		//return (float)rectRender.top + ((float)rectRender.bottom-(float)rectRender.top) / 2.0f;
 	}
 	float Mass2d::BottomOffsetRatio() {
@@ -925,8 +999,8 @@ namespace ExpertMultimediaBase {
 		else Init(Width,Height);
 	}
 	void Mass2d::SetPixCenter(int xPixNonScaled, int yPixNonScaled) {
-	    xCenterRelNonScaled=xPixNonScaled;
-	    yCenterRelNonScaled=yPixNonScaled;
+		xCenterRelNonScaled=xPixNonScaled;
+		yCenterRelNonScaled=yPixNonScaled;
 	}
 	void Mass2d::SetHitRect(float Top, float Left, float Bottom, float Right) {
 		rectHitDetectPixelBased.left=Left;
@@ -942,20 +1016,21 @@ namespace ExpertMultimediaBase {
 		Init(0,0,100.0f);
 		fScale=1.0f;
 	}
-	bool Gradient::Shade(byte* byarrDest, Uint32 dwDestLoc, byte bySrcValue) {
-		return Shade(byarrDest, dwDestLoc, (Uint32)bySrcValue);
+/*
+	bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, byte bySrcValue) {
+		return Shade(arrbyDest, u32DestLoc, (Uint32)bySrcValue);
 	}
-	bool Gradient::Shade(byte* byarrDest, Uint32 dwDestLoc, Uint32 dwSrcValue) {
+	bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, Uint32 u32SrcValue) {
 		try {
 			if (lpbyShade!=null) {
-				byarrDest[dwDestLoc]=lpbyShade[dwSrcValue];
+				arrbyDest[u32DestLoc]=lpbyShade[u32SrcValue];
 			}
 		}
 		catch (exception& exn) {
-			ShowException(exn,"Gradient::Shade");
+			ShowExn(exn,"Gradient::Shade");
 		}
 		catch (...) {
-			ShowUnknownException("Gradient::Shade");
+			ShowUnknownExn("Gradient::Shade");
 		}
 	}//end Gradient::Shade
 	Gradient::Gradient() {
@@ -963,77 +1038,137 @@ namespace ExpertMultimediaBase {
 		Init(256);
 	}
 	bool Gradient::InitNull() {
-		dwLevels=0;
+		u32Levels=0;
 		lpbyShade=NULL;
 	}
-	bool Gradient::Init(Uint32 dwSetLevels) {
+	bool Gradient::Init(Uint32 u32SetLevels) {
 		try {
 			SafeFree(lpbyShade);
-			lpbyShade=(byte*)malloc(sizeof(byte)*dwSetLevels);
-			dwLevels=dwSetLevels;
+			lpbyShade=(byte*)malloc(sizeof(byte)*u32SetLevels);
+			u32Levels=u32SetLevels;
 		}
 		catch (exception& exn) {
-			ShowException(exn,"Gradient::Init");
+			ShowExn(exn,"Gradient::Init");
 		}
 		catch (...) {
-			ShowUnknownException("Gradient::Init");
+			ShowUnknownExn("Gradient::Init");
 		}
 	}
-	//end classes' methods
+*/
 
-   	bool CopySafe(byte* byarrDest, byte* byarrSrc, int iDestStart, int iSrcStart, int iBytes) {
+	///#endregion methods
+
+	///#region memory
+	/*inline*/ void SafeFree(byte* &refToFreeAndSetToNull) {
+		try {
+			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=NULL;
+		}
+		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    ShowExn(exn, "SafeFree(byte*)");
+		}
+		catch (...) {
+			ShowUnknownExn("SafeFree(byte*)");
+		}
+	}
+	/*inline*/ void SafeFree(char* &refToFreeAndSetToNull) {
+		try {
+			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=NULL;
+		}
+		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    ShowExn(exn, "SafeFree(char*)");
+		}
+		catch (...) {
+			ShowUnknownExn("SafeFree(char*)");
+		}
+	}
+	/*inline*/ void SafeFree(int* &refToFreeAndSetToNull) {
+		try {
+			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=NULL;
+		}
+		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    ShowExn(exn, "SafeFree(int*)");
+		}
+		catch (...) {
+			ShowUnknownExn("SafeFree(int*)");
+		}
+	}
+	/*inline*/ void SafeFree(int** &refToFreeAndSetToNull, int iIndeces) {
+		try {
+			for (int index=0; index<iIndeces; index++) {
+                if (refToFreeAndSetToNull[index]!=NULL) {
+					free(refToFreeAndSetToNull[index]);
+					refToFreeAndSetToNull[index]=NULL;
+				}
+			}
+			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=NULL;
+		}
+		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    ShowExn(exn, "SafeFree(int**,"+RString_ToString(iIndeces)+")");
+		}
+		catch (...) {
+			ShowUnknownExn("SafeFree(int**,"+RString_ToString(iIndeces)+")");
+		}
+	}
+   bool CopySafe(byte* arrbyDest, byte* arrbySrc, int iDestStart, int iSrcStart, int iBytes) {
 		bool bGood=true;
 		try {
-			memcpy(&byarrDest[iDestStart],&byarrSrc[iSrcStart],iBytes);
+			memcpy(&arrbyDest[iDestStart],&arrbySrc[iSrcStart],iBytes);
 		}
 		catch (exception& exn) {
 			bGood=false;
-			ShowException(exn,"CopySafe");
+			ShowExn(exn,"CopySafe");
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException("CopySafe");
+			ShowUnknownExn("CopySafe");
 		}
 		return bGood;
 	}
+	///#endregion memory
+
+	///#region string
 	byte NibbleValueOfHexChar(char cUppercaseLetter) {
 		byte byReturn=0;
 		for (byte iNow=0; iNow<16; iNow++) {
-			if (cUppercaseLetter==carrHex[(int)iNow]) {
+			if (cUppercaseLetter==szHex[(int)iNow]) {
 				byReturn=iNow;
 				break;
 			}
 		}
 		return byReturn;
 	}
-    byte ByteFromHexChars(string sHexPair) {
+	byte HexCharsToByte(string sHexPair) {
 		byte byReturn=0;
-		const char* carrNow=sHexPair.c_str();
-		byReturn=NibbleValueOfHexChar(carrNow[0]);
-		byReturn+=(byte)16*NibbleValueOfHexChar(carrNow[1]);
+		const char* szNow=sHexPair.c_str();
+		byReturn=NibbleValueOfHexChar(szNow[0]);
+		byReturn+=(byte)16*NibbleValueOfHexChar(szNow[1]);
 		return byReturn;
 	}
 	char LowercaseElseZeroIfNotUppercase(char cNow) {
 		char cReturn=(char)0;
 		for (int iNow=0; iNow<26; iNow++) {
-			if (cNow==carrAlphabetUpper[iNow]) {
-				cReturn=carrAlphabetLower[iNow];
+			if (cNow==szAlphabetUpper[iNow]) {
+				cReturn=szAlphabetLower[iNow];
 				break;
 			}
 		}
 		return cReturn;
 	}//LowercaseElseZeroIfNotUppercase
 	string ToUpper(string val) {
-		const char* carrNow=val.c_str();
-		char* carrTemp=(char*)malloc(sizeof(char)*val.length());
+		const char* szNow=val.c_str();
+		char* szTemp=(char*)malloc(sizeof(char)*val.length());
 		for (int iNow=0; iNow<val.length(); iNow++) {
 			//TODO: fix SLOWness
-			char cNow=LowercaseElseZeroIfNotUppercase(carrNow[iNow]);
-			if ((int)cNow>0) carrTemp[iNow]=cNow;
-			else carrTemp[iNow]=carrNow[iNow];
+			char cNow=LowercaseElseZeroIfNotUppercase(szNow[iNow]);
+			if ((int)cNow>0) szTemp[iNow]=cNow;
+			else szTemp[iNow]=szNow[iNow];
 		}
-		val.assign(carrTemp);
-		SafeFree(carrTemp);
+		val.assign(szTemp);
+		SafeFree(szTemp);
 		return val;
 	}//ToUpper
 	bool StartsWith(string val, string sPart) {
@@ -1075,7 +1210,7 @@ namespace ExpertMultimediaBase {
 	bool Compare(char* s1, char* s2) {
 		bool bTest=false;
 		try {
-	    	bTest=(0==strcmp(s1, s2));
+			bTest=(0==strcmp(s1, s2));
 		}
 		catch (...) {
 			ShowError("unknown exception","Compare");
@@ -1083,89 +1218,117 @@ namespace ExpertMultimediaBase {
 		}
 		return bTest;
 	}
-	string ToString(int val) {
+	string RString_ToString(int val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(int)--");
+		if (bFirstRun) Console.Error.Write("RString_ToString(int)--");
 		string sReturn="";
-		char sTemp[2048];
-		strcpyfrom(sTemp,val);
-		sReturn.assign(sTemp);
-		if (bFirstRun) Console.Write("done...");
+		char szTemp[2048];
+		strcpyfrom(szTemp,val);
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
-	string ToString(long val) {
+	string RString_ToString(long val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(long)--");
+		if (bFirstRun) Console.Error.Write("RString_ToString(long)--");
 		string sReturn="";
-		char sTemp[2048];
-		if (bFirstRun) Console.Write("copy...");
-		strcpyfrom(sTemp,val);
-		if (bFirstRun) Console.Write("assign...");
-		sReturn.assign(sTemp);
-		if (bFirstRun) Console.Write("done...");
+		char szTemp[2048];
+		if (bFirstRun) Console.Error.Write("copy...");
+		strcpyfrom(szTemp,val);
+		if (bFirstRun) Console.Error.Write("assign...");
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
-	string ToString(Uint32 val) {
+	string RString_ToString(Uint32 val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(Uint32)--");
+		if (bFirstRun) Console.Error.Write("RString_ToString(Uint32)--");
 		string sReturn="";
-		char sTemp[2048];
-		if (bFirstRun) Console.Write("copy...");
-		strcpyfrom(sTemp,val);
-		if (bFirstRun) Console.Write("assign...");
-		sReturn.assign(sTemp);
-		if (bFirstRun) Console.Write("done...");
+		char szTemp[2048];
+		if (bFirstRun) Console.Error.Write("copy...");
+		strcpyfrom(szTemp,val);
+		if (bFirstRun) Console.Error.Write("assign...");
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
-	string ToString(float val) {
+	string RString_ToString(float val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(float)--");
+		if (bFirstRun) Console.Error.Write("RString_ToString(float)--");
 		string sReturn="";
-		char sTemp[2048];
-		if (bFirstRun) Console.Write("copy...");
-		strcpyfrom(sTemp,(double)val);
-		if (bFirstRun) Console.Write("assign...");
-		sReturn.assign(sTemp);
-		if (bFirstRun) Console.Write("done...");
+		char szTemp[2048];
+		if (bFirstRun) Console.Error.Write("copy...");
+		if (RString_iDecimalPlacesForToString>=0) strcpyfrom(szTemp,val,RString_iDecimalPlacesForToString);
+		else strcpyfrom(szTemp,val);
+		if (bFirstRun) Console.Error.Write("assign...");
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
-	string ToString(double val) {
+	string RString_ToString(double val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(double)--");
+		if (bFirstRun) Console.Error.Write("RString_ToString(double)--");
 		string sReturn="";
-		char sTemp[2048];
-		if (bFirstRun) Console.Write("copy...");
-		strcpyfrom(sTemp,val);
-		if (bFirstRun) Console.Write("assign...");
-		sReturn.assign(sTemp);
-		if (bFirstRun) Console.Write("done...");
+		char szTemp[2048];
+		if (bFirstRun) Console.Error.Write("copy...");
+		if (RString_iDecimalPlacesForToString>=0) strcpyfrom(szTemp,val,RString_iDecimalPlacesForToString);
+		else strcpyfrom(szTemp,val);
+		if (bFirstRun) Console.Error.Write("assign...");
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
-	string ToString(string val) {
+	string RString_ToString(long double val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(string)--");
-		if (bFirstRun) Console.Write("done...");
+		if (bFirstRun) Console.Error.Write("RString_ToString(double)--");
+		string sReturn="";
+		char szTemp[2048];
+		if (bFirstRun) Console.Error.Write("copy...");
+		if (RString_iDecimalPlacesForToString>=0) strcpyfrom(szTemp,val,RString_iDecimalPlacesForToString);
+		else strcpyfrom(szTemp,val);
+		if (bFirstRun) Console.Error.Write("assign...");
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
+		bFirstRun=false;
+		return sReturn;
+	}
+	string RString_ToString(string val) {
+		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
+		if (bFirstRun) Console.Error.Write("RString_ToString(string)--");
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return val;
 	}
-	string ToString(char* val) {
+	string RString_ToString(char* val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(char*)--");
+		if (bFirstRun) Console.Error.Write("RString_ToString(char*)--");
 		string sReturn="";
 		sReturn.assign(val);
-		if (bFirstRun) Console.Write("done...");
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
-	string ToString(bool val) {
+	string RString_ToString(char val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Write("ToString(bool)--");
-		if (bFirstRun) Console.Write("done...");
+		if (bFirstRun) Console.Error.Write("RString_ToString(char)--");
+		string sReturn="";
+		char szTemp[2];
+		szTemp[0]=val;
+		szTemp[1]='\0';
+		sReturn.assign(szTemp);
+		if (bFirstRun) Console.Error.Write("done...");
+		bFirstRun=false;
+		return sReturn;
+	}
+	string RString_ToString(bool val) {
+		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
+		if (bFirstRun) Console.Error.Write("RString_ToString(bool)--");
+		if (bFirstRun) Console.Error.Write("done...");
 		bFirstRun=false;
 		return val?"true":"false";
 	}
@@ -1198,10 +1361,10 @@ namespace ExpertMultimediaBase {
 			int iStartNow=0;
 			int iLenNow=0;
 			string sCharNow;
-			Console.Write("Parsing "+ToString(val.length())+ToString(" chars..."));
+			Console.Error.Write("Parsing "+RString_ToString(val.length())+RString_ToString(" chars..."));
 			for (int iNow=0; iNow<val.length(); iNow++) {
 				sCharNow=val.substr(iNow,1);
-				Console.Write(" '"+sCharNow+ToString("'"));
+				Console.Error.Write(" '"+sCharNow+RString_ToString("'"));
 				if (sCharNow=="\"") { bInQuotes=!bInQuotes; iLenNow++; }
 				else if (bAllowCurleyBracesRecursively_FalseIgnoresThem && !bInQuotes && sCharNow=="{") { iInCurleyBraces++; iLenNow++;}
 				else if (bAllowCurleyBracesRecursively_FalseIgnoresThem && !bInQuotes && sCharNow=="}") { iInCurleyBraces--; iLenNow++;}
@@ -1215,7 +1378,7 @@ namespace ExpertMultimediaBase {
 						}
 					}
 					else {
-                   		Console.Write("("+ToString(iStartNow)+ToString(",")+ToString(iLenNow)+ToString(")"));
+				   		Console.Error.Write("("+RString_ToString(iStartNow)+RString_ToString(",")+RString_ToString(iLenNow)+RString_ToString(")"));
 					}
 					iLenNow=0;
 					iStartNow=iNow+1;
@@ -1233,11 +1396,11 @@ namespace ExpertMultimediaBase {
 				}
 			}
 			iCols++;
-			if (bCountOnlyAndDontTouchArray) Console.Write("done parsing "+ToString(iCols)+ToString(" cols..."));
+			if (bCountOnlyAndDontTouchArray) Console.Error.Write("done parsing "+RString_ToString(iCols)+RString_ToString(" cols..."));
 		}
-		catch (exception& exn) { ShowException(exn,"GetCSVRow");
+		catch (exception& exn) { ShowExn(exn,"GetCSVRow");
 		}
-		catch (...) { ShowUnknownException("GetCSVRow");
+		catch (...) { ShowUnknownExn("GetCSVRow");
 		}
 		return iCols;
 	}//end GetCSVRow
@@ -1245,8 +1408,8 @@ namespace ExpertMultimediaBase {
 		string* sarrIgnored=null;
 		int iReturn=0;
 		if ( StartsWith(val,"{") && EndsWith(val,"}") ) {
-		    if (val.length()>2) iReturn=GetCSVRow(sarrIgnored,SafeSubstring(val,1,val.length()-2),true);
-		    else iReturn=1;
+			if (val.length()>2) iReturn=GetCSVRow(sarrIgnored,SafeSubstring(val,1,val.length()-2),true);
+			else iReturn=1;
 		}
 		return iReturn;
 	}
@@ -1296,9 +1459,9 @@ namespace ExpertMultimediaBase {
 			}
 			else valReturn="";
 		}
-		catch (exception& exn) { ShowException(exn,"GetForcedCArrayNotationSubstring");
+		catch (exception& exn) { ShowExn(exn,"GetForcedCArrayNotationSubstring");
 		}
-		catch (...) { ShowUnknownException("GetForcedCArrayNotationSubstring");
+		catch (...) { ShowUnknownExn("GetForcedCArrayNotationSubstring");
 		}
 		return bGood;
 	}//end GetForcedCSVNotationSubstring
@@ -1315,113 +1478,635 @@ namespace ExpertMultimediaBase {
 			else bGood=false;
 			if (bGood==false) valReturn=val;
 		}
-		catch (exception& exn) { ShowException(exn,"GetForcedCArrayNotationSubstring");
+		catch (exception& exn) { ShowExn(exn,"GetForcedCArrayNotationSubstring");
 		}
-		catch (...) { ShowUnknownException("GetForcedCArrayNotationSubstring");
+		catch (...) { ShowUnknownExn("GetForcedCArrayNotationSubstring");
 		}
 		return bGood;
 	}//end GetForcedCArrayNotationSubstring
-	//TODO uncomment: #region inline functions
-
-	/*
-	//void strcatfromsiverrno(char*, int);
-	//void strcpyfromsiverrno(char*, int);
 
 
+	/// SIMPLE FUNCTIONS USING INTRINSIC TYPES ///
 
-	//TODO uncomment: #endregion
-	
-	//TODO uncomment: #region error functions
+
+	void trunc(char *s, int i) {
+		s[i]='\0';
+	}
+
+	void Upperstring(char *s) {
+		static int iAt;
+		iAt=strlen(s)-1;
+		while (iAt>=0) {
+			if (islower(s[iAt])) s[iAt]=toupper(s[iAt]);
+			iAt--;
+		}
+		return;
+	}
+	void Lowerstring(char *s) {
+		static int iAt;
+		iAt=strlen(s)-1;
+		while (iAt>=0) {
+			if (isupper(s[iAt])) s[iAt]=tolower(s[iAt]);
+			iAt--;
+		}
+		return;
+	}
+	void DetectSlashType(char *sFullPath) { //always run this before using directory sz
+		if (slash[0]!='/' && sFullPath[0]=='/') slash[0]='/';
+		return;
+	}
+	void ValidateSlash(char *sDir) { //detects slash type and adds slash if needed
+		DetectSlashType(sDir);
+		if (sDir[ strlen(sDir)-1 ] != slash[0]) {
+			if (strlen(sDir)+1<MAX_PATH) strcat(sDir,slash);
+		}
+		return;
+	}
+	bool IsLikeMask(char *sFullPath1, char *sMask1) {
+	//limitations: gets confused if mask has 2 asterisks directly in a row
+		static char sDir[MAX_PATH], sMask[MAX_PATH];
+		strcpy(sDir,sFullPath1);//necessary to recopy because of Lowerstring, AND for removal of slash
+		strcpy(sMask,sMask1);
+		Lowerstring(sDir);
+		Lowerstring(sMask);
+		DetectSlashType(sDir);
+		int iDirLen=strlen(sDir);
+		int iDirPlace=iDirLen-1;
+		if (sDir[iDirPlace]==slash[0]) sDir[iDirPlace]='\0';
+		int iMaskLen=strlen(sMask);
+		if ((sDir[iDirLen-1]!=sMask[iMaskLen-1]) && (sMask[iMaskLen-1]!='*')) return(false);
+		while (iDirPlace>=0 && sMask[iDirPlace]!=slash[0]) iDirPlace--;
+		int iToMatch=0;//characters to find (not the asterisks)
+		for (int i=0; i<iMaskLen; i++) {
+						if (sMask[i]!='*') iToMatch++;
+		}
+		//error_txt+"iToMatch="+RString_ToString(iToMatch));
+		int iMatches=0;
+		int iMaskPlace;
+		for (iMaskPlace=0; iMaskPlace<iMaskLen && iDirPlace<iDirLen; iMaskPlace++) {
+			if (sMask[iMaskPlace]==sDir[iDirPlace]) {
+				iDirPlace++;
+				iMatches++;
+			}
+			else if (sMask[iMaskPlace]=='*') {
+				if (iMaskPlace+1<iMaskLen) {
+					iMaskPlace++;
+					while (iDirPlace<iDirLen && sMask[iMaskPlace]!=sDir[iDirPlace]) {
+						iDirPlace++;
+					}
+					if (iDirPlace<iDirLen && sMask[iMaskPlace]==sDir[iDirPlace]) {
+						iDirPlace++;
+						iMatches++;
+					}
+				}
+			}
+		}
+		//error_txt+"iMatches="+RString_ToString(iMatches));
+		return((iMatches==iToMatch)?true:false);
+	} // end IsLikeMask
+
+	void strcatfrom(char *sz, int i) {
+		if (i==0) {
+			strcat(sz, "0");
+			return;
+		}
+		else if (i<0) { //if negative
+			strcat(sz, "-");
+			i=abs(i);
+		}
+		char sDigit[10][2] = {"0","1","2","3","4","5","6","7","8","9"};
+		int iExpOfTen = 0;
+		int iTemp = i;
+		while (iTemp>9) {
+			iTemp/=10;
+			iExpOfTen++;
+		}
+		iTemp=i;
+		int iDivisor;
+		while (iExpOfTen>=0) {
+			iDivisor=int(pow((long double)10, (long double)iExpOfTen));
+			if (iDivisor) {
+				strcat(sz, sDigit[iTemp/iDivisor]);
+				iTemp-=iDivisor*int(iTemp/iDivisor);
+			}
+			else {
+			}
+			iExpOfTen--;
+		}
+		return;
+	}
+	void strcatfrom(char *sz, long val) {
+		if (val==0) {
+			strcat(sz, "0");
+			return;
+		}
+		else if (val<0) { //if negative
+			strcat(sz, "-");
+			val=abs(val);
+		}
+		char sDigit[10][2] = {"0","1","2","3","4","5","6","7","8","9"};
+		long iExpOfTen = 0;
+		long iTemp = val;
+		while (iTemp>9) {
+			iTemp/=10;
+			iExpOfTen++;
+		}
+		iTemp=val;
+		long iDivisor;
+		while (iExpOfTen>=0) {
+			iDivisor=long(pow((long double)10, (long double)iExpOfTen));
+			if (iDivisor) {
+				strcat(sz, sDigit[iTemp/iDivisor]);
+				iTemp-=iDivisor*long(iTemp/iDivisor);
+			}
+			else {
+			}
+			iExpOfTen--;
+		}
+		return;
+	}
+	void strcatfrom(char *sz, Uint32 val) {
+		if (val==0) {
+			strcat(sz, "0");
+			return;
+		}
+		//else if (val<0) { //if negative
+		//	strcat(sz, "-");
+		//	val=abs(val);
+		//}
+		char sDigit[10][2] = {"0","1","2","3","4","5","6","7","8","9"};
+		int iExpOfTen = 0;
+		Uint32 iTemp = val;
+		while (iTemp>9) {
+			iTemp/=10;
+			iExpOfTen++;
+		}
+		iTemp=val;
+		unsigned long divisor;
+		while (iExpOfTen>=0) {
+			divisor=int(pow((long double)10, (long double)iExpOfTen));
+			if (divisor) {
+				strcat(sz, sDigit[iTemp/divisor]);
+				iTemp-=divisor*(Uint32)(iTemp/divisor);
+			}
+			else {
+			}
+			iExpOfTen--;
+		}
+		return;
+	}//end strcatfrom Uint32
+
+	void strcpyfrom(char *sz, int i) {
+		sz[0]='\0';
+		strcatfrom(sz, i);
+	}
+	void strcpyfrom(char *sz, long val) {
+		sz[0]='\0';
+		strcatfrom(sz, val);
+	}
+	void strcpyfrom(char *sz, Uint32 val) {
+		sz[0]='\0';
+		strcatfrom(sz, val);
+	}
+
+	void strcatfrom(char *sNum, register float d1, int iMaxDecimals) {
+		int iExp10Max=-iMaxDecimals;
+		if (d1==0.0f) {
+			strcat(sNum,"0.0");
+			return;
+		}
+		//sNum[0]='\0';
+		if (d1<0.0f) { //if negative
+			strcat(sNum, "-");
+			d1=fabs(d1);//set abs
+		}
+		register float d=d1;//d is the destructible version
+		int iExp10=15;//DMAXEXP;
+		while (d<pow(10.0f,iExp10)) iExp10--;
+		////error_txt+"float iExp10's = ";
+		if (iExp10<0) iExp10=0; //make sure leading zeros get copied
+		const static float DMINEXP=-15;
+		while ( (d>0 && iExp10>=DMINEXP && iExp10>iExp10Max) || iExp10>=-1 ) {
+			if ( (Uint32)( d/pow(10.0f,iExp10) ) < 10 ) {
+				//error_txt+"["+(Uint32)( d/pow(10,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console.Error.Flush();
+				strcat(sNum, sDigit[(Uint32)( d/pow(10.0f,iExp10) )]);
+				if (iExp10==0) strcat(sNum, ".");
+			}
+			//else {
+				//error_txt+"ERROR: strcatfromdouble()'s (Uint32)( d/pow(10,iExp10) ) isn't < 10! =("+(Uint32)( d/pow(10.0f,iExp10) )+")");
+			//}
+			d-=(float)((Uint32)( d/pow(10.0f,iExp10) ))*pow(10.0f,iExp10);//Uint32 to truncate
+			iExp10--;
+		}
+		return;
+	}//end strcatfrom(char *sNum, register float d1, int iMaxDecimals) {
+	void strcatfrom(char *sNum, register double d1, int iMaxDecimals) {
+		int iExp10Max=-iMaxDecimals;
+		if (d1==0.0) {
+			strcat(sNum,"0.0");
+			return;
+		}
+		//sNum[0]='\0';
+		if (d1<0.0) { //if negative
+			strcat(sNum, "-");
+			d1=fabs(d1);//set abs
+		}
+		register double d=d1;//d is the destructible version
+		int iExp10=15;//DMAXEXP;
+		while (d<pow(10.0/*d*/,iExp10)) iExp10--;
+		////error_txt+"float iExp10's = ";
+		if (iExp10<0) iExp10=0; //make sure leading zeros get copied
+		const static double DMINEXP=-15;
+		while ( (d>0 && iExp10>=DMINEXP && iExp10>iExp10Max) || iExp10>=-1 ) {
+			if ( (Uint32)( d/pow(10.0/*d*/,iExp10) ) < 10 ) {
+				//error_txt+"["+(Uint32)( d/pow(10.0/*d*/,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console.Error.Flush();
+				strcat(sNum, sDigit[(Uint32)( d/pow(10.0/*d*/,iExp10) )]);
+				if (iExp10==0) strcat(sNum, ".");
+			}
+			else {
+				//error_txt+"ERROR: strcatfromdouble()'s (Uint32)( d/pow(10.0/*d*/,iExp10) ) isn't < 10! =("+(Uint32)( d/pow(10.0/*d*/,iExp10) )+")");
+			}
+			d-=double((Uint32)( d/pow(10.0/*d*/,iExp10) ))*pow(10.0/*d*/,iExp10);
+			iExp10--;
+		}
+		return;
+	}
+	void strcatfrom(char *sNum, register long double d1, int iMaxDecimals) {
+		int iExp10Max=-iMaxDecimals;
+		if (d1==0.0) {
+			strcat(sNum,"0.0");
+			return;
+		}
+		//sNum[0]='\0';
+		if (d1<0.0) { //if negative
+						strcat(sNum, "-");
+						d1=fabs(d1);//set abs
+		}
+		register double d=d1;//d is the destructible version
+		int iExp10=15;//DMAXEXP;
+		while (d<pow(10.0L,iExp10)) iExp10--; //L is long double
+		////error_txt+"float iExp10's = ";
+		if (iExp10<0) iExp10=0; //make sure leading zeros get copied
+		const static double DMINEXP=-15;
+		while ( (d>0 && iExp10>=DMINEXP && iExp10>iExp10Max) || iExp10>=-1 ) {
+			if ( (Uint32)( d/pow(10.0L,iExp10) ) < 10 ) {
+				//error_txt+"["+(Uint32)( d/pow(10.0L,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console.Error.Flush();
+				strcat(sNum, sDigit[(Uint32)( d/pow(10.0L,iExp10) )]);
+				if (iExp10==0) strcat(sNum, ".");
+			}
+			else {
+				//error_txt+"ERROR: strcatfromdouble()'s (Uint32)( d/pow(10.0L,iExp10) ) isn't < 10! =("+(Uint32)( d/pow(10.0L,iExp10) )+")");
+			}
+			d-=double((Uint32)( d/pow(10.0L,iExp10) ))*pow(10.0L,iExp10);
+			iExp10--;
+		}
+		return;
+	}
+	void strcatfrom(char *sNum, register float d1) {
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+	void strcatfrom(char *sNum, register double d1) {
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+	void strcatfrom(char *sNum, register long double d1) {
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+
+	void strcpyfrom(char *sNum, register float d1, int iMaxDecimals) {
+		sNum[0]='\0';//effectively, strcpy
+		strcatfrom(sNum, d1, iMaxDecimals);
+	}
+	//overload it without Max Decimals, so set MaxDecimals to 10:
+	void strcpyfrom(char *sNum, register float d1) {
+		sNum[0]='\0';//effectively, strcpy
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+	void strcpyfrom(char *sNum, register double d1, int iMaxDecimals) {
+		sNum[0]='\0';//effectively, strcpy
+		strcatfrom(sNum, d1, iMaxDecimals);
+	}
+	//overload it without Max Decimals, so set MaxDecimals to 10:
+	void strcpyfrom(char *sNum, register double d1) {
+		sNum[0]='\0';//effectively, strcpy
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+	void strcpyfrom(char *sNum, register long double d1) {
+		sNum[0]='\0';//effectively, strcpy
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+	void strcpyfrom(char *sNum, register long double d1, int iMaxDecimals) {
+		sNum[0]='\0';//effectively, strcpy
+		strcatfrom(sNum, d1, 10);//-(DMINEXP));
+	}
+
+	int IntOfChar(char *cDigitX) {
+		static int iErrLevel=0;
+		for (register int i=0; i<10; i++) {
+			if (*cDigitX==cDigit[i]) return(i);
+		}
+		//return before now usually
+		//if (iErrLevel<10)error_txt+"IntOfChar error: "+*cDigitX+" is not an integer!";//error if didn't return yet;
+		//else if (iErrLevel<11)error_txt+"LAST WARNING -- IntOfChar error: "+*cDigitX+" is not an integer!";//error if didn't return yet;
+		iErrLevel++;
+		return(0);
+	}
+	bool substrcpy(char* sDest, char* sSrc, int iStart, int iLen) {
+		bool bGood=false;
+		try {
+			//memcpy( (byte*)sDest, ( ((byte*)sSrc)+iStart*sizeof(char) ), iLen*sizeof(char) );
+			for (int iNow=0; iNow<iLen; iNow++) {
+				sDest[iNow]=sSrc[iStart+iNow];
+			}
+			sDest[iLen]='\0';
+			bGood=true;
+		}
+		catch(...) {
+			try {
+				Console.Error.WriteLine("Exception in substrcpy(\""+RString_ToString(sDest)+"\",\""+RString_ToString(sSrc)+"\","+RString_ToString(iStart)+","+RString_ToString(iLen)+")");
+			}
+			catch (...) {
+	            Console.Error.WriteLine("Exception:");
+				try {
+					Console.Error.WriteLine("  substrcpy Dest:"+RString_ToString(sDest));
+				}
+				catch (...) {
+					Console.Error.WriteLine("  substrcpy(bad Dest sz sent)");
+				}
+				try {
+					Console.Error.WriteLine("  substrcpy Src:"+RString_ToString(sSrc));
+				}
+				catch (...) {
+					Console.Error.WriteLine("  substrcpy(bad Source sz sent)");
+				}
+				Console.Error.WriteLine("  substrcpy iStart:"+RString_ToString(iStart));
+				Console.Error.WriteLine("  substrcpy iLen:"+RString_ToString(iLen));
+			}
+		}
+		if (!bGood) {
+			try {
+				sDest[0]='\0';
+			}
+			catch(...) {
+				//don't report this
+			}
+		}
+	}//substrcpy
+	bool Crop(char* &sVal, int iStart) {
+		bool bGood=false;
+		try {
+			char* sTemp=(char*)malloc(sizeof(char)*strlen(sVal));
+			strcpy(sTemp,(char*)(sVal+iStart));
+			SafeFree(sVal);
+			sVal=sTemp;
+			sTemp=NULL;
+			bGood=true;
+		}
+		catch (...){
+			Console.Error.WriteLine("Exception in Crop char*");
+			bGood=false;
+		}
+		return bGood;
+	}
+	int IntOfString(char *sNum) {
+		register Uint32 u32Strlen=strlen(sNum);
+		register Uint32 u32=0;//loop var
+		register Uint32 u32IsNeg=0;
+		if (sNum[0]=='-') u32IsNeg=1;
+		register int iExp10=strlen(sNum)-1-int(u32IsNeg);
+		register int iReturn=0;
+		for (u32=u32IsNeg; u32<u32Strlen; u32++) {
+			if (sNum[u32]!='.') {
+				iReturn+=(int)( powl((long double)10,(long double)iExp10)*(long double)IntOfChar(&sNum[u32]) );//math.h: long powl(10,int)
+				iExp10--;
+			}
+		}
+		if (u32IsNeg==1) iReturn*=-1;
+		return(iReturn);
+	}//end IntOfString
+	double DoubleOfString(char *sNum) {
+		register Uint32 u32Strlen=strlen(sNum);
+		register Uint32 u32=0;//loop var
+		register int iExp10=-1;
+		register Uint32 u32IsNeg=0;
+		if (sNum[0]=='-') {
+			u32IsNeg=1;
+		}
+		for (u32=u32IsNeg; u32<u32Strlen && sNum[u32]!='.'; u32++) {
+			iExp10++;
+		}
+		register double dReturn=0;
+		for (u32=u32IsNeg; u32<u32Strlen; u32++) {
+			if (sNum[u32]!='.') {
+				dReturn+=pow(10.0/*d*/,iExp10)*(double)IntOfChar(&sNum[u32]);//math.h: double pow(10.0/*d*/,int)
+				iExp10--;
+			}
+		}
+		if (u32IsNeg==1) dReturn*=-1;
+		return(dReturn);
+	}
+
+	float FloatOfString(char *sNum) {
+		register Uint32 u32Strlen=strlen(sNum);
+		register Uint32 u32=0;//loop var
+		register int iExp10=-1;
+		register Uint32 u32IsNeg=0;
+		if (sNum[0]=='-') {
+			u32IsNeg=1;
+		}
+		for (u32=u32IsNeg; u32<u32Strlen && sNum[u32]!='.'; u32++) {
+			iExp10++;
+		}
+		register float fReturn=0;
+		for (u32=u32IsNeg; u32<u32Strlen; u32++) {
+			if (sNum[u32]!='.') {
+				fReturn+=powl(10,iExp10)*(long double)IntOfChar(&sNum[u32]);//math.h: long double powl(10,int)
+				iExp10--;
+			}
+		}
+		if (u32IsNeg==1) fReturn*=-1;
+		return(fReturn);
+	}
+
+	bool IsExt(char *sFull1, char *sExt1) {
+		static char sFull[MAX_PATH];
+		static char sExt[MAX_PATH];
+		strcpy(sFull, sFull1);
+		strcpy(sExt, sExt1);
+		Upperstring(sFull);
+		Upperstring(sExt);
+
+		int iFullLen=strlen(sFull);
+		int iExtLen=strlen(sExt);
+		bool bTrue=true;
+		if (sFull[iFullLen-iExtLen-1]!='.') bTrue=false;
+		else {
+			int iExtNow=0;
+			for (int iFullNow=iFullLen-iExtLen; iFullNow<iFullLen; iFullNow++, iExtNow++) {
+				if (sFull[iFullNow]!=sExt[iExtNow]) {
+					bTrue=false;
+					break;
+				}
+			}
+		}
+		return(bTrue);
+	}
+	bool ExistsAt(char* sHaystack, char* sNeedle, int iAtHaystack) {
+		bool bMatch=false;
+		try {
+			int iMatchingChars=0;
+			int iLen=strlen(sNeedle);
+			int iHaystack=iAtHaystack;
+			for (int iNow=0; iNow<iLen; iNow++, iHaystack++) {
+				if (sHaystack[iHaystack]==sNeedle[iNow]) {
+					iMatchingChars++;
+				}
+				else break;
+			}
+			if (iMatchingChars==iLen) bMatch=true;
+		}
+		catch (...) {
+			ShowError("Exception in ExistsAt");
+		}
+	}
+
+	/*inline*/ int IndexOf(char* sHaystack, char* sNeedle) {
+		int iMaxLoops=1000000;
+		int iNow=0;
+		int iFound=-1;
+		try {
+			while (sHaystack[iNow]!='\0') {
+				if ( ExistsAt(sHaystack,sNeedle,iNow) ) {
+					iFound=iNow;
+					break;
+				}
+				iNow++;
+				if (iNow>iMaxLoops) break;
+			}
+		}
+		catch (exception& exn) {
+			ShowExn(exn,"IndexOf");
+		}
+		catch (char* szExn) {
+			ShowAndDeleteException(szExn,"IndexOf");
+		}
+		catch (...) {
+			ShowUnknownExn("IndexOf");
+		}
+		return iFound;
+	}//end IndexOf
+
+	///#endregion string
+
+	///#region reporting
 	bool ShowErr() {
 		return ShowError();
 	}
+	//bool ShowErr(string sMsg, string sCurrentFunction) {
+	//	return ShowError(sMsg,sCurrentFunction);
+	//}
 	bool ShowError() {
 		bool bPermission=false;
 		if (iErrors<iMaxErrors) {
 			bPermission=true;
 		}
 		else if (iErrors==iMaxErrors) {
-			Console.Error.WriteLine("Too many errors ("+ToString(iErrors)+")--this is the last one that will be shown:");
+			Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last one that will be shown:");
 			bPermission=true;
 		}
 		iErrors++;
+	}
+	bool ShowErr(string sMsg) {
+		return ShowError(sMsg,"");
+	}
+	bool ShowError(string sMsg) {
+		bool bGood=true;
+		if (iErrors<iMaxErrors) {
+			try {
+				Console.Error.WriteLine(sMsg);
+			}
+			catch (exception& exn) { Console.Error.WriteLine("ShowError (self-exception)"+RString_ToString(exn.what())); }
+			catch (...) { Console.Error.WriteLine("Default self-exception during exception output."); }
+		}
+		else if (iErrors==iMaxErrors) { //if > do nothing!
+			Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sMsg);
+		}
+		iErrors++;
+		return bGood;
+	}//end ShowError
+	bool ShowErr(string sMsg, string sCurrentFunction) {
+		return ShowError(sMsg,sCurrentFunction);
+	}
+	bool ShowError(string sMsg, string sCurrentFunction) {
+		bool bGood=true;
+		if (ShowError()) Console.Error.WriteLine(sCurrentFunction+": "+sMsg);
+		return bGood;
+	}
+	bool ShowError(int iSivErrNo, string sMsg, string sCurrentFunction) {
+		bool bGood=true;
+		char szTemp[2048];//=(char*)malloc(10240*sizeof(char));
+		if (iSivErrNo!=0) {
+			if (iErrors<iMaxErrors) {
+				try {
+					szTemp[0]='\0';
+					strcatfromsiverrno(szTemp, iSivErrNo);
+					Console.Error.WriteLine(sCurrentFunction+": "+RString_ToString(szTemp)+": "+sMsg);
+				}
+				catch (exception& exn) { Console.Error.WriteLine("ShowError (self-exception)"+RString_ToString(exn.what())); }
+				catch (...) { Console.Error.WriteLine("Default self-exception during exception output."); }
+			}
+			else if (iErrors==iMaxErrors) { //if > do nothing!
+				Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sCurrentFunction+" {szTemp:"+RString_ToString(szTemp)+"}: "+sMsg);
+			}
+			iErrors++;
+		}//end if iSivErrNo!=0
+		return bGood;
+	}//end ShowError
+	bool ShowError(int iSivErrNo, string sCurrentFunction) {
+		bool bGood=true;
+		if (ShowError()) {
+			char szTemp[2048];
+			strcpyfromsiverrno(szTemp,iSivErrNo);
+			Console.Error.WriteLine(sCurrentFunction+": "+szTemp);
+		}
+		return bGood;
 	}
 	void ShowAndDeleteException(char* &sExn, string sFuncNow) {
 		ShowAndDeleteException(sExn,sFuncNow,"");
 	}
 	void ShowAndDeleteException(char* &sExn, string sFuncNow, string sVerbNow) {
 		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) cerr<<"Exception in "<<sFuncNow<<sVerbNow<<": "<<sExn<<endl;
+		if (ShowErr()) Console.Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+sExn);
 		SafeFree(sExn);
 	}
-	void ShowException(exception& exn, string sFuncNow) {
-		ShowException(exn,sFuncNow,"");
+	void ShowExn(exception& exn, string sFuncNow) {
+		ShowExn(exn,sFuncNow,"");
 	}
-	void ShowException(exception& exn, string sFuncNow, string sVerbNow) {
+	void ShowExn(exception& exn, string sFuncNow, string sVerbNow) {
 		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) cerr<<"Exception in "<<sFuncNow<<sVerbNow<<": "<<exn.what();
+		if (ShowErr()) Console.Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+RString_ToString(exn.what()));
 	}
-	void ShowUnknownException(string sFuncNow, string sVerbNow) {
+	void ShowUnknownExn(string sFuncNow, string sVerbNow) {
 		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) cerr<<"Unknown Exception in "<<sFuncNow<<sVerbNow<<"."<<endl;
+		if (ShowErr()) Console.Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+".");
 	}
-	void ShowUnknownException(string sFuncNow) {
-		ShowUnknownException(sFuncNow,"");
+	void ShowUnknownExn(string sFuncNow) {
+		ShowUnknownExn(sFuncNow,"");
 	}
-	void ShowError(string sMsg, string sCurrentFunction) {
-		if (ShowError()) cerr<<sCurrentFunction<<": "<<sMsg<<endl;
-	}
-	void ShowError(int iSivErrNo, string sMsg, string sCurrentFunction) {
-		char sTemp[2048];//=(char*)malloc(10240*sizeof(char));
-		if (iSivErrNo!=0) {
-			if (iErrors<iMaxErrors) {
-				try {
-	    			sTemp[0]='\0';
-					strcatfromsiverrno(sTemp, iSivErrNo);
-					cerr<<"In "<<sCurrentFunction<<" -- "<<sTemp<<": "<<sMsg<<endl;
-				}
-				catch (exception& exn) { cerr<<"ShowError (self-exception)"<<exn.what()<<endl; }
-				catch (...) { cerr<<"Default self-exception during exception output."<<endl; }
-			}
-			else if (iErrors==iMaxErrors) { //if > do nothing!
-		        cerr<< "Too many errors ("<<iErrors<<")--this is the last that will be shown: \n\t"<<"In "<<sCurrentFunction<<" -- "<<sTemp<<": "<<sMsg<<endl;
-			}
-			iErrors++;
-		}//end if iSivErrNo!=0
-	}//end ShowError
-	void ShowError(int iSivErrNo, string sCurrentFunction) {
-		if (ShowError()) {
-			char sTemp[2048];
-			strcpyfromsiverrno(sTemp,iSivErrNo);
-			cerr<<sCurrentFunction<<": "<<sTemp<<endl;
-		}
-	}
-	void ShowError(string sMsg) {
-		if (iErrors<iMaxErrors) {
-			try {
-				cerr<<sMsg<<endl;
-			}
-			catch (exception& exn) { cerr<<"ShowError (self-exception)"<<exn.what()<<endl; }
-			catch (...) { cerr<<"Default self-exception during exception output."<<endl; }
-		}
-		else if (iErrors==iMaxErrors) { //if > do nothing!
-	        cerr<< "Too many errors ("<<iErrors<<")--this is the last that will be shown: \n\t" <<sMsg<<endl;
-		}
-		iErrors++;
-	}//end ShowError
 	void FakeException(string sExn) { //TODO: remove this and all calls to it
 		if (iErrors<iMaxErrors) {
 			try {
-				cerr<<"Exception error: "<<sExn<<endl;
+				Console.Error.WriteLine("Could not finish: "+sExn);
 			}
-			catch (exception& exn) { cerr<<"FakeException (self-exception)"<<exn.what()<<endl; }
-			catch (...) { cerr<<"Default self-exception during exception output."<<endl; }
+			catch (exception& exn) { Console.Error.WriteLine("Could not finish while showing exception: "+RString_ToString(exn.what())); }
+			catch (...) { Console.Error.WriteLine("Could not finish while showing exception."); }
 		}
 		else if (iErrors==iMaxErrors) { //if > do nothing!
-	        cerr<< "Too many errors ("<<iErrors<<")--this is the last that will be shown: \n\t" << sExn << endl;
+			Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sExn);
 		}
 		iErrors++;
 	}//end FakeException
+	//void strcatfromsiverrno(char*, int);
+	//void strcpyfromsiverrno(char*, int);
 	void strcpyfromsiverrno(char* s, int i) {
 		if (s==NULL) {// sErr=(char*)malloc(255*sizeof(char));
 			//ShowError(NULL,"s==NULL!","strcatfromsiverrno",0);
@@ -1570,8 +2255,20 @@ namespace ExpertMultimediaBase {
 			strcat(sErr,"No Description");
 		return;
 	}//end strcatfromsiverrno
+	/*inline*/ bool stringerrors(char *sz, Uint32 u32MaxBuff) {
+		if (sz==NULL) {
+			//error_txt+"STRING ERROR: "+"sz is NULL!!!");
+			return(true);
+		}
+		if (strlen(sz)<1 || strlen(sz)>=u32MaxBuff) {
+			//error_txt+"STRING ERROR: "+strlen(sz)+" is strlen(sz)! (MaxBuff="+u32MaxBuff+") sz="+sz);
+			return(true);
+		}
+		return(false);
+	}
+	///#endregion reporting
 
-	//TODO uncomment: #endregion
+	///#region math
 	float MirrorOnYLine(float fAngle) {
 		SafeAngle360ByRef(fAngle);
 		if (fAngle<90.0f) fAngle+=180.0f-fAngle;
@@ -1591,7 +2288,13 @@ namespace ExpertMultimediaBase {
 		register double dSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((dSumOfSquares>0)?sqrt(dSumOfSquares):0);
 	}
-	inline void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate) {
+	/*inline*/ void Rotate(float &xToMove, float &yToMove, float fRotate) {
+		float rTemp=ROFXY(xToMove,yToMove), thetaTemp=THETAOFXY(xToMove,yToMove);
+		thetaTemp+=fRotate;
+		xToMove=XOFRTHETA(rTemp,thetaTemp);
+		yToMove=YOFRTHETA(rTemp,thetaTemp);
+	}
+	/*inline*/ void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate) {
 		xToMove-=xCenter;
 		yToMove-=yCenter;
 		float rTemp=ROFXY(xToMove,yToMove), thetaTemp=THETAOFXY(xToMove,yToMove);
@@ -1601,32 +2304,25 @@ namespace ExpertMultimediaBase {
 		xToMove+=xCenter;
 		yToMove+=yCenter;
 	}
-	void Rotate(float &xToMove, float &yToMove, float fRotate) {
-		float rTemp=ROFXY(xToMove,yToMove), thetaTemp=THETAOFXY(xToMove,yToMove);
-		thetaTemp+=fRotate;
-		xToMove=XOFRTHETA(rTemp,thetaTemp);
-		yToMove=YOFRTHETA(rTemp,thetaTemp);
-	}
-
-	inline void Crop(float &fToModify, float fMin, float fMax) {
+	/*inline*/ void Crop(float &fToModify, float fMin, float fMax) {
 		if (fToModify>fMax) fToModify=fMax;
 		else if (fToModify<fMin) fToModify=fMin;
 	}
-	inline float SafeAngle360(float fToLimitBetweenZeroAnd360) {
+	/*inline*/ float SafeAngle360(float fToLimitBetweenZeroAnd360) {
 		SafeAngle360ByRef(fToLimitBetweenZeroAnd360);
 		return fToLimitBetweenZeroAnd360;
 	}
-	inline void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360) {
+	/*inline*/ void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360) {
 		//float fAngleTest=fToLimitBetweenZeroAnd360;//debug only
 		fToLimitBetweenZeroAnd360-=( FFLOOR(fToLimitBetweenZeroAnd360/360.0f) * 360.0f );
 		if (fToLimitBetweenZeroAnd360<0.0f) fToLimitBetweenZeroAnd360+=360.0f;
 		//static int iTest=0;//debug only
 		//if (iTest<1000) {
-		//	Console.WriteLine("SafeAngle360 of "+ToString(fAngleTest)+" is "+ToString(fToLimitBetweenZeroAnd360)+".");
+		//	Console.Error.WriteLine("SafeAngle360 of "+RString_ToString(fAngleTest)+" is "+RString_ToString(fToLimitBetweenZeroAnd360)+".");
 		//}
 		//iTest++;
 	}
-	inline LPIPOINT IPOINTFROM(float xNow, float yNow) {
+	/*inline*/ LPIPOINT IPOINTFROM(float xNow, float yNow) {
 		LPIPOINT lpiPoint=NULL;
 		try {
 			lpiPoint=(LPIPOINT)malloc(sizeof(IPOINT));
@@ -1635,34 +2331,29 @@ namespace ExpertMultimediaBase {
 		}
 		catch (exception& exn) {
 			lpiPoint=NULL;
-			ShowException(exn,"ExpertMultimediaBase::IPOINTFROM");
+			ShowExn(exn,"ExpertMultimediaBase::IPOINTFROM");
 		}
 		catch (...) {
 			lpiPoint=NULL;
-			ShowUnknownException("ExpertMultimediaBase::IPOINTFROM");
+			ShowUnknownExn("ExpertMultimediaBase::IPOINTFROM");
 		}
 		return lpiPoint;
 	}
-	inline void FPOLAROFRECT(float &r,float &theta, float x, float y) {
+	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float x, float y) {
 		//uses double since trig functions are double
 		r=(float)ROFXY(x,y);
 		float x1=x, y1=y;
 		theta=DTHETAOFXY(x1,y1);
 	}
 
-	inline void DPOLAROFRECT(double &r,double &theta, double x, double y) {
+	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double x, double y) {
 		r=ROFXY(x,y);
 		double x1=x, y1=y;
 		theta=DTHETAOFXY(x1,y1);
 	}
-
-
-	//BYTEOF360 intentionally divides by 256 to allow storage of 256 degree variations!!!
-
-
-	inline float FANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
-		SafeAngle360ByRef(f1);//f1-=FFLOOR(f1/360.0f)*360.0f;
-		SafeAngle360ByRef(f2);//f2-=FFLOOR(f2/360.0f)*360.0f;
+	/*inline*/ float FANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
+		SafeAngle360ByRef(f1);
+		SafeAngle360ByRef(f2);
 		if (f1<f2) {
 			float fTemp=f1;
 			f1=f2;
@@ -1672,46 +2363,48 @@ namespace ExpertMultimediaBase {
 		if (fDiff>180.0f) fDiff=(360.0f-fDiff);
 		return(fDiff);
 	}
-	inline float FANGLEDIFF(float f1, float f2) { //returns 0 to 180
-		SafeAngle360ByRef(f1);//f1-=FFLOOR(f1/360.0f)*360.0f;
-		SafeAngle360ByRef(f2);//f2-=FFLOOR(f2/360.0f)*360.0f;
-		if (f1<f2) {
-			float fTemp=f1;
-			f1=f2;
-			f2=fTemp;
-		}
-		register float fDiff=fabs(f1-f2);
+	/*inline*/ float FANGLEDIFF(float end, float start) { //returns 0 to 180
+		SafeAngle360ByRef(end);//end-=FFLOOR(end/360.0f)*360.0f;
+		SafeAngle360ByRef(start);//start-=FFLOOR(start/360.0f)*360.0f;
+		//if (end<start) {
+		//	float fTemp=end;
+		//	end=start;
+		//	start=fTemp;
+		//}
+		//i.e. if end==0 and start==180, then end-start=-180
+		register float fDiff=end-start; //fabs(end-start);
 		if (fDiff>180.0f) fDiff=(360.0f-fDiff);
+		else if (fDiff<-180.0f) fDiff=(360.0f+fDiff);
 		return(fDiff);
 	}
 
-	inline float FDist(FPoint &point1, FPoint &point2) {
+	/*inline*/ float FDist(FPoint &point1, FPoint &point2) {
 		register float xSquaring=(point1.x-point2.x);
 		register float ySquaring=(point1.y-point2.y);
 		register float fSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((fSumOfSquares>0)?sqrt(fSumOfSquares):0);
 	}
-	inline float FPDIST(float x1, float y1, float x2,  float y2) {
+	/*inline*/ float FPDIST(float x1, float y1, float x2,  float y2) {
 		register float xSquaring=(x1-x2);
 		register float ySquaring=(y1-y2);
 		register float fSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((fSumOfSquares>0)?sqrt(fSumOfSquares):0);
 	}
-	inline double DPDIST(double x1, double y1, double x2, double y2) {
+	/*inline*/ double DPDIST(double x1, double y1, double x2, double y2) {
 		register double xSquaring=(x1-x2);
 		register double ySquaring=(y1-y2);
 		register double dSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((dSumOfSquares>0)?sqrt(dSumOfSquares):0);
 	}
 
-	inline long double LDANGLE360(long double d1) {
+	/*inline*/ long double LDANGLE360(long double d1) {
 		while (d1>360.0L) d1-=360.0L;
 		while (d1<-360.0L) d1+=360.0L;
 		if (d1<0) d1=360.0L+d1;
 		return(d1);
 	}
 
-	inline long double LDANGLEDIFF(long double d1, long double d2) { //returns 0 to 180
+	/*inline*/ long double LDANGLEDIFF(long double d1, long double d2) { //returns 0 to 180
 		while (d1>360.0L) d1-=360.0L;
 		while (d1<-360.0L) d1+=360.0L;
 		while (d2>360.0L) d2-=360.0L;
@@ -1721,40 +2414,40 @@ namespace ExpertMultimediaBase {
 		return(dDiff);
 	}
 
-	inline float DIST3D(Mass3d &pointA, Mass3d &pointB) {
+	/*inline*/ float DIST3D(Mass3d &pointA, Mass3d &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	inline float DIST3D(FPOINT3D &pointA, FPOINT3D &pointB) {
+	/*inline*/ float DIST3D(FPOINT3D &pointA, FPOINT3D &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	inline float DIST3D(FPOINT3D &pointA, Mass3d &pointB) {
+	/*inline*/ float DIST3D(FPOINT3D &pointA, Mass3d &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	inline float DIST3D(Mass3d &pointA, FPOINT3D &pointB) {
+	/*inline*/ float DIST3D(Mass3d &pointA, FPOINT3D &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	inline float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB) {
+	/*inline*/ float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	inline float DIST3D(float x1, float y1, float z1, float x2, float y2, float z2) {
+	/*inline*/ float DIST3D(float x1, float y1, float z1, float x2, float y2, float z2) {
 		register float fSquare;
 		fSquare=DSQUARED(x2-x1) + DSQUARED(y2-y1) + DSQUARED(z2-z1);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	//inline bool Point3dFromPolar(Mass3d &pointToSet, float fAltitude, float fAzimuth, float fDistance) {
+	//bool Point3dFromPolar(Mass3d &pointToSet, float fAltitude, float fAzimuth, float fDistance) {
 	//	//TODO: copy from Travel3dAbs but set instead of move
 	//}
-	inline bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel) {
+	/*inline*/ bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel) {
 		register float xRel,yRel,zRel;
 		//notes:
 		//--Roll, though not used here, would be done first (x rotation)
@@ -1766,91 +2459,221 @@ namespace ExpertMultimediaBase {
 		xRel=FXOFRTHETA(fDistanceTravel,fPitch);
 		zRel=FYOFRTHETA(fDistanceTravel,fPitch);
 		if (xRel!=0.0f) { //if rotation would modify location from this view
-		    Rotate(xRel,yRel,fYaw);
+			Rotate(xRel,yRel,fYaw);
 		}
 		//else do nothing since xRel and yRel are zero
 		pointToSlide.x+=xRel;
 		pointToSlide.y+=yRel;
 		pointToSlide.z+=zRel;
 	}
-	inline bool Travel3dAbs(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel) {
+	/*inline*/ bool Travel3dAbs(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel) {
 		return Travel3d(pointToSlide,pointDest,fDistanceTravel/DIST3D(pointToSlide,pointDest));
 	}
-	inline bool Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio) {
+	/*inline*/ bool Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio) {
 		pointToSlide.x=APPROACH(pointToSlide.x,pointDest.x,fDistanceTravelRatio);
 		pointToSlide.y=APPROACH(pointToSlide.y,pointDest.y,fDistanceTravelRatio);
 		pointToSlide.z=APPROACH(pointToSlide.z,pointDest.z,fDistanceTravelRatio);
 	}
-	inline bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel) {
+	/*inline*/ bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel) {
 		register float xRel,yRel,zRel;
 		yRel=0;
 		xRel=FXOFRTHETA(fDistanceTravel,fPitch);
 		zRel=FYOFRTHETA(fDistanceTravel,fPitch);
 		if (xRel!=0.0f) { //if rotation would modify location from this view
-		    Rotate(xRel,yRel,fYaw);
+			Rotate(xRel,yRel,fYaw);
 		}
 		//else do nothing since xRel and yRel are zero
 		xToMove+=xRel;
 		yToMove+=yRel;
 		zToMove+=zRel;
 	}
-	int FileSize(const char* carrFile) {
+
+	/*inline*/ float FSQUARED(float val) {
+		return val*val;
+	}
+	/*inline*/ float DSQUARED(double val) {
+		return val*val;
+	}
+
+	/*inline*/ int SafePow(int basenum, int exp) {
+		int result;
+		bool bNeg;
+		if (exp<0) {
+			bNeg=true;
+			exp*=-1;
+		}
+		if (exp==0) return 1;
+		else {
+			bNeg=false;
+			result=basenum;
+			for (int iCount=1; iCount<exp; iCount++) {
+				if (result<INT_MAX-basenum) result*=basenum;
+				else return INT_MAX;
+			}
+		}
+		if (bNeg) {
+			result=1/result;
+			exp*=-1;//leaves it the way we found it
+		}
+		return result;
+	}
+	/*inline*/ long SafePow(long basenum, int exp) {
+		long result;
+		bool bNeg;
+		if (exp<0) {
+			bNeg=true;
+			exp*=-1;
+		}
+		if (exp==0) return 1;
+		else {
+			bNeg=false;
+			result=basenum;
+			for (int iCount=1; iCount<exp; iCount++) {
+				if (result<LONG_MAX-basenum) result*=basenum;
+				else return LONG_MAX;
+			}
+		}
+		if (bNeg) {
+			result=1L/result;
+			exp*=-1;//leaves it the way we found it
+		}
+		return result;
+	}
+	/*inline*/ float SafePow(float basenum, int exp) {
+		float result;
+		bool bNeg;
+		if (exp<0) {
+			bNeg=true;
+			exp*=-1;
+		}
+		if (exp==0) return 1;
+		else {
+			bNeg=false;
+			result=basenum;
+			for (int iCount=1; iCount<exp; iCount++) {
+				if (result<FLT_MAX-basenum) result*=basenum;
+				else return FLT_MAX;
+			}
+		}
+		if (bNeg) {
+			result=1.0f/result;
+			exp*=-1;//leaves it the way we found it
+		}
+		return result;
+	}
+	/*inline*/ double SafePow(double basenum, int exp) {
+		double result;
+		bool bNeg;
+		if (exp<0) {
+			bNeg=true;
+			exp*=-1;
+		}
+		if (exp==0) return 1;
+		else {
+			bNeg=false;
+			result=basenum;
+			for (int iCount=1; iCount<exp; iCount++) {
+				if (result<DBL_MAX-basenum) result*=basenum;
+				else return DBL_MAX;
+			}
+		}
+		if (bNeg) {
+			result=1.0/result;
+			exp*=-1; //leaves it the way we found it
+		}
+		return result;
+	}
+	/*inline*/ int SafeE10I(int exp) {
+		return SafePow(i10, exp);
+	}
+	/*inline*/ long SafeE10L(int exp) {
+		return SafePow(l10, exp);
+	}
+	/*inline*/ float SafeE10F(int exp) {
+		return SafePow(f10, exp);
+	}
+	/*inline*/ double SafeE10D(int exp) {
+		return SafePow(d10, exp);
+	}
+	/*inline*/ byte SafeByRoundF(float val) {
+		val+=.5f;
+		if (val<0.0f) return 0;
+		else if (val>255.0f) return 255;
+		else return (byte)val;
+	}
+	/*inline*/ byte SafeByte(float val) {
+	    return (val>255.0f)?255:((val<0.0f)?0:(byte)val);
+	}
+	/*inline*/ int SafeAddWrappedPositiveOnly(int val1, int val2) {
+		if (val1<0) val1*=-1;
+		if (val2<0) val2*=-1;
+	    int max=2147483647;
+	    int val3=0;
+	    int maxdiff=max-val1;
+	    if (maxdiff<val2) val3=val1+val2;
+	    else val3=val2-maxdiff;
+	    return val3;
+	}
+	///#endregion math
+
+	///#region file operations
+	int FileSize(const char* szFile) {
 		static bool bFirstRun=true;
-		if (bFirstRun) Console.Write("FileSize--");
+		if (bFirstRun) Console.Error.Write("FileSize--");
 		int iBytes=0;
 		std::ifstream ifData;
 		string sOpNoun="start";
 		try {
 			sOpNoun="open";
-			if (bFirstRun) Console.Write(sOpNoun+",");
-			ifData.open(carrFile, std::ios_base::binary | std::ios_base::in);
+			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			ifData.open(szFile, std::ios_base::binary | std::ios_base::in);
 			sOpNoun="status";
-			if (bFirstRun) Console.Write(sOpNoun+",");
+			if (bFirstRun) Console.Error.Write(sOpNoun+",");
 			if (!ifData.good() || ifData.eof() || !ifData.is_open()) {
-				if (bFirstRun) Console.WriteLine("found zero bytes...");
+				if (bFirstRun) Console.Error.WriteLine("found zero bytes...");
 				return 0;
 			}
 			sOpNoun="init";
-			if (bFirstRun) Console.Write(sOpNoun+",");
+			if (bFirstRun) Console.Error.Write(sOpNoun+",");
 			ifData.seekg(0, std::ios_base::beg);
 			sOpNoun="traverse";
-			if (bFirstRun) Console.Write(sOpNoun+",");
+			if (bFirstRun) Console.Error.Write(sOpNoun+",");
 			std::ifstream::pos_type posNow = ifData.tellg();
 			sOpNoun="seek";
-			if (bFirstRun) Console.Write(sOpNoun+",");
+			if (bFirstRun) Console.Error.Write(sOpNoun+",");
 			ifData.seekg(0, std::ios_base::end);
 			sOpNoun="convert";
-			if (bFirstRun) Console.Write(sOpNoun+",");
+			if (bFirstRun) Console.Error.Write(sOpNoun+",");
 			iBytes=static_cast<int>(ifData.tellg() - posNow);
 			//thanks http://www.codeproject.com/file/filesize.asp
 		}
 		catch (exception& exn) {
-			ShowException(exn,"ExpertMultimediaBase::FileSize");
+			ShowExn(exn,"ExpertMultimediaBase::FileSize");
 		}
 		catch (...) {
-			ShowUnknownException("ExpertMultimediaBase::FileSize",sOpNoun);
+			ShowUnknownExn("ExpertMultimediaBase::FileSize",sOpNoun);
 		}
 		try {
 	  		sOpNoun="close...";
-			if (bFirstRun) Console.Write(sOpNoun);
+			if (bFirstRun) Console.Error.Write(sOpNoun);
 			if (ifData!=NULL) ifData.close();
 		}
 		catch (exception& exn) {
-			ShowException(exn,"ExpertMultimediaBase::FileSize");
+			ShowExn(exn,"ExpertMultimediaBase::FileSize");
 		}
 		catch (...) {
-			ShowUnknownException("ExpertMultimediaBase::FileSize",sOpNoun);
+			ShowUnknownExn("ExpertMultimediaBase::FileSize",sOpNoun);
 		}
-	 	sOpNoun="done ("+ToString(iBytes)+" bytes)...";
-		if (bFirstRun) Console.Write(sOpNoun);
+	 	sOpNoun="done ("+RString_ToString(iBytes)+" bytes)...";
+		if (bFirstRun) Console.Error.Write(sOpNoun);
 	 	bFirstRun=false;
 		return iBytes;
-	}//end inline int FileSize(char* carrFile)
+	}//end FileSize(char* szFile)
 	int FileSize(string sFile) {
 		int iBytes=0;
 		//int iBlockSize=1024;
 		//int iCount=10;
-		//byte byarrTest[10240];
+		//byte arrbyTest[10240];
 		//int iLastRead=1;//1 is unused but required initial value
 		//FILE * pFile;
 		try {
@@ -1858,18 +2681,13 @@ namespace ExpertMultimediaBase {
 			//thanks http://www.codeproject.com/file/filesize.asp
 		}
 		catch (exception& exn) {
-			ShowException(exn,"ExpertMultimediaBase::FileSize");
+			ShowExn(exn,"ExpertMultimediaBase::FileSize");
 		}
 		catch (...) {
-			ShowUnknownException("ExpertMultimediaBase::FileSize string overload");
+			ShowUnknownExn("ExpertMultimediaBase::FileSize string overload");
 		}
 		return iBytes;
 	}
-
-	//TODO uncomment: #region simple classes
-	//TODO uncomment: #endregion simple classes
-	
-	//TODO uncomment: #region scripting
-	//TODO uncomment: #endregion
+	///#endregion file operations
 }//end namespace
 #endif
