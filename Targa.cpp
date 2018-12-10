@@ -6,46 +6,49 @@
 #include <fstream>
 #include <memory>
 #include <targa.h>
-//#include "C:\My Documents\Projects-cpp\Base\targa.h"
+//#include "E:\Projects-cpp\Base\targa.h"
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
 	//#region static targa functions
-	int RLESizeUncompressed(byte* byarrSrc, int iStart, int iSrcSize, int iBytesPerChunk) {
-		byte* byarrNull=null;
-		return RLEUncompress(byarrNull, 0, byarrSrc, iSrcSize, iBytesPerChunk, 0, iStart, true);
+	int RLESizeUncompressed(byte* arrbySrc, int iStart, int iSrcSize, int iBytesPerChunk) {
+		byte* arrbyNull=null;
+		return RLEUncompress(arrbyNull, 0, arrbySrc, iSrcSize, iBytesPerChunk, 0, iStart, true);
 	}
-	bool Compare(byte* byarrSrc1, int iSrcLoc1, byte* byarrSrc2, int iSrcLoc2, int iRun) {
+	bool Compare(byte* arrbySrc1, int iSrcLoc1, byte* arrbySrc2, int iSrcLoc2, int iRun) {
 		bool bMatch=false;
 		int iMatch=0;
 		try {
 			for (int iNow; iNow<iRun; iNow++) {
-				if (byarrSrc1[iSrcLoc1+iNow]==byarrSrc2[iSrcLoc2+iNow]) iMatch++;
+				if (arrbySrc1[iSrcLoc1+iNow]==arrbySrc2[iSrcLoc2+iNow]) iMatch++;
 			}
 			if (iMatch==iRun) bMatch=true;
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"Compare");
+		catch (exception& exn) {
+			ShowExn(exn,"Compare");
 		}
 		catch (...) {
-			ShowUnknownException("Compare");
+			ShowUnknownExn("Compare");
 		}
 	}
-	
-	byte* RLECompress(ref_int iReturnLength, byte* byarrSrc, int iSrcStart, int iBytesToParse, int iBytesPerChunk) {
-		return RLECompress(iReturnLength, byarrSrc, iSrcStart, iBytesToParse, iBytesPerChunk, false);
+
+	byte* RLECompress(ref_int iReturnLength, byte* arrbySrc, int iSrcStart, int iBytesToParse, int iBytesPerChunk) {
+		return RLECompress(iReturnLength, arrbySrc, iSrcStart, iBytesToParse, iBytesPerChunk, false);
 	}
-	byte* RLECompress(ref_int iReturnLength, byte* byarrSrc, int iSrcStart, int iBytesToParse, int iBytesPerChunk, bool bCountOnlyAndReturnNull) {
+	byte* RLECompress(ref_int iReturnLength, byte* arrbySrc, int iSrcStart, int iBytesToParse, int iBytesPerChunk, bool bCountOnlyAndReturnNull) {
 		bool bGood=true;
 		iReturnLength=0;
 		int iTotal=0;
-		byte* byarrReturn=null;
+		byte* arrbyReturn=null;
 		try {
 			if (!bCountOnlyAndReturnNull) {
-				byte* test=RLECompress(iTotal,byarrSrc,iSrcStart,iBytesToParse,iBytesPerChunk,true);
-				if (iTotal>0) byarrReturn=(byte*)malloc(iTotal);
-				else bGood=false;
+				byte* test=RLECompress(iTotal,arrbySrc,iSrcStart,iBytesToParse,iBytesPerChunk,true);
+				if (iTotal>0) arrbyReturn=(byte*)malloc(iTotal);
+				else {
+					bGood=false;
+					ShowErr("Compressed total of "+RString_ToString(iTotal)+RString_ToString(" wasn't calculated correctly"),"RLECompress");
+				}
 			}
 			if (bGood) {
 				int iSrcAbs=iSrcStart;
@@ -56,7 +59,7 @@ namespace ExpertMultimediaBase {
 				bool bPartOfThisTypeOfRun;
 				int iPacketByte=0;
 				while (iSrcRel<iBytesToParse) {
-					bRunIsCompressed=( (iSrcRel+iBytesPerChunk*2<=iBytesToParse) && Compare(byarrSrc,iSrcAbs,byarrSrc,iSrcAbs+iBytesPerChunk,iBytesPerChunk) )  ?  true  :  false;
+					bRunIsCompressed=( (iSrcRel+iBytesPerChunk*2<=iBytesToParse) && Compare(arrbySrc,iSrcAbs,arrbySrc,iSrcAbs+iBytesPerChunk,iBytesPerChunk) )  ?  true  :  false;
 					iRun=bRunIsCompressed?1:0;
 					bPartOfThisTypeOfRun=true;
 					iPacketByte=iReturnLength;
@@ -66,7 +69,7 @@ namespace ExpertMultimediaBase {
 						for (int iNow=0; iNow<iBytesPerChunk; iNow++) {
 							if (!bRunIsCompressed || iRun==1) {
 								if (!bCountOnlyAndReturnNull)
-									byarrReturn[iReturnLength]=byarrSrc[iSrcAbs];
+									arrbyReturn[iReturnLength]=arrbySrc[iSrcAbs];
 								iReturnLength++;
 							}
 							iSrcRel++;
@@ -77,34 +80,34 @@ namespace ExpertMultimediaBase {
 						if (iRun==128) bPartOfThisTypeOfRun=false;
 						else {
 	                        if (bRunIsCompressed)
-								bPartOfThisTypeOfRun=( (iSrcRel+iBytesPerChunk*2<=iBytesToParse) && Compare(byarrSrc,iSrcAbs,byarrSrc,iSrcAbs+iBytesPerChunk,iBytesPerChunk) )  ?  true  :  false;
+								bPartOfThisTypeOfRun=( (iSrcRel+iBytesPerChunk*2<=iBytesToParse) && Compare(arrbySrc,iSrcAbs,arrbySrc,iSrcAbs+iBytesPerChunk,iBytesPerChunk) )  ?  true  :  false;
 							else
-								bPartOfThisTypeOfRun=( (iSrcRel+iBytesPerChunk*2<=iBytesToParse) && !Compare(byarrSrc,iSrcAbs,byarrSrc,iSrcAbs+iBytesPerChunk,iBytesPerChunk) )  ?  true  :  false;
+								bPartOfThisTypeOfRun=( (iSrcRel+iBytesPerChunk*2<=iBytesToParse) && !Compare(arrbySrc,iSrcAbs,arrbySrc,iSrcAbs+iBytesPerChunk,iBytesPerChunk) )  ?  true  :  false;
 						}//end else not too long
 					}
 					if (!bCountOnlyAndReturnNull) {
-						if (bRunIsCompressed) byarrReturn[iPacketByte]=0x80 & (byte)(iRun-1);
-						else byarrReturn[iPacketByte]=(byte)(iRun-1);
+						if (bRunIsCompressed) arrbyReturn[iPacketByte]=0x80 & (byte)(iRun-1);
+						else arrbyReturn[iPacketByte]=(byte)(iRun-1);
 					}
 				}//end while iSrcRel<iBytesToParse
-			}
+			}//end if bGood
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"RLECompress");
+		catch (exception& exn) {
+			ShowExn(exn,"RLECompress");
 		}
 		catch (...) {
-			ShowUnknownException("RLECompress");
+			ShowUnknownExn("RLECompress");
 		}
-		return byarrReturn;
+		return arrbyReturn;
 	}//end RLECompress
 
-	//RLEUncompress(byarrDest, iDestSize, byarrSrc, iSrcSize, iBytesPerChunk);
-	int RLEUncompress(byte* byarrDest, int iDestSize, byte* byarrSrc, int iSrcSize, int iBytesPerChunk) {
+	//RLEUncompress(arrbyDest, iDestSize, arrbySrc, iSrcSize, iBytesPerChunk);
+	int RLEUncompress(byte* arrbyDest, int iDestSize, byte* arrbySrc, int iSrcSize, int iBytesPerChunk) {
 		if (iDestSize<0) iDestSize=0;
-		return RLEUncompress(byarrDest, iDestSize, byarrSrc, iSrcSize, iBytesPerChunk, 0, 0, false);
+		return RLEUncompress(arrbyDest, iDestSize, arrbySrc, iSrcSize, iBytesPerChunk, 0, 0, false);
 	}
-	//int iBytesFound=RLEUncompress(byarrDest, iDestSizeIrrelevantIfCountOnlyIsTrue, byarrSrc, iSrcSize, iBytesPerChunk, iSrcStart, bCountOnlyAndDontTouchDest)
-	int RLEUncompress(byte* byarrDest, int iDestSizeIrrelevantIfCountOnlyIsTrue, byte* byarrSrc, int iSrcSize, int iBytesPerChunk, int iDestStart, int iSrcStart, bool bCountOnlyAndDontTouchDest) {
+	//int iBytesFound=RLEUncompress(arrbyDest, iDestSizeIrrelevantIfCountOnlyIsTrue, arrbySrc, iSrcSize, iBytesPerChunk, iSrcStart, bCountOnlyAndDontTouchDest)
+	int RLEUncompress(byte* arrbyDest, int iDestSizeIrrelevantIfCountOnlyIsTrue, byte* arrbySrc, int iSrcSize, int iBytesPerChunk, int iDestStart, int iSrcStart, bool bCountOnlyAndDontTouchDest) {
 		bool bGood=true;
 		int iDestAbs=iDestStart;
 		int iDestRel=0;
@@ -117,13 +120,13 @@ namespace ExpertMultimediaBase {
 				int iSrcRel=0;
 				int iChunkRelNow;
 				while (iSrcAbs<iSrcSize) {
-					if (byarrSrc[iSrcAbs]>=128) { //if high bit is true
+					if (arrbySrc[iSrcAbs]>=128) { //if high bit is true
 						bRunIsCompressed=true;
-						iRun=((int)byarrSrc[iSrcAbs]-128)+1;
+						iRun=((int)arrbySrc[iSrcAbs]-128)+1;
 					}
 					else {
 						bRunIsCompressed=false;
-						iRun=(int)byarrSrc[iSrcAbs]+1;
+						iRun=(int)arrbySrc[iSrcAbs]+1;
 					}
 					//first advance past packet header byte:
 					iSrcRel++;
@@ -132,10 +135,10 @@ namespace ExpertMultimediaBase {
 						for (int iChunkSubByte=0; iChunkSubByte<iBytesPerChunk && (iSrcAbs+iChunkSubByte)<iSrcSize; iChunkSubByte++) {
                             if (!bCountOnlyAndDontTouchDest) {
 								if (iDestAbs>=iDestSizeIrrelevantIfCountOnlyIsTrue) {
-									ShowError("Compressed data wanted destination bigger than "+ToString(iDestSizeIrrelevantIfCountOnlyIsTrue)+" bytes.","RLEUncompress");
+									ShowError("Compressed data wanted destination bigger than "+RString_ToString(iDestSizeIrrelevantIfCountOnlyIsTrue)+" bytes.","RLEUncompress");
 									return 0;
 								}
-								byarrDest[iDestAbs]=byarrSrc[iSrcAbs+iChunkSubByte];
+								arrbyDest[iDestAbs]=arrbySrc[iSrcAbs+iChunkSubByte];
 							}//end if actually uncompressing
 							iDestAbs++;
 							iDestRel++;
@@ -156,11 +159,11 @@ namespace ExpertMultimediaBase {
 				}//end while still any data (iSrcAbs<iSrcSize)
 			}
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"RLEUncompress");
+		catch (exception& exn) {
+			ShowExn(exn,"RLEUncompress");
 		}
 		catch (...) {
-			ShowUnknownException("RLEUncompress");
+			ShowUnknownExn("RLEUncompress");
 		}
 		//Run-length packet:
 		//--byte with high bit=true
@@ -174,64 +177,64 @@ namespace ExpertMultimediaBase {
 		return iDestRel;
 	}//end RLEUncompress
 	//#endregion static Targa functions
-	
+
 	//#region TargaFooter methods
-	TargaFooter::TargaFooter(byte* byarrDataSrcToCopyFrom, uint dwStart, uint dwCount, uint dwActualSourceBufferSize) {
-		Init(byarrDataSrcToCopyFrom, dwStart, dwCount, dwActualSourceBufferSize);
+	TargaFooter::TargaFooter(byte* arrbyDataSrcToCopyFrom, uint u32Start, uint u32Count, uint u32ActualSourceBufferSize) {
+		Init(arrbyDataSrcToCopyFrom, u32Start, u32Count, u32ActualSourceBufferSize);
 	}
-	TargaFooter::TargaFooter(byte* lpbyDataPointerToKeep, uint dwSize) {
-		Init(lpbyDataPointerToKeep,dwSize);
+	TargaFooter::TargaFooter(byte* lpbyDataPointerToKeep, uint u32Size) {
+		Init(lpbyDataPointerToKeep,u32Size);
 	}
 	TargaFooter::TargaFooter() {
 		dump=null;
-		dwSizeofDump=0;
+		u32SizeofDump=0;
 	}
 	TargaFooter::~TargaFooter() {
 		SafeFree(dump);
 	}
-	bool TargaFooter::Init(byte* byarrDataSrcToCopyFrom, uint dwSrcStart, uint dwCount, uint dwActualSourceBufferSize) {
+	bool TargaFooter::Init(byte* arrbyDataSrcToCopyFrom, uint u32SrcStart, uint u32Count, uint u32ActualSourceBufferSize) {
 		bool bGood=true;
 		SafeFree(dump);
 		try {
-			dwSizeofDump=dwCount;
-			dump=(byte*)malloc(dwCount);
-			uint iSrc=dwSrcStart;
-			for (uint iNow=0; iNow<dwCount && iSrc<dwActualSourceBufferSize; iNow++,iSrc++) {
-				dump[iNow]=byarrDataSrcToCopyFrom[iSrc];
+			u32SizeofDump=u32Count;
+			dump=(byte*)malloc(u32Count);
+			uint iSrc=u32SrcStart;
+			for (uint iNow=0; iNow<u32Count && iSrc<u32ActualSourceBufferSize; iNow++,iSrc++) {
+				dump[iNow]=arrbyDataSrcToCopyFrom[iSrc];
 			}
 		}
 		catch (exception& exn) {
-			ShowException(exn, "TargaFooter::Init");
+			ShowExn(exn, "TargaFooter::Init");
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException("TargaFooter::Init");
+			ShowUnknownExn("TargaFooter::Init");
 		}
 		return bGood;
 	}
-	bool TargaFooter::Init(byte* lpbyDataPointerToKeep, uint dwSize) {
+	bool TargaFooter::Init(byte* lpbyDataPointerToKeep, uint u32Size) {
 		bool bGood=true;
 		try {
-			if (dwSize>0 && lpbyDataPointerToKeep!=null) {
-				dwSizeofDump=dwSize;
+			if (u32Size>0 && lpbyDataPointerToKeep!=null) {
+				u32SizeofDump=u32Size;
 				dump=lpbyDataPointerToKeep;
 				//TODO: process the footer here
 			}
 			else {
-				dwSizeofDump=0;
+				u32SizeofDump=0;
 				dump=null;
 			}
 		}
-		catch (char* sExn) {
+		catch (exception& exn) {
 			bGood=false;
-			string sMsg="dwSize="+ToString(dwSize);
+			string sMsg="u32Size="+RString_ToString(u32Size);
 			sMsg+="; lpbyDataPointerToKeep is";
 			sMsg+=((lpbyDataPointerToKeep==null)?"null.":"not null.");
-			ShowAndDeleteException(sExn,"TargaFooter::Init",sMsg);
+			ShowExn(exn,"TargaFooter::Init"+sMsg);
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException("TargaFooter::Init");
+			ShowUnknownExn("TargaFooter::Init");
 		}
 		return bGood;
 	}
@@ -240,7 +243,7 @@ namespace ExpertMultimediaBase {
 	}
 	bool TargaFooter::WriteTo(Byter &byterNow) {
 		bool bGood=true;
-		for (uint iNow=0; iNow<dwSizeofDump; iNow++) {
+		for (uint iNow=0; iNow<u32SizeofDump; iNow++) {
 			if( !byterNow.Write(dump[iNow]) ) {
 				bGood=false;
 				break;
@@ -249,16 +252,16 @@ namespace ExpertMultimediaBase {
 		return bGood;
 	}//end WriteTo byter
 	uint TargaFooter::ByteCount() {
-		return dwSizeofDump;
+		return u32SizeofDump;
 	}
 	//#endregion TargaFooter methods
-	
+
 	//#region Targa methods
 	Targa::Targa() {
 		InitNull();
 	}
 	Targa::~Targa() {
-		SafeFree(byarrData);
+		SafeFree(arrbyData);
 	}
 	int Targa::BytesPP() {
 		return iBytesPP;
@@ -275,10 +278,10 @@ namespace ExpertMultimediaBase {
 	bool Targa::Init(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bReallocateBuffers) {
 		bool bGood=true;
 		if (bReallocateBuffers) {
-			SafeFree(byarrColorMap);
+			SafeFree(arrbyColorMap);
 			iMapLength=0;
 			sID="";
-			SafeFree(byarrData);
+			SafeFree(arrbyData);
 		}
 		iWidth=iSetWidth;
 		iHeight=iSetHeight;
@@ -288,18 +291,19 @@ namespace ExpertMultimediaBase {
 		//else if (iSetBytesPP==1) TypeTarga=TypeUncompressedGrayscale;
 		iBytesBuffer=iBytesAsUncompressed;
 		if (iBytesBuffer<=0) {
-			ShowError("iBytesBuffer="+ToString(iBytesBuffer)+"!","Targa::Init");
+			ShowError("iBytesBuffer="+RString_ToString(iBytesBuffer)+"!","Targa::Init");
 			bGood=false;
 		}
 		if (bReallocateBuffers && bGood) {
-			byarrData=(byte*)malloc(iBytesBuffer);
+			arrbyData=(byte*)malloc(iBytesBuffer);
 		}
 		return bGood;
 	}//end Targa::Init
 	bool Targa::CopyTo(Targa &targaDest) {
+		bool bGood=false;
 		try {
 			targaDest.Init(iWidth,iHeight,iBytesPP,false);
-			targaDest.byarrData=(byte*)malloc(iBytesBuffer);
+			if (iBytesBuffer>0) targaDest.arrbyData=(byte*)malloc(iBytesBuffer);
 			targaDest.MapType=MapType; //1 byte
 			targaDest.TypeTarga=TypeTarga; //1 byte
 			targaDest.iMapOrigin=iMapOrigin; //2 bytes
@@ -317,33 +321,42 @@ namespace ExpertMultimediaBase {
 			targaDest.iBytesAsUncompressed=iBytesAsUncompressed;//byte sizeof image data only
 			targaDest.iBytesBuffer=iBytesBuffer;
 			int iNow;
-			for (iNow=0; iNow<iBytesBuffer; iNow++) {
-				targaDest.byarrData[iNow]=byarrData[iNow];
+			if (iBytesBuffer>0) {
+				for (iNow=0; iNow<iBytesBuffer; iNow++) {
+					targaDest.arrbyData[iNow]=arrbyData[iNow];
+				}
 			}
-			targaDest.byarrColorMap=(byte*)malloc(iMapLength); //array of [] bytes  //[byMapBitDepth*wMapLength] -- the palette
-		    for (iNow=0; iNow<iMapLength; iNow++) {
-				targaDest.byarrColorMap[iNow]=byarrColorMap[iNow];
+			else ShowErr("Warning: Program tried to duplicate null targa.","Targa CopyTo");
+			if (iMapLength>0) {
+				targaDest.arrbyColorMap=(byte*)malloc(iMapLength); //array of [] bytes  //[byMapBitDepth*wMapLength] -- the palette
+				for (iNow=0; iNow<iMapLength; iNow++) {
+					targaDest.arrbyColorMap[iNow]=arrbyColorMap[iNow];
+				}
 			}
+			bGood=true;
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"Targa::CopyTo");
+		catch (exception& exn) {
+			ShowExn(exn,"Targa CopyTo");
+			bGood=false;
 		}
 		catch (...) {
-	        ShowUnknownException("Targa::CopyTo");
+			ShowUnknownExn("Targa CopyTo");
+			bGood=false;
 		}
+		return bGood;
 	}//end Targa::CopyTo(Targa);
-	bool Targa::DrawFast(byte* byarrDest, int xAtDest, int yAtDest, int iDestWidth, int iDestHeight, int iDestBytesPP, int iDestStride) {
+	bool Targa::DrawFast(byte* arrbyDest, int xAtDest, int yAtDest, int iDestWidth, int iDestHeight, int iDestBytesPP, int iDestStride) {
 		bool bGood=true;
 		try {
 			/*
 			byte* lpbySrc;
 			byte* lpbyDest;
-   			byte* lpbySrcLine=byarrData;
-   			byte* lpbyDestLine=//&byarrDest[rectDestAdjusted.Y*iDestStride+rectDestAdjusted;
-   			uint* lpdwSrc=(uint*)byarrData;
-   			uint* lpdwDest=(uint*)byarrDest;
-			ushort lpwSrc=(ushort*)byarrData;
-			ushort lpwDest=(ushort*)byarrDest;
+   			byte* lpbySrcLine=arrbyData;
+   			byte* lpbyDestLine=//&arrbyDest[rectDestAdjusted.Y*iDestStride+rectDestAdjusted;
+   			uint* lpu32Src=(uint*)arrbyData;
+   			uint* lpu32Dest=(uint*)arrbyDest;
+			ushort lpwSrc=(ushort*)arrbyData;
+			ushort lpwDest=(ushort*)arrbyDest;
 			*/
 			int xDest;
 			int yDest=yAtDest;
@@ -372,13 +385,13 @@ namespace ExpertMultimediaBase {
 							int iSrcSize=iBytesAsUncompressed;
 							int iDestSize=iDestStride*iDestHeight;
 							while (iSrcAbs<iSrcSize) {
-								if (byarrData[iSrcAbs]>=128) { //if high bit is true
+								if (arrbyData[iSrcAbs]>=128) { //if high bit is true
 									bRunIsCompressed=true;
-									iRun=((int)byarrData[iSrcAbs]-128)+1;
+									iRun=((int)arrbyData[iSrcAbs]-128)+1;
 								}
 								else {
 									bRunIsCompressed=false;
-									iRun=(int)byarrData[iSrcAbs]+1;
+									iRun=(int)arrbyData[iSrcAbs]+1;
 								}
 								//first advance past packet header byte:
 								iSrcRel++;
@@ -386,10 +399,10 @@ namespace ExpertMultimediaBase {
 								for (iChunkRelNow=0; iChunkRelNow<iRun && iSrcAbs<iSrcSize; iChunkRelNow++) {
 									for (int iChunkSubByte=0; iChunkSubByte<iBytesPP && (iSrcAbs+iChunkSubByte)<iSrcSize; iChunkSubByte++) {
 										if (iDestAbs>=iDestSize) {
-											ShowError("Compressed data wanted destination bigger than "+ToString(iDestSize)+" bytes.","DrawFast (same bit depth, uncompressing)");
+											ShowError("Compressed data wanted destination bigger than "+RString_ToString(iDestSize)+" bytes.","DrawFast (same bit depth, uncompressing)");
 											return 0;
 										}
-										byarrDest[iDestAbs]=byarrData[iSrcAbs+iChunkSubByte];
+										arrbyDest[iDestAbs]=arrbyData[iSrcAbs+iChunkSubByte];
 										iDestAbs++;
 										iDestRel++;
 									}
@@ -415,19 +428,19 @@ namespace ExpertMultimediaBase {
 							}//end while still any data (iSrcAbs<iSrcSize)
 						}
 					}
-					catch (char* carrExn) {
-						ShowAndDeleteException(carrExn,"DrawFast (same bit depth, uncompressing)");
+					catch (exception& exn) {
+						ShowExn(exn,"DrawFast (same bit depth, uncompressing)");
 					}
 					catch (...) {
-						ShowUnknownException("DrawFast (same bit depth, uncompressing)");
+						ShowUnknownExn("DrawFast (same bit depth, uncompressing)");
 					}
 				}//end if compressed
 				else {//else uncompressed already
 					for (int ySrc=0; ySrc<iHeight; ySrc++,yDest++,iSrcByteLineStart+=iStride,iDestByteLineStart+=iDestStride) {
                         iDestByteNow=iDestByteLineStart;//xDest=xAtDest;
-						memcpy(&byarrDest[iDestByteNow],&byarrData[iSrcByteLineStart],iStrideLimited);
+						memcpy(&arrbyDest[iDestByteNow],&arrbyData[iSrcByteLineStart],iStrideLimited);
 						//for (iSrcByteNow=iSrcByteLineStart; iSrcByteNow<iLineEnder; iSrcByteNow++, iDestByteNow++) { //for (int xSrc=0; xSrc<iWidth; xSrc++,xDest++) {
-						//	byarrDest[iDestByteNow]=byarrData[iSrcByteNow];
+						//	arrbyDest[iDestByteNow]=arrbyData[iSrcByteNow];
 						//}
 					}
 				}
@@ -439,19 +452,19 @@ namespace ExpertMultimediaBase {
 				else {
 					for (int ySrc=0; ySrc<iHeight; ySrc++,yDest++,iSrcByteLineStart+=iStride,iDestByteLineStart+=iDestStride) {
                         iDestByteNow=iDestByteLineStart;//xDest=xAtDest;
-						memcpy(&byarrDest[iDestByteNow],&byarrData[iSrcByteLineStart],iStrideLimited);
+						memcpy(&arrbyDest[iDestByteNow],&arrbyData[iSrcByteLineStart],iStrideLimited);
 						//for (iSrcByteNow=iSrcByteLineStart; iSrcByteNow<iLineEnder; iSrcByteNow++, iDestByteNow++) { //for (int xSrc=0; xSrc<iWidth; xSrc++,xDest++) {
-						//	byarrDest[iDestByteNow]=byarrData[iSrcByteNow];
+						//	arrbyDest[iDestByteNow]=arrbyData[iSrcByteNow];
 						//}
 					}
 				}
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"Targa::DrawFast");
+		catch (exception& exn) {
+			ShowExn(exn,"Targa::DrawFast");
 		}
 		catch (...) {
-	        ShowUnknownException("Targa::DrawFast");
+	        ShowUnknownExn("Targa::DrawFast");
 		}
 	}
 	void Targa::ToRect(ref_Rectangle rectReturn) {
@@ -462,27 +475,27 @@ namespace ExpertMultimediaBase {
 		rectReturn.Width=(float)iWidth;
 		rectReturn.Height=(float)iHeight;
 	}
-	bool Targa::From(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, bool bUsePointerNotCopyData) {
-		return From(iWidthTo,iHeightTo,iBytesPP,byarrSrc,bUsePointerNotCopyData,0);
+	bool Targa::From(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, bool bUsePointerNotCopyData) {
+		return From(iWidthTo,iHeightTo,iBytesPP,arrbySrc,bUsePointerNotCopyData,0);
 	}
-	bool Targa::From(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, bool bUsePointerNotCopyData, uint dwSrcStart) {
+	bool Targa::From(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, bool bUsePointerNotCopyData, uint u32SrcStart) {
 		bool bGood=true;
 		bGood=Init(iWidthTo,iHeightTo,iBytesPP,!bUsePointerNotCopyData);
 		if (bGood) {
 			if (bUsePointerNotCopyData) {
-				byarrData=&byarrSrc[dwSrcStart];
+				arrbyData=&arrbySrc[u32SrcStart];
 			}
 			else {
 				try {
-					memcpy(byarrData,&byarrSrc[dwSrcStart],iWidthTo*iHeightTo*iBytesPP);
+					memcpy(arrbyData,&arrbySrc[u32SrcStart],iWidthTo*iHeightTo*iBytesPP);
 				}
-				catch (char* carrExn) {
+				catch (exception& exn) {
 					bGood=false;
-					ShowAndDeleteException(carrExn, "Targa::From");
+					ShowExn(exn,"Targa::From");
 				}
 				catch (...) {
 					bGood=false;
-					ShowUnknownException("Targa::From");
+					ShowUnknownExn("Targa::From");
 				}
 			}
 		}
@@ -491,28 +504,30 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}//end From a source buffer
-	int Targa::SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, uint dwSrcRealLen) {
-        SafeCopyFrom(iWidthTo, iHeightTo, iBytesPP, byarrSrc, dwSrcRealLen, true);
+	int Targa::SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen) {
+        SafeCopyFrom(iWidthTo, iHeightTo, iBytesPP, arrbySrc, u32SrcRealLen, true);
 	}
-	int Targa::SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, uint dwSrcRealLen, bool bReInitializeAll) {
-		return SafeCopyFrom(iWidthTo,iHeightTo,iBytesPP,byarrSrc,dwSrcRealLen,0,bReInitializeAll);
+	int Targa::SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen, bool bReInitializeAll) {
+		return SafeCopyFrom(iWidthTo,iHeightTo,iBytesPP,arrbySrc,u32SrcRealLen,0,bReInitializeAll);
 	}
-	//SafeCopyFrom(iWidthTo, iHeightTo, iBytesPP, byarrSrc, dwSrcRealLen, dwSrcStart, bReInitializeAll)
-	int Targa::SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, uint dwSrcRealLen, uint dwSrcStart, bool bReInitializeAll) {
+	//SafeCopyFrom(iWidthTo, iHeightTo, iBytesPP, arrbySrc, u32SrcRealLen, u32SrcStart, bReInitializeAll)
+	int Targa::SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen, uint u32SrcStart, bool bReInitializeAll) {
 		int iFound=0;
 		bool bGood=true;
 		static bool bFirstRun=true;
 		string sFuncNow="Targa::SafeCopyFrom";
-		if (bFirstRun) Console.Write(sFuncNow);
-		string sArgs="(w="+ToString(iWidthTo)+",h="+ToString(iHeightTo)+",BytesPP="+ToString(iBytesPP)+","+(byarrSrc==null?"src=null":"src=ok")+",len="+ToString(dwSrcRealLen)+",start="+ToString(dwSrcStart)+","+ToString(bReInitializeAll)+")";
+		if (bFirstRun) Console.Error.Write(sFuncNow);
+		string sArgs="(w="+RString_ToString(iWidthTo)+",h="+RString_ToString(iHeightTo)+",BytesPP="+RString_ToString(iBytesPP)+","+(arrbySrc==null?"src=null":"src=ok")+",len="+RString_ToString(u32SrcRealLen)+",start="+RString_ToString(u32SrcStart)+","+RString_ToString(bReInitializeAll)+")";
 		sFuncNow+=sArgs;
-		if (bFirstRun) Console.Write(sArgs);
+		if (bFirstRun) Console.Error.Write(sArgs);
 		static bool bFirstFatalSafeCopyFrom=true;
-		if (byarrData==null) {
+		if (arrbyData==null) {
 			ShowError("Null image! Forcing reinitialize",sFuncNow);
 			if (bFirstFatalSafeCopyFrom) {
-				cout<<endl<<endl<<"IMAGE BUFFER IS NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl<<endl;
-				cerr<<endl<<endl<<"IMAGE BUFFER IS NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl<<endl;
+				Console.Error.WriteLine();
+				Console.Error.WriteLine();
+				Console.Error.WriteLine("IMAGE BUFFER IS NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+				Console.Error.WriteLine();
 				bFirstFatalSafeCopyFrom=false;
 			}
 			bReInitializeAll=true;
@@ -524,44 +539,44 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		if (bGood) {
-			if (byarrSrc==null) {
+			if (arrbySrc==null) {
 				bGood=false;
 				ShowError("null source!",sFuncNow);
 			}
 		}
 		if (bGood) {
 			try {
-				int iSrcAbs=(int)dwSrcStart;
+				int iSrcAbs=(int)u32SrcStart;
 				int iLen=iWidthTo*iHeightTo*iBytesPP;
-				int iSrcRealLen=(int)dwSrcRealLen;
+				int iSrcRealLen=(int)u32SrcRealLen;
 				int iNow=0;
 				for (iNow=0; iNow<iLen && iSrcAbs<iSrcRealLen; iNow++, iSrcAbs++) {
-					byarrData[iNow]=byarrSrc[iSrcAbs];
+					arrbyData[iNow]=arrbySrc[iSrcAbs];
 					iFound++;
 				}
 				if (iNow<iLen) {//ok since iNow is now a length (since increments past end then exits loop)
 					bGood=false;
-					ShowError("Only"+ToString(iNow)+" of "+ToString(iLen)+" expected bytes of image data were found in file.",sFuncNow);
+					ShowError("Only"+RString_ToString(iNow)+" of "+RString_ToString(iLen)+" expected bytes of image data were found in file.",sFuncNow);
 				}
 			}
-			catch (char* carrExn) {
+			catch (exception& exn) {
 				bGood=false;
-				ShowAndDeleteException(carrExn, sFuncNow);
+				ShowExn(exn,sFuncNow);
 			}
 			catch (...) {
 				bGood=false;
-				ShowUnknownException(sFuncNow);
+				ShowUnknownExn(sFuncNow);
 			}
-			if (bFirstRun) Console.Write(bGood?"Targa::SafeCopyFrom Success...":"Targa::SafeCopyFrom finished with errors...");
+			if (bFirstRun) Console.Error.Write(bGood?"Targa::SafeCopyFrom Success...":"Targa::SafeCopyFrom finished with errors...");
 		}
 		bFirstRun=false;
 		return iFound;
 	}//end SafeCopyFrom source buffer
 	byte* Targa::GetBufferPointer() {
-		return byarrData;
+		return arrbyData;
 	}
 	bool Targa::IsLoaded() {
-		return (byarrData!=null);
+		return (arrbyData!=null);
 	}
 	bool Targa::Save(string sFileNow) {
 		sFile=sFileNow;
@@ -576,12 +591,12 @@ namespace ExpertMultimediaBase {
 			ushort wNow=0;
 			byte byNow=0;
 			int iPlacePrev=0;
-			uint dwTest=0;
+			uint u32Test=0;
 			//(byte)(length of id)
 			iPlacePrev=byterNow.Place();
 			if (/*sID!=null && */sID.length()>255) sID=sID.substr(0,255);
-			uint dwIDLenNow=(/*sID==null || */sID=="")?0:(uint)sID.length();
-			byNow=(byte)dwIDLenNow;
+			uint u32IDLenNow=(/*sID==null || */sID=="")?0:(uint)sID.length();
+			byNow=(byte)u32IDLenNow;
 			byterNow.Write(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
 			//(byte)(int)MapType
@@ -640,32 +655,32 @@ namespace ExpertMultimediaBase {
 			byterNow.Write(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
 			//(byte[length of id])sID
-			if (dwIDLenNow>0) {
+			if (u32IDLenNow>0) {
 				iPlacePrev=byterNow.Place();
-				byterNow.WriteAscii(sID,dwIDLenNow);
-				if (byterNow.Place()-iPlacePrev != dwIDLenNow) bGood=false;
+				byterNow.WriteAscii(sID,u32IDLenNow);
+				if (byterNow.Place()-iPlacePrev != u32IDLenNow) bGood=false;
 			}
-			//(byte[iMapLength])(byarrColorMap)
+			//(byte[iMapLength])(arrbyColorMap)
 			if (iMapLength>0) {
 				iPlacePrev=byterNow.Place();
 				for (int iNow=0; iNow<iMapLength; iNow++) {
-					byterNow.Write(byarrColorMap[iNow]);
+					byterNow.Write(arrbyColorMap[iNow]);
 				}
 				if (byterNow.Place()-iPlacePrev != iMapLength) {
 					bGood=false;
-					sMsg="Not all "+ToString(iMapLength)+" color map bytes were found.";
+					sMsg="Not all "+RString_ToString(iMapLength)+" color map bytes were found.";
 				}
 			}
-			else SafeFree(byarrColorMap);
-			//(byte[iWidth*iHeight*iBytesPP])(byarrData)
+			else SafeFree(arrbyColorMap);
+			//(byte[iWidth*iHeight*iBytesPP])(arrbyData)
 			if (iBytesBuffer>0) {
-				if (byarrData!=null) {
+				if (arrbyData!=null) {
 					for (int iNow=0; iNow<iBytesBuffer; iNow++) {
-						byterNow.Write(byarrData[iNow]);
+						byterNow.Write(arrbyData[iNow]);
 					}
 					if (byterNow.Place()-iPlacePrev != iBytesAsUncompressed) {
 						bGood=false;
-						sMsg="Not all "+ToString(iBytesBuffer)+" image data bytes were saveable.";
+						sMsg="Not all "+RString_ToString(iBytesBuffer)+" image data bytes were saveable.";
 					}
 				}
 				else {
@@ -675,7 +690,7 @@ namespace ExpertMultimediaBase {
 			}
 			else {
 				bGood=false;
-				sMsg="Targa::Save error: bad header wanted "+ToString(iBytesBuffer)+" bytes of data";
+				sMsg="Targa::Save error: bad header wanted "+RString_ToString(iBytesBuffer)+" bytes of data";
 			}
 			footer.WriteTo(byterNow);
 			if (!byterNow.Save()) {
@@ -686,170 +701,170 @@ namespace ExpertMultimediaBase {
 				ShowError(sMsg,"Targa::Save");
 			}
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			bGood=false;
-			ShowAndDeleteException(carrExn, "Targa::Save");
+			ShowExn(exn,"Targa::Save");
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException("Targa::Save");
+			ShowUnknownExn("Targa::Save");
 		}
 		return bGood;
 	}//end Save
 	bool Targa::Load(string sFileNow) {
        	static bool bFirstRun=true;
-       	if (bFirstRun) Console.Write("Targa::Load...");
+       	if (bFirstRun) Console.Error.Write("Targa::Load...");
 		sFile=sFileNow;
 		string sMsg="before initialization";
 		bool bGood=true;
 		try {
 			Byter byterNow;
-       		if (bFirstRun) Console.Write("calling byter...");
+       		if (bFirstRun) Console.Error.Write("calling byter...");
 			byterNow.OpenRead(sFile);
 			ushort wNow=0;
 			byte byNow=0;
 			int iPlacePrev=0;
-			uint dwTest=0;
+			uint u32Test=0;
 			//(byte)(length of id)
 			iPlacePrev=byterNow.Place();
-       		if (bFirstRun) Console.Write("reading at["+ToString(byterNow.Place())+"]{");
+       		if (bFirstRun) Console.Error.Write("reading at["+RString_ToString(byterNow.Place())+"]{");
 			byterNow.Read(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
-       		if (bFirstRun) Console.Write(  "idLen:"  +  (  bGood ? (ToString((int)byNow)+"; ") : "missing;" )  );
-			uint dwIDLenNow=(uint)byNow;
+       		if (bFirstRun) Console.Error.Write(  "idLen:"  +  (  bGood ? (RString_ToString((int)byNow)+"; ") : "missing;" )  );
+			uint u32IDLenNow=(uint)byNow;
 			//(byte)(int)MapType
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
-       		if (bFirstRun) Console.Write(  "MapType:"  +  (  bGood ? (ToString((int)byNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "MapType:"  +  (  bGood ? (RString_ToString((int)byNow)+"; ") : "missing;" )  );
 			MapType=(int)byNow;
 			//(byte)(int)TypeTarga
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
-       		if (bFirstRun) Console.Write(  "TypeTarga:"  +  (  bGood ? (ToString((int)byNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "TypeTarga:"  +  (  bGood ? (RString_ToString((int)byNow)+"; ") : "missing;" )  );
 			TypeTarga=(int)byNow;
 			//(ushort)iMapOrigin
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(wNow);
 			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
-       		if (bFirstRun) Console.Write(  "iMapOrigin:"  +  (  bGood ? (ToString((int)wNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "iMapOrigin:"  +  (  bGood ? (RString_ToString((int)wNow)+"; ") : "missing;" )  );
 			iMapOrigin=(int)wNow;
 			//(ushort)iMapLength
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(wNow);
 			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
-       		if (bFirstRun) Console.Write(  "iMapLength:"  +  (  bGood ? (ToString((int)wNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "iMapLength:"  +  (  bGood ? (RString_ToString((int)wNow)+"; ") : "missing;" )  );
 			iMapLength=(int)wNow;
 			//(byte)iMapBitDepth
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
-       		if (bFirstRun) Console.Write(  "iMapBitDepth:"  +  (  bGood ? (ToString((int)byNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "iMapBitDepth:"  +  (  bGood ? (RString_ToString((int)byNow)+"; ") : "missing;" )  );
 			iMapBitDepth=(int)byNow;
 			//(ushort)xImageLeft
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(wNow);
 			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
-       		if (bFirstRun) Console.Write(  "ImageLeft:"  +  (  bGood ? (ToString((int)wNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "ImageLeft:"  +  (  bGood ? (RString_ToString((int)wNow)+"; ") : "missing;" )  );
 			xImageLeft=(int)wNow;
 			//(ushort)yImageBottom
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(wNow);
 			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
-       		if (bFirstRun) Console.Write(  "ImageBottom:"  +  (  bGood ? (ToString((int)wNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "ImageBottom:"  +  (  bGood ? (RString_ToString((int)wNow)+"; ") : "missing;" )  );
 			yImageBottom=(int)wNow;
 			//(ushort)iWidth
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(wNow);
 			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
-       		if (bFirstRun) Console.Write(  "iWidth:"  +  (  bGood ? (ToString((int)wNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "iWidth:"  +  (  bGood ? (RString_ToString((int)wNow)+"; ") : "missing;" )  );
 			iWidth=(int)wNow;
 			//(ushort)iHeight
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(wNow);
 			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
-       		if (bFirstRun) Console.Write(  "iHeight:"  +  (  bGood ? (ToString((int)wNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "iHeight:"  +  (  bGood ? (RString_ToString((int)wNow)+"; ") : "missing;" )  );
 			iHeight=(int)wNow;
 			//(byte)iBitDepth
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
-       		if (bFirstRun) Console.Write(  "iBitDepth:"  +  (  bGood ? (ToString((int)byNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "iBitDepth:"  +  (  bGood ? (RString_ToString((int)byNow)+"; ") : "missing;" )  );
 			iBitDepth=(int)byNow;
 			iBytesPP=iBitDepth/8;
 			//(byte)bitsDescriptor
 			iPlacePrev=byterNow.Place();
 			byterNow.Read(byNow);
 			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
-       		if (bFirstRun) Console.Write(  "AttributeBitsSum:"  +  (  bGood ? (ToString((int)byNow)+"; ") : "missing;" )  );
+       		if (bFirstRun) Console.Error.Write(  "AttributeBitsSum:"  +  (  bGood ? (RString_ToString((int)byNow)+"; ") : "missing;" )  );
 			bitsDescriptor=byNow;
 			//(byte[length of id])sID
-			if (dwIDLenNow>0) {
+			if (u32IDLenNow>0) {
 				iPlacePrev=byterNow.Place();
-				if (!byterNow.ReadAscii(sID,dwIDLenNow,dwTest)) bGood=false;
-       			if (bFirstRun) Console.Write(  "id:"  +  (  bGood ? (sID+"; ") : "missing;" )  );
-				if (dwTest!=dwIDLenNow) bGood=false;
+				if (!byterNow.ReadAscii(sID,u32IDLenNow,u32Test)) bGood=false;
+       			if (bFirstRun) Console.Error.Write(  "id:"  +  (  bGood ? (sID+"; ") : "missing;" )  );
+				if (u32Test!=u32IDLenNow) bGood=false;
 			}
 			else sID="";
 			Init(iWidth,iHeight,iBytesPP,true); //DOES DeriveVars and create buffer
-			//(byte[iMapLength])(byarrColorMap)
-       		if (bFirstRun) Console.Write("map:");
+			//(byte[iMapLength])(arrbyColorMap)
+       		if (bFirstRun) Console.Error.Write("map:");
 			if (iMapLength>0) {
-				byarrColorMap=(byte*)malloc(iMapLength);
+				arrbyColorMap=(byte*)malloc(iMapLength);
 				iPlacePrev=byterNow.Place();
 				for (int iNow=0; iNow<iMapLength; iNow++) {
-					byterNow.Read(byarrColorMap[iNow]);
+					byterNow.Read(arrbyColorMap[iNow]);
 				}
 				if (byterNow.Place()-iPlacePrev != iMapLength) {
-					sMsg="Not all "+ToString(iMapLength)+" color map bytes were found.";
-					if (bFirstRun) Console.Write("only "+ToString(byterNow.Place()-iPlacePrev)+"!;");
+					sMsg="Not all "+RString_ToString(iMapLength)+" color map bytes were found.";
+					if (bFirstRun) Console.Error.Write("only "+RString_ToString(byterNow.Place()-iPlacePrev)+"!;");
 					bGood=false;
 				}
 				else {
-					if (bFirstRun) Console.Write("good;");
+					if (bFirstRun) Console.Error.Write("good;");
 				}
 			}
 			else {
-				SafeFree(byarrColorMap);
-				if (bFirstRun) Console.Write("none;");
+				SafeFree(arrbyColorMap);
+				if (bFirstRun) Console.Error.Write("none;");
 			}
-			//(byte[iWidth*iHeight*iBytesPP])(byarrData)
+			//(byte[iWidth*iHeight*iBytesPP])(arrbyData)
 			iBytesBuffer=byterNow.BytesLeftUsed();
 			//TODO: iBytesBuffer=//finish this! Count compressed area, limited by output size, and load rest into footer!
 			if (iBytesAsUncompressed<iBytesBuffer) iBytesBuffer=iBytesAsUncompressed;
-       		if (bFirstRun) Console.Write("buffer:"+ToString(iBytesBuffer)+"; ");
+       		if (bFirstRun) Console.Error.Write("buffer:"+RString_ToString(iBytesBuffer)+"; ");
        		int iFound=0;
-       		
+
 			if (iBytesBuffer<=0) {
 				bGood=false;
-				ShowError("Only "+ToString(iBytesBuffer)+" were expected given this file's header","Targa::Load");
+				ShowError("Only "+RString_ToString(iBytesBuffer)+" were expected given this file's header","Targa::Load");
 			}
 			if (bGood) {
 				//the following is ONLY OK SINCE called Init above
-				if (bFirstRun) Console.Write("( ");
+				if (bFirstRun) Console.Error.Write("( ");
 				if (IsCompressed()) {
-					if (bFirstRun) Console.Write("compression found...");
+					if (bFirstRun) Console.Error.Write("compression found...");
 					int iStart=byterNow.Place();
-					//iBytesBuffer=RLESizeUncompressed(byterNow.byarrData,iStart,iBytesLeft,iBytesPP);
-					SafeFree(byarrData);
-					byarrData=(byte*)malloc(iBytesBuffer);
+					//iBytesBuffer=RLESizeUncompressed(byterNow.arrbyData,iStart,iBytesLeft,iBytesPP);
+					SafeFree(arrbyData);
+					arrbyData=(byte*)malloc(iBytesBuffer);
 					for (int iNow=0; iNow<iBytesBuffer; iNow++) {
-						byarrData[iNow]=byterNow.byarrData[iStart+iNow];
+						arrbyData[iNow]=byterNow.arrbyData[iStart+iNow];
 						iFound++;
 					}
 					byterNow.Advance(iFound);
 				}
 				else {
-					if (bFirstRun) Console.Write("no compression...");
-					int iTest=SafeCopyFrom(iWidth,iHeight,iBytesPP,byterNow.byarrData,byterNow.Length(),byterNow.Place(),false);
+					if (bFirstRun) Console.Error.Write("no compression...");
+					int iTest=SafeCopyFrom(iWidth,iHeight,iBytesPP,byterNow.arrbyData,byterNow.Length(),byterNow.Place(),false);
 					if (iTest!=iBytesBuffer) {
 						bGood=false;
-						ShowError("Expected "+ToString(iBytesBuffer)+" but found "+ToString(iTest)+"...");
+						ShowError("Expected "+RString_ToString(iBytesBuffer)+" but found "+RString_ToString(iTest)+"...");
 					}
 					byterNow.Advance(iTest);
 				}
-				if (bFirstRun) Console.Write(" )...");
+				if (bFirstRun) Console.Error.Write(" )...");
 			}
 			if (bGood&&IsSavedAsFlipped()) {
 				if (IsCompressed()) {
@@ -872,35 +887,35 @@ namespace ExpertMultimediaBase {
 						ShowError("Failed to flip targa!","Targa::Load");
 					}
 					else if (bFirstRun) {
-						Console.Write("Flip():success...");
+						Console.Error.Write("Flip():success...");
 					}
 				}
 			}
-       		if (bFirstRun) Console.Write("footer:");
+       		if (bFirstRun) Console.Error.Write("footer:");
 			if (byterNow.BytesLeftUsed()>0) {
-       			footer.Init(byterNow.byarrData, (uint)byterNow.Place(), (uint)byterNow.BytesLeftUsed(), (uint)byterNow.Length());
-       			if (bFirstRun) Console.Write(ToString(footer.ByteCount())+"; ");
+       			footer.Init(byterNow.arrbyData, (uint)byterNow.Place(), (uint)byterNow.BytesLeftUsed(), (uint)byterNow.Length());
+       			if (bFirstRun) Console.Error.Write(RString_ToString(footer.ByteCount())+"; ");
 			}
-       		if (bFirstRun) Console.Write("} ");
-       		if (bFirstRun) Console.Write(bGood?"Targa::Load Success--dump":"Targa::Load Done with errors--dump");
-       		if (bFirstRun) Console.Write(Dump());
+       		if (bFirstRun) Console.Error.Write("} ");
+       		if (bFirstRun) Console.Error.Write(bGood?"Targa::Load Success--dump":"Targa::Load Done with errors--dump");
+       		if (bFirstRun) Console.Error.Write(Dump());
 			if (!bGood) {
 				ShowError(sMsg,"Targa::Load");
 			}
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			bGood=false;
-			ShowAndDeleteException(carrExn, "Targa::Load");
+			ShowExn(exn,"Targa::Load");
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException("Targa::Load");
+			ShowUnknownExn("Targa::Load");
 		}
 		bFirstRun=false;
 		return bGood;
 	}//end Targa::Load
 	bool Targa::IsOK() {
-		bool bGood=(iWidth>0 && iHeight>0 && iBytesPP>0 && byarrData!=null);
+		bool bGood=(iWidth>0 && iHeight>0 && iBytesPP>0 && arrbyData!=null);
 		if (!IsCompressed()) {
 			if (iBytesBuffer!=(iWidth*iHeight*iBytesPP)) bGood=false;
 			if (iBytesBuffer!=iBytesAsUncompressed) bGood=false;
@@ -919,27 +934,27 @@ namespace ExpertMultimediaBase {
 		}
 		if (bGood) {
 			try {
-				byte* byarrTemp=(byte*)malloc(iBytesBuffer);
+				byte* arrbyTemp=(byte*)malloc(iBytesBuffer);
 				int xSrc=0, ySrc=iHeight-1, xDest, yDest;
 				for (yDest=0; yDest<iHeight; yDest++, ySrc--) {
 					xSrc=0;
 					for (xDest=0; xDest<iWidth; xDest++, xSrc++) {
 						for (int iChan=0; iChan<iBytesPP; iChan++) {
-							byarrTemp[yDest * iStride + xDest * iBytesPP + iChan]=
-							byarrData[ySrc  * iStride + xSrc  * iBytesPP + iChan];
+							arrbyTemp[yDest * iStride + xDest * iBytesPP + iChan]=
+							arrbyData[ySrc  * iStride + xSrc  * iBytesPP + iChan];
 						}
 					}
 				}
-				SafeFree(byarrData);
-				byarrData=byarrTemp;
+				SafeFree(arrbyData);
+				arrbyData=arrbyTemp;
 			}
 			catch (exception& exn) {
 				bGood=false;
-				ShowException(exn,"Targa::Flip");
+				ShowExn(exn,"Targa::Flip");
 			}
 			catch (...) {
 				bGood=false;
-				ShowUnknownException("Targa::Flip");
+				ShowUnknownExn("Targa::Flip");
 			}
 		}
 		return bGood;
@@ -960,34 +975,42 @@ namespace ExpertMultimediaBase {
 	bool Targa::SetCompressionRLE(bool bOn) {
 		bool bGood=true;
 		try {
-			if (bOn) {
-				if (!IsCompressed()) { //Compress
-					byte* byarrCompressed=RLECompress(iBytesBuffer, byarrData, 0, iBytesBuffer, iBytesPP);
-					SafeFree(byarrData);
-					byarrData=byarrCompressed;
-				}
+			if (iWidth*iHeight*iBytesPP<=0) {
+				ShowErr("Tried to turn compression "+RString_ToString(bOn?"on":"off")+" for "+RString_ToString(iWidth)+RString_ToString("x")+RString_ToString(iHeight)+RString_ToString("x")+RString_ToString(iBytesPP)+RString_ToString(" image!"));
+			}
+			else if (iBytesBuffer<=0) {
+				ShowErr("Tried to turn compression "+RString_ToString(bOn?"on":"off")+" for "+RString_ToString(iBytesBuffer)+"-buffer "+RString_ToString(BytesAsUncompressed())+"-length image!");
 			}
 			else {
-				if (IsCompressed()) { //Uncompress
-					int iNewSize=iWidth*iHeight*iBytesPP;
-					byte* byarrUncompressed=(byte*)malloc(iNewSize); //byte* byarrUncompress=RLEUncompress(iBytesBuffer, byarrData, 0, iBytesBuffer, iBytesPP);
-					int iTest=RLEUncompress(byarrUncompressed, iNewSize, byarrData, iBytesBuffer, iBytesPP);
-					if (iTest!=iNewSize) {
-						ShowError("Uncompressed "+ToString(iTest)+" bytes but expected "+ToString(iNewSize)+" ("+ToString(iWidth)+"x"+ToString(iHeight)+" at "+ToString(iBytesPP*8)+"bpp ["+ToString(iBytesPP)+" bytes per pixel])","Targa::SetCompressionRLE("+ToString(bOn)+")");
+				if (bOn) {
+					if (!IsCompressed()) { //Compress
+						byte* arrbyCompressed=RLECompress(iBytesBuffer, arrbyData, 0, iBytesBuffer, iBytesPP);
+						SafeFree(arrbyData);
+						arrbyData=arrbyCompressed;
 					}
-					SafeFree(byarrData);
-					byarrData=byarrUncompressed;
-					iBytesBuffer=iNewSize;
+				}
+				else {
+					if (IsCompressed()) { //Uncompress
+						int iNewSize=iWidth*iHeight*iBytesPP;
+						byte* arrbyUncompressed=(byte*)malloc(iNewSize); //byte* arrbyUncompress=RLEUncompress(iBytesBuffer, arrbyData, 0, iBytesBuffer, iBytesPP);
+						int iTest=RLEUncompress(arrbyUncompressed, iNewSize, arrbyData, iBytesBuffer, iBytesPP);
+						if (iTest!=iNewSize) {
+							ShowError("Uncompressed "+RString_ToString(iTest)+" bytes but expected "+RString_ToString(iNewSize)+" ("+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+" at "+RString_ToString(iBytesPP*8)+"bpp ["+RString_ToString(iBytesPP)+" bytes per pixel])","Targa::SetCompressionRLE("+RString_ToString(bOn)+")");
+						}
+						SafeFree(arrbyData);
+						arrbyData=arrbyUncompressed;
+						iBytesBuffer=iNewSize;
+					}
 				}
 			}
 		}
-		catch (char* carrExn) {
+		catch (exception& exn) {
 			bGood=false;
-			ShowAndDeleteException(carrExn, "Targa::SetCompressionRLE("+ToString(bOn)+")");
+			ShowExn(exn,"Targa::SetCompressionRLE("+RString_ToString(bOn)+")");
 		}
 		catch (...) {
 			bGood=false;
-			ShowUnknownException("Targa::SetCompressionRLE("+ToString(bOn)+")");
+			ShowUnknownExn("Targa::SetCompressionRLE("+RString_ToString(bOn)+")");
 		}
 	}
 	string Targa::Dump() {
@@ -995,17 +1018,24 @@ namespace ExpertMultimediaBase {
 	}
 	string Targa::Dump(bool bDumpFull) {
 		string sReturn="{";
-		sReturn+="dimensions:"+ToString(iWidth)
-			+"x"+ToString(iHeight)
-			+"x"+ToString(iBytesPP)+";";
-		sReturn+=" buffer:"+ToString(((byarrData==null)?"null":"ok"))+"; ";
-		sReturn+=" ImageSize:"+ToString(iBytesAsUncompressed)+"; ";
-		sReturn+=" BufferSize:"+ToString(iBytesBuffer)+"; ";
+		sReturn+="dimensions:"+RString_ToString(iWidth)
+			+"x"+RString_ToString(iHeight)
+			+"x"+RString_ToString(iBytesPP)+";";
+		sReturn+=" buffer:"+RString_ToString(((arrbyData==null)?"null":"ok"))+"; ";
+		sReturn+=" ImageSize:"+RString_ToString(iBytesAsUncompressed)+"; ";
+		sReturn+=" BufferSize:"+RString_ToString(iBytesBuffer)+"; ";
 		if (bDumpFull) {
 			//do some stuff here maybe later
 		}
 		sReturn+="}";
 		return sReturn;
+	}
+	string Targa::Description() {
+		return Description(false);
+	}
+	string Targa::Description(bool bVerbose) {
+		if (bVerbose) return RString_ToString((arrbyData==null)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8)+" "+RString_ToString(iBytesAsUncompressed)+"-length "+RString_ToString(iBytesBuffer)+"-buffer";
+		else return RString_ToString((arrbyData==null)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8);
 	}
 	//private methods:
 	void Targa::DeriveVars() {
@@ -1027,8 +1057,8 @@ namespace ExpertMultimediaBase {
 		iBitDepth=0;
 		bitsDescriptor=0;
 		sID="";
-		byarrColorMap=null;
-		byarrData=null;
+		arrbyColorMap=null;
+		arrbyData=null;
 		DeriveVars();
 		iBytesBuffer=iBytesAsUncompressed;
 	}
