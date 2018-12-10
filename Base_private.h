@@ -5,7 +5,7 @@
 #define BASE_PRIVATE_H
 
 /* VERSION DEFINITIONS */
-#define VER_STRING	"0.1.1.1"
+#define VER_STRING	"0.9.9.0"
 #define VER_MAJOR	0
 #define VER_MINOR	1
 #define VER_RELEASE	1

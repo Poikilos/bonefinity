@@ -13,7 +13,7 @@
 #include <targa.cpp>
 #include <byter.cpp>
 #include <base.cpp>
-#include <dotnetfake.cpp>
+#include <frameworkdummy.cpp>
 
 using namespace std;
 
@@ -208,15 +208,15 @@ namespace ExpertMultimediaBase {
 						}
 						break;
 					case 4:
-						Uint32* lpdwDestPix;
+						Uint32* lpu32DestPix;
 						for (int y=0; y<gbScreen.iHeight; y++) {
-							lpdwDestPix=(Uint32*)lpDestLine;
+							lpu32DestPix=(Uint32*)lpDestLine;
 							lpSrcPix=lpSrcLine;
 							for (int x=0; x<gbScreen.iWidth; x++) {
-								//*lpdwDestPix=*((Uint32*)lpSrcPix);
-								*lpdwDestPix = (Uint32)SDL_MapRGB(screen->format, lpSrcPix[2], lpSrcPix[1], *lpSrcPix);
+								//*lpu32DestPix=*((Uint32*)lpSrcPix);
+								*lpu32DestPix = (Uint32)SDL_MapRGB(screen->format, lpSrcPix[2], lpSrcPix[1], *lpSrcPix);
 								lpSrcPix+=4;//assumes 32-bit GBuffer
-								lpdwDestPix++;//ok since Uint32*
+								lpu32DestPix++;//ok since Uint32*
 							}
 							lpDestLine+=iDestStride;
 							lpSrcLine+=iSrcStride;
@@ -238,8 +238,8 @@ namespace ExpertMultimediaBase {
 			}//end if bGood
 			//else already showed an error
 		}
-		catch (char* carrExn) {
-			ShowAndDeleteException(carrExn,"DrawScreen()");
+		catch (char* szExn) {
+			ShowAndDeleteException(szExn,"DrawScreen()");
 			bGood=false;
 		}
 		catch (...) {
@@ -255,12 +255,12 @@ namespace ExpertMultimediaBase {
 	    static int iFakeValue = 128;
 	    static int iFakeHue = 0;
 	    SDL_Rect sdlrectPixelNow;
-	    Uint32 dwColor;
+	    Uint32 u32Color;
 	    /* Create a black background */
-	    dwColor = SDL_MapRGB (screen->format, 0, 0, 0);
-	    SDL_FillRect (screen, NULL, dwColor);
+	    u32Color = SDL_MapRGB (screen->format, 0, 0, 0);
+	    SDL_FillRect (screen, NULL, u32Color);
 
-	    /* Determine which dwColor the layer should have */
+	    /* Determine which u32Color the layer should have */
 	    if (iFakeValueVel == 0) {
 	        iFakeValue += 2;
 	        if (iFakeValue >= 256) {
@@ -282,26 +282,26 @@ namespace ExpertMultimediaBase {
 	    if (bFirstRun) Console.Write("Starting Draw background color...");
 	    switch (iFakeHue) {
 	      case 0:
-	          dwColor = SDL_MapRGB (screen->format, iFakeValue, 0, 0);
+	          u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, 0);
 	          break;
 	      case 1:
-	          dwColor = SDL_MapRGB (screen->format, 0, iFakeValue, 0);
+	          u32Color = SDL_MapRGB (screen->format, 0, iFakeValue, 0);
 	          break;
 	      case 2:
-	          dwColor = SDL_MapRGB (screen->format, 0, 0, iFakeValue);
+	          u32Color = SDL_MapRGB (screen->format, 0, 0, iFakeValue);
 	          break;
 	      case 3:
-	          dwColor = SDL_MapRGB (screen->format, iFakeValue, iFakeValue, iFakeValue);
+	          u32Color = SDL_MapRGB (screen->format, iFakeValue, iFakeValue, iFakeValue);
 	          break;
 	      case 4:
-	          dwColor = SDL_MapRGB (screen->format, iFakeValue, 0, iFakeValue);
+	          u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, iFakeValue);
 	          break;
 	    }
 	    sdlrectPixelNow.w = screen->w / 2;
 	    sdlrectPixelNow.h = screen->h / 2;
 	    sdlrectPixelNow.x = (screen->w / 2) - (sdlrectPixelNow.w / 2);
 	    sdlrectPixelNow.y = (screen->h / 2) - (sdlrectPixelNow.h / 2);
-	    SDL_FillRect (screen, &sdlrectPixelNow, dwColor);
+	    SDL_FillRect (screen, &sdlrectPixelNow, u32Color);
 		if (bFirstRun) Console.WriteLine("Done.");
 		if (bFirstRun) Console.Write("Clearing screen...");
 		bool bTest=gbScreen.Fill(0);

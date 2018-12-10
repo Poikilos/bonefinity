@@ -2,17 +2,17 @@
 #define WORLD_CPP
 
 #include <world.h>
-//#include "C:\My Documents\Projects-cpp\Base\world.h"
+//#include "E:\Projects-cpp\Base\world.h"
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
 	//private methods:
 	void World::InitNull() {
-		animarr=null;
+		arranim=null;
 	}
 	void World::SafeFree() {
-		ExpertMultimediaBase::SafeFree(animarr);
+		ExpertMultimediaBase::SafeFree(arranim);
 	}
 	//public methods:
 	World::World() {
@@ -28,7 +28,7 @@ namespace ExpertMultimediaBase {
 	bool World::Load(string sWorldFileRelToBasePath, string sBasePathWithEndSlash) {
 
 	}
-    bool World::Pause(bool val) {
+	bool World::Pause(bool val) {
 
 	}
 }//end namespace

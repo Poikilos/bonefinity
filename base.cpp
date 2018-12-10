@@ -44,22 +44,12 @@ namespace ExpertMultimediaBase {
 	///#endregion globals defined in base.h
 
 	///#region methods
-	/*
+
 	IPoint::IPoint() {
 		x=0;
 		y=0;
 	}
-	IRect::IRect() {
-		top=0;
-		left=0;
-		bottom=0;
-		right=0;
-	}
-	*/
-	IPoint::IPoint() {
-		x=0;
-		y=0;
-	}
+
 	string IPoint::ToString() {
 		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
 	}
@@ -71,6 +61,7 @@ namespace ExpertMultimediaBase {
 	string FPoint::ToString() {
 		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
 	}
+
 
 	DPoint::DPoint() {
 		x=0;
@@ -868,32 +859,60 @@ namespace ExpertMultimediaBase {
 		if (zDegMove>=FANGLEDIFFPOSITIVE(zRot,zRotDest)) zRot=zRotDest;
 		else zRot=APPROACH(zRot,zRotDest,zDegMove/(zRotDest-zRot));
 	}//end RotateTowardDest
-	void Mass3d::RotateTowardDest(float fSeconds) {
+	void Mass3d::RotateTowardDest(float rSecondsSinceLastCall) {
 		AngleToLimits();
 		AngleDestToLimits();
 		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
-		float xDegMove=xRotVel*fSeconds;
-		float yDegMove=yRotVel*fSeconds;
-		float zDegMove=zRotVel*fSeconds;
-		float fApproach;
+		float xDegMove=xRotVel*rSecondsSinceLastCall;
+		float yDegMove=yRotVel*rSecondsSinceLastCall;
+		float zDegMove=zRotVel*rSecondsSinceLastCall;
+		float rApproach;
 		float xToDest=FANGLEDIFFPOSITIVE(xRot,xRotDest);
 		float yToDest=FANGLEDIFFPOSITIVE(yRot,yRotDest);
 		float zToDest=FANGLEDIFFPOSITIVE(zRot,zRotDest);
 
 		if (xDegMove>=xToDest) xRot=xRotDest;
 		else {
-			fApproach=xDegMove/xToDest;//xDegMove/360.0f;
-			xRot=APPROACH(xRot,xRotDest,fApproach);//commented for debug only//,xDegMove/(xRotDest-xRot));
+			rApproach=xDegMove/xToDest;//xDegMove/360.0f;
+			xRot=APPROACH(xRot,xRotDest,rApproach);//commented for debug only//,xDegMove/(xRotDest-xRot));
 		}
 		if (yDegMove>=yToDest) yRot=yRotDest;
 		else {
-			fApproach=yDegMove/yToDest;//yDegMove/360.0f;
-			yRot=APPROACH(yRot,yRotDest,fApproach);//debug only
+			rApproach=yDegMove/yToDest;//yDegMove/360.0f;
+			yRot=APPROACH(yRot,yRotDest,rApproach);//debug only
 		}
 		if (zDegMove>=zToDest) zRot=zRotDest;
 		else {
-			fApproach=zDegMove/zToDest;//zDegMove/360.0f;
-			zRot=APPROACH(zRot,zRotDest,fApproach);//debug only
+			rApproach=zDegMove/zToDest;//zDegMove/360.0f;
+			zRot=APPROACH(zRot,zRotDest,rApproach);//debug only
+		}
+	}//end RotateTowardDest
+	void Mass3d::RotateTowardDest(double rSecondsSinceLastCall) {
+		AngleToLimits();
+		AngleDestToLimits();
+		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
+		double xDegMove=xRotVel*rSecondsSinceLastCall;
+		double yDegMove=yRotVel*rSecondsSinceLastCall;
+		double zDegMove=zRotVel*rSecondsSinceLastCall;
+		double rApproach;
+		double xToDest=FANGLEDIFFPOSITIVE(xRot,xRotDest);
+		double yToDest=FANGLEDIFFPOSITIVE(yRot,yRotDest);
+		double zToDest=FANGLEDIFFPOSITIVE(zRot,zRotDest);
+
+		if (xDegMove>=xToDest) xRot=xRotDest;
+		else {
+			rApproach=xDegMove/xToDest;//xDegMove/360.0f;
+			xRot=APPROACH(xRot,xRotDest,rApproach);//commented for debug only//,xDegMove/(xRotDest-xRot));
+		}
+		if (yDegMove>=yToDest) yRot=yRotDest;
+		else {
+			rApproach=yDegMove/yToDest;//yDegMove/360.0f;
+			yRot=APPROACH(yRot,yRotDest,rApproach);//debug only
+		}
+		if (zDegMove>=zToDest) zRot=zRotDest;
+		else {
+			rApproach=zDegMove/zToDest;//zDegMove/360.0f;
+			zRot=APPROACH(zRot,zRotDest,rApproach);//debug only
 		}
 	}//end RotateTowardDest
 	void Mass3d::HardRotation(float xRotTo, float yRotTo, float zRotTo) {
@@ -1055,7 +1074,6 @@ namespace ExpertMultimediaBase {
 		}
 	}
 */
-
 	///#endregion methods
 
 	///#region memory
@@ -2487,7 +2505,6 @@ namespace ExpertMultimediaBase {
 		yToMove+=yRel;
 		zToMove+=zRel;
 	}
-
 	/*inline*/ float FSQUARED(float val) {
 		return val*val;
 	}
@@ -2602,17 +2619,17 @@ namespace ExpertMultimediaBase {
 		else return (byte)val;
 	}
 	/*inline*/ byte SafeByte(float val) {
-	    return (val>255.0f)?255:((val<0.0f)?0:(byte)val);
+		return (val>255.0f)?255:((val<0.0f)?0:(byte)val);
 	}
 	/*inline*/ int SafeAddWrappedPositiveOnly(int val1, int val2) {
 		if (val1<0) val1*=-1;
 		if (val2<0) val2*=-1;
-	    int max=2147483647;
-	    int val3=0;
-	    int maxdiff=max-val1;
-	    if (maxdiff<val2) val3=val1+val2;
-	    else val3=val2-maxdiff;
-	    return val3;
+		int max=2147483647;
+		int val3=0;
+		int maxdiff=max-val1;
+		if (maxdiff<val2) val3=val1+val2;
+		else val3=val2-maxdiff;
+		return val3;
 	}
 	///#endregion math
 

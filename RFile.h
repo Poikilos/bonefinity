@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <base.h>
-//#include "C:\My Documents\Projects-cpp\Base\base.h"
+//#include "E:\Projects-cpp\Base\base.h"
 
 using namespace std;
 
@@ -14,11 +14,11 @@ namespace ExpertMultimediaBase {
 		int iLength;
 		int iMaxLength;
 	public:
-		byte* byarrData;
+		byte* arrbyData;
 		string sFile;
 
 		bool OpenRead(string sFileNow);
-		bool OpenRead(const char* carrFile);
+		bool OpenRead(const char* szFile);
 		int Place();
 		int Length();
 		bool EndOfFile();
@@ -26,16 +26,16 @@ namespace ExpertMultimediaBase {
 		~Byter();
 		bool OpenWrite(string sFileNow);
 		bool OpenWrite(string sFileNow, int iSizeTo);
-		bool Read(void* hDummyA, void* Dest, Uint32 dwBytesToRead, Uint32 &dwReturnBytesRead, void* hDummyB);
-		void Read(void* Dest, Uint32 dwBytesToRead);
+		bool Read(void* hDummyA, void* Dest, Uint32 u32BytesToRead, Uint32 &u32ReturnBytesRead, void* hDummyB);
+		void Read(void* Dest, Uint32 u32BytesToRead);
 		void Read(byte& val);
 		void Read(ushort& val);
-		bool ReadAscii(string &sReturn, Uint32 dwBytesToRead, Uint32 &dwBytesRead);
-		bool Write(byte* lpbySrc, Uint32 dwBytesToWrite, Uint32 &dwBytesWritten);
-		void Write(byte* lpbySrc, Uint32 dwBytesToWrite);
+		bool ReadAscii(string &sReturn, Uint32 u32BytesToRead, Uint32 &u32BytesRead);
+		bool Write(byte* lpbySrc, Uint32 u32BytesToWrite, Uint32 &u32BytesWritten);
+		void Write(byte* lpbySrc, Uint32 u32BytesToWrite);
 		bool Write(byte& val);
 		void Write(ushort& val);
-		bool WriteAscii(string val, Uint32 &dwBytesWritten);
+		bool WriteAscii(string val, Uint32 &u32BytesWritten);
 		bool Save();
 		bool Save(string sFileNow);
 		bool SetLength(int iSizeTo);

@@ -1,11 +1,9 @@
-#ifndef GBUFFER32BGRA_H
-#define GBUFFER32BGRA_H
+#ifndef GBUFFER_H
+#define GBUFFER_H
 
 #include <base.h>
-//#include "C:\My Documents\Projects-cpp\Base\base.h"
 #include <targa.h>
-//#include "C:\My Documents\Projects-cpp\Base\targa.h"
-//#include <gradient.h>
+#include <gradient32bgra.h>
 
 using namespace std;
 
@@ -13,9 +11,10 @@ using namespace std;
 /// For simple graphics buffers used as images, variable-size frames, or graphics surfaces.
 /// </summary>
 namespace ExpertMultimediaBase {
+	extern byte by2d_ByteAsByte_times_ByteAsFloatLookup[256][256];
 	//Sequential iDrawMode Draw(...) argument values:
-	const int DrawModeCopyAlpha			= 0;
-	const int DrawModeBlendAlpha		= 1;
+	const int DrawModeCopyAlpha			= 0; //copy whole pixel and do no blending
+	const int DrawModeBlendAlpha			= 1;
 	const int DrawModeKeepGreaterAlpha	= 2;
 	const int DrawModeKeepDestAlpha		= 3;
 
@@ -23,42 +22,45 @@ namespace ExpertMultimediaBase {
 	const int INDEX_TR=1;
 	const int INDEX_BL=2;
 	const int INDEX_BR=3;
-	class GBuffer32BGRA {
+	class GBuffer {
 	public:
 		Targa targaLoaded;//Bitmap bmpLoaded;
 		string sErrBy;
 		string sFile;
 		bool bBufferAsPointerNotCopy;
 		//int iType;
-		byte* byarrData;
+		byte* arrbyData;
 		int iWidth;
 		int iHeight;
 		int iBytesPP;
 		int iStride;
 		int iBytesTotal;
-		byte byarrBrush[4];
-		byte byarrBrush32Copied64[8];
-
+		byte arrbyBrush[4];
+		byte arrbyBrush32Copied64[8];
 		byte* BytePtrStart();
 		void InitNull();
-		GBuffer32BGRA(string sFileImage);
+		GBuffer(string sFileImage);
 		bool Load(string sFileNow);
 		bool Save(string sFileNow);
+		bool SaveJec(string sFileNow, int iSetFrames, int iColorTolerance, int iLightnessTolerance);
 		bool SaveRaw(string sFileNow);
-		GBuffer32BGRA();
-	    GBuffer32BGRA(int iSetWidth, int iSetHeight, int iSetBytesPP);
-		GBuffer32BGRA(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bInitializeBuffer);
-		~GBuffer32BGRA();
+		GBuffer();
+		GBuffer(int iSetWidth, int iSetHeight, int iSetBytesPP);
+		GBuffer(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bInitializeBuffer);
+		~GBuffer();
+		void Dispose();
 		void Init(int iSetWidth, int iSetHeight, int iSetBytesPP);
 		void Init(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bInitializeBuffer);
-        bool CopyTo(GBuffer32BGRA* gbBlankNonNullObjectToSet);
-		bool CopyTo(GBuffer32BGRA &gbBlankNonNullObjectToSet);
-		bool CopyToByDataRef(GBuffer32BGRA &gbBlankNonNullObjectToSet);
-		GBuffer32BGRA* Copy();
+		bool CopyTo(GBuffer* gbBlankNonNullObjectToSet);
+		bool CopyTo(GBuffer &gbBlankNonNullObjectToSet);
+		bool CopyToByDataRef(GBuffer &gbBlankNonNullObjectToSet);
+		GBuffer* Copy();
+		string Description();
+		string Description(bool bVerbose);
 		bool SetBrushColor(byte r, byte g, byte b, byte a);
 		bool SetBrushColor(byte r, byte g, byte b);
 		bool SetBrushColor(string sHexCode);
-	    bool DrawRect(int xDest, int yDest, int iRectWidth, int iRectHeight);
+		bool DrawRect(int xDest, int yDest, int iRectWidth, int iRectHeight);
 		bool DrawRect(IRect &irectExclusive);
 		bool DrawRect(Rectangle &rectNow);
 		bool DrawRectFilled(Rectangle &rectNow);
@@ -83,27 +85,27 @@ namespace ExpertMultimediaBase {
 				float fPrecisionIncrement,float fPushSpiralPixPerRotation);
 		bool Fill(byte byGrayVal);
 		bool IsLoaded();
-		bool IsLike(GBuffer32BGRA &gbDest);
-		bool NeedsToCrop(GBuffer32BGRA &gbDest, int xDest, int yDest);
-		//bool DrawToSmallerWithoutVoidAreasElseCancel(GBuffer32BGRA gbDest, int xSrc, int ySrc, int iDrawMode);
-		bool DrawToLargerWithoutCropElseCancel(GBuffer32BGRA &gbDest, int xDest, int yDest, int iDrawMode);
-	};//end class GBuffer32BGRA
+		bool IsLike(GBuffer &gbDest);
+		bool NeedsToCrop(GBuffer &gbDest, int xDest, int yDest);
+		//bool DrawToSmallerWithoutVoidAreasElseCancel(GBuffer gbDest, int xSrc, int ySrc, int iDrawMode);
+		bool DrawToWithClipping(GBuffer &gbDest, int xDest, int yDest, float fOpacityMultiplier);
+		bool DrawToLargerWithoutCropElseCancel(GBuffer &gbDest, int xDest, int yDest, int iDrawMode);
+	};//end class GBuffer
 
 	//////////////////////////////// PROTOTYPES ////////////////////////////////////
 
-	double dDiagonalUnit = 1.4142135623730950488016887242097;//the sqrt. of 2, dist of diagonal pixel
 
-	bool RawOverlayNoClipToBig(GBuffer32BGRA &gbDest, IPoint &ipAt, byte* byarrSrc, int iSrcWidth, int iSrcHeight, int iSrcBytesPP);
-	bool OverlayNoClipToBig(GBuffer32BGRA &gbDest, GBuffer32BGRA &gbSrc, IPoint &ipDest, Gradient &gradNow, int iSrcChannel);
-	bool OverlayNoClipToBigCopyAlpha(GBuffer32BGRA &gbDest, IPoint &ipAt, GBuffer32BGRA &gbSrc, Gradient &gradNow, int iSrcChannel);
-	bool OverlayNoClipToBigCopyAlpha(GBuffer32BGRA &gbDest, IPoint &ipAt, GBuffer32BGRA &gbSrc);
-	bool MaskFromChannel(GBuffer32BGRA &gbDest, GBuffer32BGRA &gbSrc, int iByteInPixel);
-	bool MaskFromValue(GBuffer32BGRA &gbDest, GBuffer32BGRA &gbSrc);
-	bool InterpolatePixel(GBuffer32BGRA &gbDest, GBuffer32BGRA &gbSrc, int iDest, DPoint &dpSrc);
-	bool EffectMoBlurSimModWidth(GBuffer32BGRA &gbDest, GBuffer32BGRA &gbSrc, int xOffsetTotal, byte byDecayTotal);
-	bool EffectSkewModWidth(GBuffer32BGRA &gbDest, GBuffer32BGRA &gbSrc, int xOffsetBottom);
-	bool EffectLightenOnly(byte* byarrDest, byte* byarrSrc, int iDestByte, int iSrcByte, int iBytes);
-	bool EffectLightenOnly(byte* byarrDest, byte* byarrSrc, int iDestByte, int iSrcByte, int iBytes, float fMultiplySrc);
-	bool CopyTo(GBuffer32BGRA &gbDest);
+	bool RawOverlayNoClipToBig(GBuffer &gbDest, IPoint &ipAt, byte* arrbySrc, int iSrcWidth, int iSrcHeight, int iSrcBytesPP);
+	bool OverlayNoClipToBig(GBuffer &gbDest, GBuffer &gbSrc, IPoint &ipDest, GBuffer &gradNow, int iSrcChannel);
+	bool OverlayNoClipToBigCopyAlpha(GBuffer &gbDest, IPoint &ipAt, GBuffer &gbSrc, Gradient &gradNow, int iSrcChannel);
+	bool OverlayNoClipToBigCopyAlpha(GBuffer &gbDest, IPoint &ipAt, GBuffer &gbSrc);
+	bool MaskFromChannel(GBuffer &gbDest, GBuffer &gbSrc, int iByteInPixel);
+	bool MaskFromValue(GBuffer &gbDest, GBuffer &gbSrc);
+	bool InterpolatePixel(GBuffer &gbDest, GBuffer &gbSrc, int iDest, DPoint &dpSrc);
+	bool EffectMoBlurSimModWidth(GBuffer &gbDest, GBuffer &gbSrc, int xOffsetTotal, byte byDecayTotal);
+	bool EffectSkewModWidth(GBuffer &gbDest, GBuffer &gbSrc, int xOffsetBottom);
+	bool EffectLightenOnly(byte* arrbyDest, byte* arrbySrc, int iDestByte, int iSrcByte, int iBytes);
+	bool EffectLightenOnly(byte* arrbyDest, byte* arrbySrc, int iDestByte, int iSrcByte, int iBytes, float fMultiplySrc);
+	bool CopyTo(GBuffer &gbDest);
 }//end namespace
 #endif

@@ -2,7 +2,7 @@
 #define SPRITE_CPP
 
 #include <sprite.h>
-//#include "C:\My Documents\Projects-cpp\Base\sprite.h"
+//#include "E:\Projects-cpp\Base\sprite.h"
 
 using namespace std;
 
@@ -14,32 +14,32 @@ namespace ExpertMultimediaBase {
 	}
 	void Sprite::InitNull() {
 		//runtime vars (to save):
-		i2dSeq=null;
-		iSeq=0; //index in 1st dimension of i2dSeq
-		iFrame=0; //index in 2nd dimension of i2dSeq
-		iarrFrames=null; //size of sub-arrays of i2dSeq
-		iSeqs=1; //number of sub-arrays of i2dSeq
+		arr2iSeq=null;
+		iSeq=0; //index in 1st dimension of arr2iSeq
+		iFrame=0; //index in 2nd dimension of arr2iSeq
+		arriFrames=null; //size of sub-arrays of arr2iSeq
+		iSeqs=1; //number of sub-arrays of arr2iSeq
 		//sarrNames=null; //names of the sequences, i.e. "walk"
 		//save-only (non-runtime) vars (commented purposely)
-		//int** i2dFrameRates; //(NOT 1 to 1 match with i2dSeq) FPS of each frame,
+		//int** arr2iFrameRates; //(NOT 1 to 1 match with arr2iSeq) FPS of each frame,
 				//followed by how many frames for which to use that speed
 				//(if doesn't have a second value, keep for whole anim!)
 		barrAutoAnimate=false;
 		bDieIfAdvanceAfterLastFrame=false;
 		//runtime-only vars:
 		bActive;
-		i2dDelay=null; //(1 to 1 match with i2dSeq) millisecond delays for each frame, calculated from "RLE" i2dFrameRates
+		arr2iDelay=null; //(1 to 1 match with arr2iSeq) millisecond delays for each frame, calculated from "RLE" arr2iFrameRates
 		//runtime-only vars:
-		iAnim; //references an anim in animarr
+		iAnim; //references an anim in arranim
 		//runtime vars (to save):
-		sAnim=""; //references an anim in animarr
+		sAnim=""; //references an anim in arranim
 		sName="";
 		bLoop=false;
 	}
 	void Sprite::SafeFree() {
-		ExpertMultimediaBase::SafeFree(i2dSeq,iSeqs);
-		ExpertMultimediaBase::SafeFree(iarrFrames);
-		ExpertMultimediaBase::SafeFree(i2dDelay,iSeqs);
+		ExpertMultimediaBase::SafeFree(arr2iSeq,iSeqs);
+		ExpertMultimediaBase::SafeFree(arriFrames);
+		ExpertMultimediaBase::SafeFree(arr2iDelay,iSeqs);
 	}
 	//public methods:
 	bool Sprite::Load(string sFileNow) {
@@ -55,29 +55,29 @@ namespace ExpertMultimediaBase {
 		}
 		if (iSeqs<1) iSeqs=1;
 		try {
-			i2dSeq=(int**)malloc(sizeof(int*)*iSeqs);
-			i2dDelay=(int**)malloc(sizeof(int*)*iSeqs);
-			iarrFrames=(int*)malloc(sizeof(int)*iSeqs);
+			arr2iSeq=(int**)malloc(sizeof(int*)*iSeqs);
+			arr2iDelay=(int**)malloc(sizeof(int*)*iSeqs);
+			arriFrames=(int*)malloc(sizeof(int)*iSeqs);
 			int iTempFPS;
 			if (vsTemp.Exists("fps")) iTempFPS=vsTemp.GetForcedInt("fps");
 			else iTempFPS=30;
 			if (iTempFPS<0) iTempFPS=30;
 			iSeq=0;
 			iFrame=0;
-			iarrFrames=null;
+			arriFrames=null;
 			iSeqs=1;
 			barrAutoAnimate=false;
 			bDieIfAdvanceAfterLastFrame=false;
 			bActive;
-			i2dDelay=null;
+			arr2iDelay=null;
 			iAnim;
 			sAnim="";
 			sName="";
 			bLoop=false;
 		}
-		catch (exception& exn) { ShowException(exn,"Sprite::Load");
+		catch (exception& exn) { ShowExn(exn,"Sprite::Load");
 		}
-		catch (...) { ShowUnknownException("Sprite::Load");
+		catch (...) { ShowUnknownExn("Sprite::Load");
 		}
 	}//end Sprite::Load
 	bool Sprite::Save(string sFileNow) {

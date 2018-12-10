@@ -1,23 +1,26 @@
 #ifndef GRADIENT_H
 #define GRADIENT_H
-/*
-#include <cstdlib>
+//#include <cstdlib>
 #include <base.h>
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
+	class GBuffer;//end class GBuffer
+
+
 	class Gradient {
 	private:
-		Uint32 dwLevels;
+		Uint32 u32Levels;
+		Uint32 u32BytesPP;
+		Uint32 u32BytesTotal;
 		byte* lpbyShade;
-		bool Init(Uint32 dwSetLevels);
+		bool Init(Uint32 u32SetLevels);
 		bool InitNull();
 	public:
 		Gradient();
-		bool Shade(byte* byarrDest, uint dwDestLoc, byte bySrcValue);
-		bool Shade(byte* byarrDest, uint dwDestLoc, Uint32 dwSrcValue);
+		void Gradient::ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, byte bySrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, byte bySrcValue);
+		void Gradient::ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, Uint32 u32SrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, Uint32 u32SrcValue);
 	};
 }//end namespace
-*/
 #endif

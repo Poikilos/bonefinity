@@ -6,7 +6,7 @@
 #include <fstream>
 #include <memory>
 #include <byter.h>
-//#include "C:\My Documents\Projects-cpp\Base\byter.h"
+//#include "E:\Projects-cpp\Base\byter.h"
 
 using namespace std;
 
@@ -32,29 +32,29 @@ namespace ExpertMultimediaBase {
 	const byte bitInterleave4Way			= 64;	//bit6
 	const byte bitInterleave2Way			= 128;	//bit7
 	//#region prototypes
-	int RLESizeUncompressed(byte* byarrSrc, int iStart, int iSrcSize, int iBytesPerChunk);
-	bool Compare(byte* byarrSrc1, int iSrcLoc1, byte* byarrSrc2, int iSrcLoc2, int iRun);
-	byte* RLECompress(ref_int iReturnLength, byte* byarrSrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse, bool bCountOnlyAndReturnNull);
-	byte* RLECompress(ref_int iReturnLength, byte* byarrSrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse);
-	byte* RLEUncompress(ref_int iReturnLength, byte* byarrSrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse, bool bCountOnlyAndReturnNull);
-	byte* RLEUncompress(ref_int iReturnLength, byte* byarrSrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse);
-	int RLEUncompress(byte* byarrDest, int iDestSize, byte* byarrSrc, int iSrcSize, int iBytesPerChunk);
-	int RLEUncompress(byte* byarrDest, int iDestSizeIrrelevantIfCountOnlyIsTrue, byte* byarrSrc, int iSrcSize, int iBytesPerChunk, int iDestStart, int iSrcStart, bool bCountOnlyAndDontTouchDest);
+	int RLESizeUncompressed(byte* arrbySrc, int iStart, int iSrcSize, int iBytesPerChunk);
+	bool Compare(byte* arrbySrc1, int iSrcLoc1, byte* arrbySrc2, int iSrcLoc2, int iRun);
+	byte* RLECompress(ref_int iReturnLength, byte* arrbySrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse, bool bCountOnlyAndReturnNull);
+	byte* RLECompress(ref_int iReturnLength, byte* arrbySrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse);
+	byte* RLEUncompress(ref_int iReturnLength, byte* arrbySrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse, bool bCountOnlyAndReturnNull);
+	byte* RLEUncompress(ref_int iReturnLength, byte* arrbySrc, int iSrcStart, int iBytesPerChunk, int iBytesToParse);
+	int RLEUncompress(byte* arrbyDest, int iDestSize, byte* arrbySrc, int iSrcSize, int iBytesPerChunk);
+	int RLEUncompress(byte* arrbyDest, int iDestSizeIrrelevantIfCountOnlyIsTrue, byte* arrbySrc, int iSrcSize, int iBytesPerChunk, int iDestStart, int iSrcStart, bool bCountOnlyAndDontTouchDest);
 	//#endregion prototypes
-	
+
 	//#region TargaFooter
 	class TargaFooter {
 	private:
 		byte *dump;
-		uint dwSizeofDump;
+		uint u32SizeofDump;
 	public:
 	    TargaFooter();
-	    TargaFooter(byte* lpbyDataPointerToKeep, uint dwSize);
-	    TargaFooter(byte* byarrDataSrcToCopyFrom, uint dwStart, uint dwCount, uint dwActualSourceBufferSize);
+	    TargaFooter(byte* lpbyDataPointerToKeep, uint u32Size);
+	    TargaFooter(byte* arrbyDataSrcToCopyFrom, uint u32Start, uint u32Count, uint u32ActualSourceBufferSize);
 		~TargaFooter();
 		bool Init();
-		bool Init(byte* lpbyDataPointerToKeep, uint dwSize);
-		bool Init(byte* byarrDataSrc, uint dwSrcStart, uint dwCount, uint dwActualSourceBufferSize);
+		bool Init(byte* lpbyDataPointerToKeep, uint u32Size);
+		bool Init(byte* arrbyDataSrc, uint u32SrcStart, uint u32Count, uint u32ActualSourceBufferSize);
 		bool WriteTo(Byter &byterNow);
 		uint ByteCount();
 	};
@@ -64,7 +64,7 @@ namespace ExpertMultimediaBase {
 	public:
 		string sFile;
 		TargaFooter footer;
-		byte *byarrData;
+		byte *arrbyData;
 
 		Targa();
 		~Targa();
@@ -74,14 +74,14 @@ namespace ExpertMultimediaBase {
 		int BytesBuffer();
 		bool Init(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bReallocateBuffers);
 		bool CopyTo(Targa &targaDest);
-		bool DrawFast(byte* byarrDest,  int xAtDest, int yAtDest, int iDestWidth, int iDestHeight, int iDestBytesPP, int iDestStride);
+		bool DrawFast(byte* arrbyDest,  int xAtDest, int yAtDest, int iDestWidth, int iDestHeight, int iDestBytesPP, int iDestStride);
 		void ToRect(ref_Rectangle rectReturn);
 		void ToRect(ref_RectangleF rectReturn);
-		bool From(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, bool bUsePointerNotCopyData);
-		bool From(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, bool bUsePointerNotCopyData, uint dwSrcStart);
-		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, uint dwSrcRealLen);
-		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, uint dwSrcRealLen, bool bReInitializeAll);
-		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* byarrSrc, uint dwSrcRealLen, uint dwSrcStart, bool bReInitializeAll);
+		bool From(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, bool bUsePointerNotCopyData);
+		bool From(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, bool bUsePointerNotCopyData, uint u32SrcStart);
+		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen);
+		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen, bool bReInitializeAll);
+		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen, uint u32SrcStart, bool bReInitializeAll);
 		byte* GetBufferPointer();
 		bool IsLoaded();
 		bool Save();
@@ -95,12 +95,14 @@ namespace ExpertMultimediaBase {
 		bool SetCompressionRLE(bool bOn);
 		string Dump();
 		string Dump(bool bDumpFull);
+		string Description();
+		string Description(bool bVerbose);
 	private:
 		void DeriveVars();
 		void InitNull();
 		bool MarkAsCompressed(bool bAsCompressed);
 		//header:
-			//(byte)(length of id),(byte)(int)MapType,(byte)(int)TypeTarga,(ushort)iMapOrigin,(ushort)iMapLength,(byte)iMapBitDepth,(ushort)xImageLeft,(ushort)yImageBottom,(ushort)iWidth,(ushort)iHeight,(byte)iBitDepth,(byte)bitsDescriptor,(byte[length of id])sID,(byte[iMapLength])(byarrColorMap),(byte[iBytesAsUncompressed])(byarrData)
+			//(byte)(length of id),(byte)(int)MapType,(byte)(int)TypeTarga,(ushort)iMapOrigin,(ushort)iMapLength,(byte)iMapBitDepth,(ushort)xImageLeft,(ushort)yImageBottom,(ushort)iWidth,(ushort)iHeight,(byte)iBitDepth,(byte)bitsDescriptor,(byte[length of id])sID,(byte[iMapLength])(arrbyColorMap),(byte[iBytesAsUncompressed])(arrbyData)
 		//int iIDLength; //1 byte implied (length of sID)
 		int MapType; //1 byte
 		int TypeTarga; //1 byte
@@ -114,10 +116,10 @@ namespace ExpertMultimediaBase {
 		int iBitDepth; //1 byte //TODO: 16 is 5.5.5.1 (!!!)IF(!!!) low nibble of descriptor is 1 (otherwise 5.6.5 and descriptor low nibble is zero)
 		byte bitsDescriptor; //1 byte  //(default zero)
 		string sID; //array of [iTagLength] bytes  //[bySizeofID] -- custom non-terminated string
-		byte *byarrColorMap; //array of [] bytes  //[byMapBitDepth*wMapLength] -- the palette
-		//byarrData
+		byte *arrbyColorMap; //array of [] bytes  //[byMapBitDepth*wMapLength] -- the palette
+		//arrbyData
 		//derived fields:
-		int iBytesPP; 
+		int iBytesPP;
 		int iStride;
 		int iBytesAsUncompressed;//byte sizeof image data only
 		int iBytesBuffer;

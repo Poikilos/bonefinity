@@ -2,7 +2,8 @@
 #define WORLD_H
 
 #include <anim32bgra.h>
-//#include "C:\My Documents\Projects-cpp\Base\anim32bgra.h"
+#include <sprite.h>
+//#include "E:\Projects-cpp\Base\anim32bgra.h"
 
 using namespace std;
 
@@ -24,8 +25,8 @@ public:
 	//runtime vars (to save):
 	//string sBasePath;
 	//runtime-only vars:
-	Anim32BGRA* animarr;
-	Sprite* spritearr;
+	Anim* arranim;
+	Sprite* arrsprite;
 
 	World();
 	~World();

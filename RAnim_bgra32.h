@@ -1,14 +1,13 @@
-#ifndef ANIM32BGRA_H
-#define ANIM32BGRA_H
+#ifndef ANIM_H
+#define ANIM_H
 #include <gbuffer32bgra.h>
-//#include "C:\My Documents\Projects-cpp\Base\gbuffer32bgra.h"
+//#include "E:\Projects-cpp\Base\gbuffer32bgra.h"
 
 using namespace std;
 //using System.Drawing.Text;
 
 namespace ExpertMultimediaBase {
 	string PathFileOfSeqFrame(string sSetFileBaseName, string sSetFileExt, long lFrameTarget, int iDigitsMin);
-
 	const int ResourceTypeNone = 0;
 	const int ResourceTypeAnim = 1;
 	const int ResourceTypeClip = 2;
@@ -38,7 +37,7 @@ namespace ExpertMultimediaBase {
 		void Init();
 	};
 
-	class Anim32BGRA {
+	class Anim {
 	private:
 		Targa targaLoaded;
 		RectangleF rectNowF;
@@ -48,11 +47,9 @@ namespace ExpertMultimediaBase {
 		string sPathFileNonSeq();
 		//int iMaxEffects;
 		//PixelFormat pixelformatNow=PixelFormat.Format32bppArgb;
-		GBuffer32BGRA* gbarrAnim;
-		string sFuncNow;
-		string sLastErr;
+		GBuffer* gbarrAnim;
 	public:
-		GBuffer32BGRA gbFrame;//TODO: make this read only if using .net/mono
+		GBuffer gbFrame;
 		bool bLoop;
 		long lFramesCached;
 		//private string sPathFile="";
@@ -63,11 +60,15 @@ namespace ExpertMultimediaBase {
 		int iEffects;
 		int iMaxEffects;
 		Effect* effectarr;
-		Anim32BGRA();
-		~Anim32BGRA();
-		Anim32BGRA* Copy();
-		Anim32BGRA* CopyAsGray();
-		Anim32BGRA* CopyAsGray(int iChannelOffset);
+		Anim();
+		void InitNull();
+		~Anim();
+		Anim* Copy();
+		Anim* CopyAsGray();
+		Anim* CopyAsGray(int iChannelOffset);
+		bool CopyTo(Anim& animOut);
+		bool CopyAsGrayTo(Anim& animOut);
+		bool CopyAsGrayTo(Anim& animOut, int iChannelOffset);
 		bool SaveSeq(string sSetFileBaseName, string sSetFileExt);
 		string Dump(bool bDumpVars);
 		string Dump();
@@ -92,40 +93,40 @@ namespace ExpertMultimediaBase {
 		bool GotoFrame(int iFrameX);
 		bool GotoNextFrame();
 		bool GotoNextFrame(bool bLoop);
-		bool DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest, long lFrame);
-		bool DrawFrameOverlay(GBuffer32BGRA &gbDest, IPoint &ipDest);
+		bool DrawFrameOverlay(GBuffer &gbDest, IPoint &ipDest, long lFrame);
+		bool DrawFrameOverlay(GBuffer &gbDest, IPoint &ipDest);
 		int MinDigitsRequired(int iNumber);
 		bool LastFrame();
 		string PathFileOfSeqFrame(long lFrameTarget);
 		bool SplitFromImage32(string sFile, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool SplitFromImage32(string sFileImage, int iCellWidth, int iCellHeight, int iRows, int iColumns);
-		bool SplitFromImage32(GBuffer32BGRA &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
+		bool SplitFromImage32(GBuffer &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool TransposeFramesAsMatrix(int iResultRows, int iResultCols);
-		//GBuffer32BGRA ToOneImage(int iCellW, int iCellH, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
-		//bool SplitFromImage32(GBuffer32BGRA &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
-		GBuffer32BGRA* ToOneImage(int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
+		//GBuffer ToOneImage(int iCellW, int iCellH, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
+		//bool SplitFromImage32(GBuffer &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
+		GBuffer* ToOneImage(int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool SafeDeleteAnim();
 		bool SafeDeleteEffects();
 		int Width();
 		int Height();
-		bool DrawToLargerWithoutCropElseCancel(GBuffer32BGRA &gbDest, int xDest, int yDest, int iDrawMode);
+		bool DrawToLargerWithoutCropElseCancel(GBuffer &gbDest, int xDest, int yDest, int iDrawMode);
 		int IFrames();
-	};//end class Anim32BGRA;
-	
+	};//end class Anim;
+
 	class Clip {
 	public:
-		int iParent; //index of parent Anim32BGRA in animarr
+		int iParent; //index of parent Anim in arranim
 		long lFrameStart;
 		long lFrames;
 		long lFrame;
-		Effect* effectarr; //remember to also process animarr[iParent].effectarr[]
+		Effect* effectarr; //remember to also process arranim[iParent].effectarr[]
 		int iEffects;
 		Clip();
 	private:
 		int iMaxEffects;
 	};
 
-	void SafeFree(Anim32BGRA*& animarrX);
+	void SafeFree(Anim*& arranimX);
 
 }
 #endif
