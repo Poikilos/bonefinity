@@ -1,0 +1,33 @@
+# Project: Base
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = obj/Base_private.res
+OBJ  = obj/main.o $(RES)
+LINKOBJ  = obj/main.o $(RES)
+LIBS =  -L"C:/DEV-CPP/lib" -mwindows -lmingw32 -lSDLmain -lSDL  
+INCS =  -I"C:/DEV-CPP/include"  -I"C:/My Documents/Projects-cpp/Base" 
+CXXINCS =  -I"C:/DEV-CPP/lib/gcc/mingw32/3.4.2/include"  -I"C:/DEV-CPP/include/c++/3.4.2/backward"  -I"C:/DEV-CPP/include/c++/3.4.2/mingw32"  -I"C:/DEV-CPP/include/c++/3.4.2"  -I"C:/DEV-CPP/include"  -I"C:/My Documents/Projects-cpp/Base" 
+BIN  = bin/Base.exe
+CXXFLAGS = $(CXXINCS)  
+CFLAGS = $(INCS) -Dmain=SDL_main  
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before bin/Base.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "bin\Base.exe" $(LIBS)
+
+obj/main.o: main.c
+	$(CPP) -c main.c -o obj/main.o $(CXXFLAGS)
+
+obj/Base_private.res: Base_private.rc 
+	$(WINDRES) -i Base_private.rc --input-format=rc -o obj/Base_private.res -O coff 
