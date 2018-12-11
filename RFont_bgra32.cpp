@@ -1,6 +1,6 @@
 #ifndef GFONT_CPP
 #define GFONT_CPP
-#include <gfont32bgra.h>
+#include <RFont_bgra32.h>
 #include <base.h>
 
 /*
@@ -48,22 +48,21 @@ namespace ExpertMultimediaBase {
 	bool GFont::TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText) {
 		return TypeFast(gbDest, ipDest, sText, 0, DrawModeCopyAlpha);
 	}
-
 	bool GFont::TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode) {
 		bool bGood=true;
 		static bool bFirstRun=true;
 		IPoint ipDestNow;
 		try {
 			if (bFirstRun) { //(GFont_bFirstRun) {
-				Console.Error.Write("GFont::TypeFast ");
-				Console.Error.Flush();
+				Console::Error.Write("GFont::TypeFast ");
+				Console::Error.Flush();
 				bFirstRun=false;
 			}
-			ipDestNow.x=ipDest.x;
-			ipDestNow.y=ipDest.y;
+			ipDestNow.X=ipDest.X;
+			ipDestNow.Y=ipDest.Y;
 			if (GFont_bFirstRun) {
-				Console.Error.Write("{iGlyphType:"+RString_ToString(iGlyphType)+"}");
-				Console.Error.Flush();
+				Console::Error.Write("{iGlyphType:"+RString_ToString(iGlyphType)+"}");
+				Console::Error.Flush();
 			}
 			const char* szText=sText.c_str();//debug hard-coded limitation
 			if (iGlyphType>=GFont_iGlyphTypes) {
@@ -71,34 +70,34 @@ namespace ExpertMultimediaBase {
 				iGlyphType=0;
 			}
 			if (GFont_bFirstRun) {
-				Console.Error.Write("{iGlyphType:"+RString_ToString(iGlyphType)+"}");
-				Console.Error.Flush();
+				Console::Error.Write("{iGlyphType:"+RString_ToString(iGlyphType)+"}");
+				Console::Error.Flush();
 			}
 			bool character_bFirstRun=true;
 			char cPrev='\0';
 			bool bSpacingChar;
 			for (int i=0; i<sText.length(); i++) {
 				if (GFont_bFirstRun&&character_bFirstRun) {
-					Console.Error.Write("{szText["+RString_ToString(i)+"]:"+RString_ToString(szText[i])+"} GotoFrame...");
-					Console.Error.Flush();
+					Console::Error.Write("{szText["+RString_ToString(i)+"]:"+RString_ToString(szText[i])+"} GotoFrame...");
+					Console::Error.Flush();
 				}
 				bool bTest=arranimGlyphType[iGlyphType].GotoFrame((long)szText[i]);
 				if (GFont_bFirstRun&&character_bFirstRun) {
-					Console.Error.Write("{GotoFrame bTest:"+RString_ToString(bTest)+"}...");
-					Console.Error.Flush();
+					Console::Error.Write("{GotoFrame bTest:"+RString_ToString(bTest)+"}...");
+					Console::Error.Flush();
 				}
 
 				if ( (szText[i]=='\r') || (szText[i]=='\n') ) {
 					if (  ( (szText[i]=='\r') && (cPrev!='\n') )
 					  ||  ( (szText[i]=='\n') && (cPrev!='\r') )  ) {
-					  	ipDestNow.x=ipDest.x;
-					  	ipDestNow.y+=arranimGlyphType[iGlyphType].gbFrame.iHeight;
+					  	ipDestNow.X=ipDest.X;
+					  	ipDestNow.Y+=arranimGlyphType[iGlyphType].gbFrame.iHeight;
 					}
 					bSpacingChar=true;
 				}
 				else if (szText[i]=='\t') {
 					bSpacingChar=true;
-					ipDestNow.x+=arranimGlyphType[iGlyphType].gbFrame.iWidth*3; //TODO: remove *3 if proportional font with wide tab character
+					ipDestNow.X+=arranimGlyphType[iGlyphType].gbFrame.iWidth*3; //TODO: remove *3 if proportional font with wide tab character
 				}
 				else {
 					bSpacingChar=false;
@@ -112,24 +111,24 @@ namespace ExpertMultimediaBase {
 						}
 					}
 					else {
-						if (!arranimGlyphType[iGlyphType].gbFrame.DrawToLargerWithoutCropElseCancel(gbDest,ipDestNow.x, ipDestNow.y,iDrawMode)) {//if (!ExpertMultimediaBase::OverlayNoClipToBig(gbDest, ipDestNow, arranimGlyphType[iGlyphType].gbFrame, gradNow, -1)) {
+						if (!arranimGlyphType[iGlyphType].gbFrame.DrawToLargerWithoutCropElseCancel(gbDest,ipDestNow.X, ipDestNow.Y,iDrawMode)) {//if (!ExpertMultimediaBase::OverlayNoClipToBig(gbDest, ipDestNow, arranimGlyphType[iGlyphType].gbFrame, gradNow, -1)) {
 							bGood=false;
 							ShowErr("failed to overlay text character#"+RString_ToString((long)szText[i]),"TypeFast");
 						}
 					}
-					ipDestNow.x+=arranimGlyphType[iGlyphType].gbFrame.iWidth;
+					ipDestNow.X+=arranimGlyphType[iGlyphType].gbFrame.iWidth;
 				}
 				if (GFont_bFirstRun&&character_bFirstRun) {
-					Console.Error.Write("move to next character...");
-					Console.Error.Flush();
+					Console::Error.Write("move to next character...");
+					Console::Error.Flush();
 				}
-				if (ipDestNow.x+arranimGlyphType[iGlyphType].gbFrame.iWidth>=gbDest.iWidth) {
+				if (ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth>=gbDest.iWidth) {
 					//if (GFont_bFirstRun) ShowErr("Tried to write text beyond screen");
 					//break;
 				}
 				if (GFont_bFirstRun&&character_bFirstRun) {
-					Console.Error.Write("done first character.");
-					Console.Error.Flush();
+					Console::Error.Write("done first character.");
+					Console::Error.Flush();
 				}
 				character_bFirstRun=false;
 				cPrev=szText[i];
@@ -205,14 +204,14 @@ namespace ExpertMultimediaBase {
 			//panimTemp=new Anim();
 			bGood=Init();
 			if (bGood) {
-				Console.Error.Write("Splitting font image...");
+				Console::Error.Write("Splitting font image...");
 				bGood=panimTemp->SplitFromImage32(sFile, iCharWidth, iCharHeight, iRows, iColumns);
-				Console.Error.Write(bGood?"Done.  CopyAsGrayTo...":"Splitting Failed!  ");
+				Console::Error.Write(bGood?"Done.  CopyAsGrayTo...":"Splitting Failed!  ");
 				//panimTemp->SaveSeq("0.debug-glyph", "png");
 				//RawOverlayNoClipToBig(RetroEngine.gbScreenMain, ipAt, panimTemp->gbFrame.arrbyData, iCharWidth, iCharHeight, 4);
 				if (bGood) {
 					bGood=panimTemp->CopyAsGrayTo(arranimGlyphType[GFont_GlyphTypePlain]);
-					Console.Error.Write(bGood?"CopyAsGrayTo Succeeded.  ":"CopyAsGrayTo Failed!  ");
+					Console::Error.Write(bGood?"CopyAsGrayTo Succeeded.  ":"CopyAsGrayTo Failed!  ");
 					//arranimGlyphType[GFont_GlyphTypePlain].CopyTo(arranimGlyphType[GFont_GlyphTypeBold]);
 					//arranimGlyphType[GFont_GlyphTypePlain].CopyTo(arranimGlyphType[GFont_GlyphTypeItalic]);
 					//arranimGlyphType[GFont_GlyphTypePlain].CopyTo(arranimGlyphType[GFont_GlyphTypeBoldItalic]);
@@ -231,12 +230,12 @@ namespace ExpertMultimediaBase {
 		}
 		try {
 			if (panimTemp!=null) {
-				Console.Error.Write("deconstructing panimTemp...");
+				Console::Error.Write("deconstructing panimTemp...");
 				delete panimTemp;
-				Console.Error.Write("done deconstructing panimTemp.");
+				Console::Error.Write("done deconstructing panimTemp.");
 			}
-			else Console.Error.Write("panimTemp was already null.");
-			Console.Error.Flush();
+			else Console::Error.Write("panimTemp was already null.");
+			Console::Error.Flush();
 		}
 		catch (exception& exn) {
 			ShowExn(exn,"GFont FromImageValue","deconstructing panimTemp");
@@ -254,14 +253,14 @@ namespace ExpertMultimediaBase {
 			//panimTemp=new Anim();
 			bGood=Init();
 			if (bGood) {
-				Console.Error.Write("Splitting font image...");
+				Console::Error.Write("Splitting font image...");
 				bGood=panimTemp->SplitFromImage32(sFile, iCharWidth, iCharHeight, iRows, iColumns);
-				Console.Error.Write(bGood?"Done.  CopyAsGrayTo...":"Splitting Failed!  ");
+				Console::Error.Write(bGood?"Done.  CopyAsGrayTo...":"Splitting Failed!  ");
 				//panimTemp->SaveSeq("0.debug-glyph", "png");
 				//RawOverlayNoClipToBig(RetroEngine.gbScreenMain, ipAt, panimTemp->gbFrame.arrbyData, iCharWidth, iCharHeight, 4);
 				if (bGood) {
 					bGood=panimTemp->CopyTo(arranimGlyphType[GFont_GlyphTypePlain]);
-					Console.Error.Write(bGood?"CopyAsGrayTo Succeeded.  ":"CopyAsGrayTo Failed!  ");
+					Console::Error.Write(bGood?"CopyAsGrayTo Succeeded.  ":"CopyAsGrayTo Failed!  ");
 					//arranimGlyphType[GFont_GlyphTypePlain].CopyTo(arranimGlyphType[GFont_GlyphTypeBold]);
 					//arranimGlyphType[GFont_GlyphTypePlain].CopyTo(arranimGlyphType[GFont_GlyphTypeItalic]);
 					//arranimGlyphType[GFont_GlyphTypePlain].CopyTo(arranimGlyphType[GFont_GlyphTypeBoldItalic]);
@@ -280,12 +279,12 @@ namespace ExpertMultimediaBase {
 		}
 		try {
 			if (panimTemp!=null) {
-				Console.Error.Write("deconstructing panimTemp...");
+				Console::Error.Write("deconstructing panimTemp...");
 				delete panimTemp;
-				Console.Error.Write("done deconstructing panimTemp.");
+				Console::Error.Write("done deconstructing panimTemp.");
 			}
-			else Console.Error.Write("panimTemp was already null.");
-			Console.Error.Flush();
+			else Console::Error.Write("panimTemp was already null.");
+			Console::Error.Flush();
 		}
 		catch (exception& exn) {
 			ShowExn(exn,"GFont FromImageAsPredefinedColorFont","deconstructing panimTemp");
@@ -298,21 +297,21 @@ namespace ExpertMultimediaBase {
 	void GFont::ShowAsciiTable(GBuffer& gbDest, int xAt, int yAt) {
 		try {
 			IPoint ipAt;//=new IPoint(xAt,yAt);
-			ipAt.x=xAt;
-			ipAt.y=yAt;
+			ipAt.X=xAt;
+			ipAt.Y=yAt;
 			int lChar=0;
 			for (int yChar=0; yChar<16; yChar++) {
-				ipAt.x=xAt;
+				ipAt.X=xAt;
 				for (int xChar=0; xChar<16; xChar++) {
 					arranimGlyphType[GFont_GlyphTypePlain].GotoFrame(lChar);
 					RawOverlayNoClipToBig(gbDest, ipAt,
 													arranimGlyphType[GFont_GlyphTypePlain].gbFrame.arrbyData,
 													arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iWidth,
 													arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight, 1);
-					ipAt.x+=arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iWidth;
+					ipAt.X+=arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iWidth;
 					lChar++;
 				}
-				ipAt.y+=arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight;
+				ipAt.Y+=arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight;
 			}
 		}
 		catch (exception& exn) {

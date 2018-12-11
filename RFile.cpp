@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <byter.h>
+#include <RFile.h>
 #include <base.h>
 //#include "E:\Projects-cpp\Base\byter.h"
 
@@ -80,15 +80,15 @@ namespace ExpertMultimediaBase {
 		int iFileSize=0;
 		try {
 			sFile.assign(szFile);
-			if (bByterFirstRun) Console.Error.Write("Byter::OpenRead(\""+sFile+"\")...");
+			if (bByterFirstRun) Console::Error.Write("Byter::OpenRead(\""+sFile+"\")...");
 			//const char* szFile=sFileNow.c_str();
 			sMsg="openread char*...";
-       		if (bByterFirstRun) Console.Error.Write(sMsg);
+       		if (bByterFirstRun) Console::Error.Write(sMsg);
 			iFileSize=FileSize(szFile);
 			sMsg="done getting filesize [";
 			sMsg+=RString_ToString(iFileSize);
 			sMsg+="].  Loading all data...";
-       		if (bByterFirstRun) Console.Error.Write(sMsg);
+       		if (bByterFirstRun) Console::Error.Write(sMsg);
 			iLength=iFileSize;
 			iMaxLength=iLength;
 			if (iFileSize>0) {
@@ -122,7 +122,7 @@ namespace ExpertMultimediaBase {
 					//arrbySrc=NULL;
 					//free(szData);
 					sMsg="done...";
-       				if (bByterFirstRun) Console.Error.Write(sMsg);
+       				if (bByterFirstRun) Console::Error.Write(sMsg);
 				}
 				else {
 					sMsg="ifstream fails to open file";
@@ -145,10 +145,10 @@ namespace ExpertMultimediaBase {
 		if (!bGood) {
 			if (ShowError()) {
 				if (szFile!=NULL) {
-					Console.Error.WriteLine("Exception error in Byter::OpenRead(\""+RString_ToString(szFile)+"\"): "+sMsg);
+					Console::Error.WriteLine("Exception error in Byter::OpenRead(\""+RString_ToString(szFile)+"\"): "+sMsg);
 				}
 				else {
-					Console.Error.WriteLine("Exception error in Byter::OpenRead(NULL char*) (failed to read the exception): "+sMsg);
+					Console::Error.WriteLine("Exception error in Byter::OpenRead(NULL char*) (failed to read the exception): "+sMsg);
 				}
 			}
 		}
@@ -206,7 +206,7 @@ namespace ExpertMultimediaBase {
 		}
 		if (!bGood) {
 			if (ShowErr()) {
-				Console.Error.WriteLine("Byter::Read("+RString_ToString(u32BytesToRead)+" bytes from \""+sFile+"\") Error: "+sMsg);
+				Console::Error.WriteLine("Byter::Read("+RString_ToString(u32BytesToRead)+" bytes from \""+sFile+"\") Error: "+sMsg);
 			}
 		}
 		return (bGood)?(u32NumBytesRead==u32BytesToRead):false;
@@ -297,7 +297,7 @@ namespace ExpertMultimediaBase {
 		}
 		if (!bGood) {
 			if (ShowErr()) {
-				Console.Error.WriteLine("Byter::Read("+RString_ToString(u32BytesToRead)+" bytes from \""+sFile+"\") Error: "+sMsg);
+				Console::Error.WriteLine("Byter::Read("+RString_ToString(u32BytesToRead)+" bytes from \""+sFile+"\") Error: "+sMsg);
 			}
 		}
 		return (bGood)?(u32NumBytesRead==u32BytesToRead):false;
@@ -344,7 +344,7 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		if (!bGood) {
-			if (ShowErr()) Console.Error.WriteLine("Error in Byter::Write: "+sMsg);
+			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Write: "+sMsg);
 		}
 		return bGood;
 	}//end write byte array
@@ -433,7 +433,7 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		if (!bGood) {
-			if (ShowErr()) Console.Error.WriteLine("Error in Byter::Write: "+sMsg);
+			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Write: "+sMsg);
 		}
 		return bGood;
 	}//end WriteAscii
@@ -461,7 +461,7 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		if (!bGood) {
-			if (ShowErr()) Console.Error.WriteLine("Error in Byter::Save() \""+sFile+"\": "+sMsg);
+			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Save() \""+sFile+"\": "+sMsg);
 		}
 	}//end Byter::Save()
 	bool Byter::Save(string sFileNow) {
@@ -509,7 +509,7 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		if (!bGood) {
-			if (ShowErr()) Console.Error.WriteLine("Error in Byter::ResizeTo(): "+sMsg);
+			if (ShowErr()) Console::Error.WriteLine("Error in Byter::ResizeTo(): "+sMsg);
 		}
 	}//end Byter::ResizeTo
 	int Byter::BytesLeftUsed() {

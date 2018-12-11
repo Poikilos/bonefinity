@@ -1,7 +1,7 @@
 #ifndef ANIM_H
 #define ANIM_H
-#include <gbuffer32bgra.h>
-//#include "E:\Projects-cpp\Base\gbuffer32bgra.h"
+#include <RImage_bgra32.h>
+//#include "E:\Projects-cpp\Base\RImage_bgra32.h"
 
 using namespace std;
 //using System.Drawing.Text;

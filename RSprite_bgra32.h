@@ -1,8 +1,8 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include <anim32bgra.h>
-//#include "E:\Projects-cpp\Base\anim32bgra.h"
+#include <RAnim_bgra32.h>
+//#include "E:\Projects-cpp\Base\RAnim_bgra32.h"
 
 using namespace std;
 

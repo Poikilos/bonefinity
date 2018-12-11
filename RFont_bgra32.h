@@ -1,7 +1,7 @@
 #ifndef GFONT_H
 #define GFONT_H
-#include <gradient32bgra.h>
-#include <anim32bgra.h>
+#include <RGradient_bgra32.h>
+#include <RAnim_bgra32.h>
 
 using namespace std;
 

@@ -34,7 +34,7 @@ namespace ProtoArmor {
 	StaticConstructors::~StaticConstructors() {
 		//FileMode::staticdeconstructorFileMode();
 	}
-	
+
 
 	//const float float_MaxValue=FLT_MAX;
 	//const float double_MaxValue=DBL_MAX;
@@ -184,7 +184,7 @@ namespace ProtoArmor {
 		return sReturn;
 	}
 
-  
+
 /////////////////////////////  FileMode  /////////////////////////////
 
 	//void FileMode::staticconstructorFileMode() {
@@ -261,7 +261,7 @@ namespace ProtoArmor {
 	bool File::Exists(string sFile) {
 		bool bReturn=false;
 		static bool bFirstRun=true;
-		if (bFirstRun) cerr<<"checking File.Exists(\""<<sFile<<"\")...";
+		if (bFirstRun) cerr<<"checking File::Exists(\""<<sFile<<"\")...";
 		string sMsg="opening";
 		if (bFirstRun) cerr<<sMsg<<"...";
 		try {

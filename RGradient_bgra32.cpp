@@ -1,7 +1,7 @@
 #ifndef GRADIENT_CPP
 #define GRADIENT_CPP
-#include <gradient32bgra.h>
-#include <gbuffer32bgra.h>
+#include <RGradient_bgra32.h>
+#include <RImage_bgra32.h>
 
 using namespace std;
 
@@ -22,7 +22,7 @@ namespace ExpertMultimediaBase {
 						if (this->u32BytesPP==4) {
 						}//end if 32-bit to 32-bit
 						else if (this->u32BytesPP=1) {
-							byte* lpbySrcNow=&lpbyShade[u32SrcLoc];//*this->u32BytesPP];
+							byte* lpbySrcNow=&lpbyShade[u32SrcLoc];// *this->u32BytesPP];
 							byte* lpbyDestNow=&gbDest.arrbyData[u32DestBufferLoc];
 							if (*lpbySrcNow==255) {//copy the value, multiple times if dest is greater bitdepth
 								*lpbyDestNow=*lpbySrcNow;
@@ -165,8 +165,8 @@ namespace ExpertMultimediaBase {
 								}
 							}
 							else {
-								Console.Error.Write("<gradient skipping "+RString_ToString(u32BytesPP)+"- to "+RString_ToString(u32DestBytesPP)+"-bit>");
-								Console.Error.Flush();
+								Console::Error.Write("<gradient skipping "+RString_ToString(u32BytesPP)+"- to "+RString_ToString(u32DestBytesPP)+"-bit>");
+								Console::Error.Flush();
 							}
 						}//end if gradient bitdepth is 4
 						else if (u32BytesPP==1) {//1-channel gradient
@@ -227,8 +227,8 @@ namespace ExpertMultimediaBase {
 							}
 						}
 						else {
-							Console.Error.Write("<gradient skipping "+RString_ToString(u32BytesPP)+"- to "+RString_ToString(u32DestBytesPP)+"-bit>");
-							Console.Error.Flush();
+							Console::Error.Write("<gradient skipping "+RString_ToString(u32BytesPP)+"- to "+RString_ToString(u32DestBytesPP)+"-bit>");
+							Console::Error.Flush();
 						}
 					//}//end else dissimilar bitdepths
 				}//end if value is within range
@@ -254,8 +254,10 @@ namespace ExpertMultimediaBase {
 		u32BytesPP=0;
 		u32BytesTotal=0;
 		lpbyShade=NULL;
+		return true;
 	}
 	bool Gradient::Init(Uint32 u32SetLevels) {
+		bool bGood=false;
 		try {
 			SafeFree(lpbyShade);
 			u32BytesPP=4;
@@ -273,6 +275,7 @@ namespace ExpertMultimediaBase {
 				iLoc++;
 			}
 			u32Levels=u32SetLevels;
+			bGood=true;
 		}
 		catch (exception& exn) {
 			ShowExn(exn,"Gradient Init");
@@ -280,6 +283,7 @@ namespace ExpertMultimediaBase {
 		catch (...) {
 			ShowUnknownExn("Gradient Init");
 		}
+		return bGood;
 	}//end Init
 }//end namespace
 #endif

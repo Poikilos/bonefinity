@@ -253,10 +253,10 @@ namespace ExpertMultimediaBase {
 		//Variable vTemp;
 		string sTemp;
 		bool bGood=GetForcedCArrayNotationSubstring(sTemp,sVal,i1stDimension);
-		Console.Error.Write("Checking "+sTemp+"...");
+		Console::Error.Write("Checking "+sTemp+"...");
 		int iReturn=0;
 		iReturn=CountCArrayNotationFields(sTemp);
-		Console.Error.Write( "Found "+RString_ToString(iReturn)+RString_ToString("...") );
+		Console::Error.Write( "Found "+RString_ToString(iReturn)+RString_ToString("...") );
 		return iReturn;
 	}
 	bool Variable::Get(string &val, int i1stDimension) {
@@ -350,23 +350,23 @@ namespace ExpertMultimediaBase {
 		SetActive();
 		string sFuncNow="FromIniLine";
 		try {
-			if (bFirstRun) Console.Error.Write(sFuncNow);
-			if (bFirstRun) Console.Error.WriteLine("(\""+val+"\")");
+			if (bFirstRun) Console::Error.Write(sFuncNow);
+			if (bFirstRun) Console::Error.WriteLine("(\""+val+"\")");
 			sFuncNow+="(\""+val+"\")";
-			if (bFirstRun) Console.Error.WriteLine("  -about to analyze \""+val+"\"");
+			if (bFirstRun) Console::Error.WriteLine("  -about to analyze \""+val+"\"");
 			int iNow=val.find_first_of("=");
 			if (iNow>=0) {
-				if (bFirstRun) Console.Error.WriteLine("  -about to get first part from 0 to "+RString_ToString(iNow));
+				if (bFirstRun) Console::Error.WriteLine("  -about to get first part from 0 to "+RString_ToString(iNow));
 				sName=val.substr(0,iNow);
 				if (sName=="") ShowError("  -var name string is blank \"\"!",sFuncNow);
 				if (bGood && (iNow<val.length()-1)) {
 					iNowPrev=iNow;
 					iNow++;
-					if (bFirstRun) Console.Error.WriteLine("	-done get first part: "+sName);
-					if (bFirstRun) Console.Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString(val.length()-iNow));
+					if (bFirstRun) Console::Error.WriteLine("	-done get first part: "+sName);
+					if (bFirstRun) Console::Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString(val.length()-iNow));
 					sVal=val.substr(iNow,val.length()-iNow);
 					if (sVal=="") ShowError("	  -\"\" VALUE part is blank !",sFuncNow);
-					if (bFirstRun) Console.Error.WriteLine("	  -done getting next part");
+					if (bFirstRun) Console::Error.WriteLine("	  -done getting next part");
 					//if (!bGood) ShowError("	  -get VALUE part failed!",sFuncNow);
 				}
 				else if (!bGood) ShowError("	-substr name failed!",sFuncNow);
@@ -387,15 +387,15 @@ namespace ExpertMultimediaBase {
 		}
 		else { //if active
 			try {
-				if (bFirstRun) Console.Error.WriteLine("Trying to save ini line:");
+				if (bFirstRun) Console::Error.WriteLine("Trying to save ini line:");
 				val=sName;
-				if (bFirstRun) Console.Error.WriteLine(" 1."+val+" (after adding "+sName+")");
+				if (bFirstRun) Console::Error.WriteLine(" 1."+val+" (after adding "+sName+")");
 				if (sVal.length()>0) {
 					if (sName.length()>1) {
 						val+="=";
-						if (bFirstRun) Console.Error.WriteLine(" 3."+val+" (after adding '=' sign)");
+						if (bFirstRun) Console::Error.WriteLine(" 3."+val+" (after adding '=' sign)");
 						val+=sVal;
-						if (bFirstRun) Console.Error.WriteLine(" 3."+val+" (after adding "+sVal+")");
+						if (bFirstRun) Console::Error.WriteLine(" 3."+val+" (after adding "+sVal+")");
 					}
 				}
 			}
@@ -429,10 +429,10 @@ namespace ExpertMultimediaBase {
 	bool Variables::Load(string sFile) {
 		static bool bFirstRun=true;
 		try {
-			if (bFirstRun) Console.Error.WriteLine("About to load \""+sFile+"\"");//debug only
+			if (bFirstRun) Console::Error.WriteLine("About to load \""+sFile+"\"");//debug only
 			sFileName=sFile;
 			ifstream ifNow(sFile.c_str());
-			if (bFirstRun) Console.Error.WriteLine("Done trying to load \""+sFile+"\"");//debug only
+			if (bFirstRun) Console::Error.WriteLine("Done trying to load \""+sFile+"\"");//debug only
 			int iChars=1;
 			bool bCheck;
 			int iMaxLine=varr[iVars].MaxChars()+varr[iVars].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
@@ -457,9 +457,9 @@ namespace ExpertMultimediaBase {
 						bNew=true;
 					}
 					else bNew=false;
-					if (bFirstRun) Console.Error.WriteLine("  -about to get FromIniLine: "+sLine);
+					if (bFirstRun) Console::Error.WriteLine("  -about to get FromIniLine: "+sLine);
 					bCheck=varr[iAt].FromIniLine(sLine);
-					if (bFirstRun) Console.Error.WriteLine("  -done get FromIniLine");
+					if (bFirstRun) Console::Error.WriteLine("  -done get FromIniLine");
 					if (bCheck&&bNew) {
 						iVars++;
 						iVarsNow++;
@@ -467,7 +467,7 @@ namespace ExpertMultimediaBase {
 				}//end if
 				iLines++;
 			}//end while sPtr line
-			if (bFirstRun) Console.Error.WriteLine("Done: Read "+RString_ToString(iVars)+" variables from "+RString_ToString(iLines)+" lines in "+sFile);
+			if (bFirstRun) Console::Error.WriteLine("Done: Read "+RString_ToString(iVars)+" variables from "+RString_ToString(iLines)+" lines in "+sFile);
 			ifNow.close();
 		}
 		catch (exception& exn) { ShowExn(exn,"Variables::Load");
@@ -949,8 +949,8 @@ namespace ExpertMultimediaBase {
 		int iDecimalPlacesPrev=RString_iDecimalPlacesForToString;
 		RString_iDecimalPlacesForToString=1;
 		if (Mass3d_ToString_bFirstRun) {
-			Console.Error.Write("Mass3d::ToString(bShowAll="+RString_ToString(bShowAll)+")...");
-			Console.Error.Flush();
+			Console::Error.Write("Mass3d::ToString(bShowAll="+RString_ToString(bShowAll)+")...");
+			Console::Error.Flush();
 		}
 		if (bShowAll) {
 			sReturn=RString_ToString("At(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")")
@@ -963,8 +963,8 @@ namespace ExpertMultimediaBase {
 		}
 		RString_iDecimalPlacesForToString=iDecimalPlacesPrev;
 		if (Mass3d_ToString_bFirstRun) {
-			Console.Error.Write("returning...");
-			Console.Error.Flush();
+			Console::Error.Write("returning...");
+			Console::Error.Flush();
 			Mass3d_ToString_bFirstRun=false;
 		}
 		return sReturn;
@@ -1249,115 +1249,115 @@ namespace ExpertMultimediaBase {
 	}
 	string RString_ToString(int val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(int)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(int)--");
 		string sReturn="";
 		char szTemp[2048];
 		strcpyfrom(szTemp,val);
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(long val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(long)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(long)--");
 		string sReturn="";
 		char szTemp[2048];
-		if (bFirstRun) Console.Error.Write("copy...");
+		if (bFirstRun) Console::Error.Write("copy...");
 		strcpyfrom(szTemp,val);
-		if (bFirstRun) Console.Error.Write("assign...");
+		if (bFirstRun) Console::Error.Write("assign...");
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(Uint32 val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(Uint32)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(Uint32)--");
 		string sReturn="";
 		char szTemp[2048];
-		if (bFirstRun) Console.Error.Write("copy...");
+		if (bFirstRun) Console::Error.Write("copy...");
 		strcpyfrom(szTemp,val);
-		if (bFirstRun) Console.Error.Write("assign...");
+		if (bFirstRun) Console::Error.Write("assign...");
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(float val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(float)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(float)--");
 		string sReturn="";
 		char szTemp[2048];
-		if (bFirstRun) Console.Error.Write("copy...");
+		if (bFirstRun) Console::Error.Write("copy...");
 		if (RString_iDecimalPlacesForToString>=0) strcpyfrom(szTemp,val,RString_iDecimalPlacesForToString);
 		else strcpyfrom(szTemp,val);
-		if (bFirstRun) Console.Error.Write("assign...");
+		if (bFirstRun) Console::Error.Write("assign...");
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(double val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(double)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(double)--");
 		string sReturn="";
 		char szTemp[2048];
-		if (bFirstRun) Console.Error.Write("copy...");
+		if (bFirstRun) Console::Error.Write("copy...");
 		if (RString_iDecimalPlacesForToString>=0) strcpyfrom(szTemp,val,RString_iDecimalPlacesForToString);
 		else strcpyfrom(szTemp,val);
-		if (bFirstRun) Console.Error.Write("assign...");
+		if (bFirstRun) Console::Error.Write("assign...");
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(long double val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(double)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(double)--");
 		string sReturn="";
 		char szTemp[2048];
-		if (bFirstRun) Console.Error.Write("copy...");
+		if (bFirstRun) Console::Error.Write("copy...");
 		if (RString_iDecimalPlacesForToString>=0) strcpyfrom(szTemp,val,RString_iDecimalPlacesForToString);
 		else strcpyfrom(szTemp,val);
-		if (bFirstRun) Console.Error.Write("assign...");
+		if (bFirstRun) Console::Error.Write("assign...");
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(string val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(string)--");
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("RString_ToString(string)--");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return val;
 	}
 	string RString_ToString(char* val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(char*)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(char*)--");
 		string sReturn="";
 		sReturn.assign(val);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(char val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(char)--");
+		if (bFirstRun) Console::Error.Write("RString_ToString(char)--");
 		string sReturn="";
 		char szTemp[2];
 		szTemp[0]=val;
 		szTemp[1]='\0';
 		sReturn.assign(szTemp);
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return sReturn;
 	}
 	string RString_ToString(bool val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
-		if (bFirstRun) Console.Error.Write("RString_ToString(bool)--");
-		if (bFirstRun) Console.Error.Write("done...");
+		if (bFirstRun) Console::Error.Write("RString_ToString(bool)--");
+		if (bFirstRun) Console::Error.Write("done...");
 		bFirstRun=false;
 		return val?"true":"false";
 	}
@@ -1390,10 +1390,10 @@ namespace ExpertMultimediaBase {
 			int iStartNow=0;
 			int iLenNow=0;
 			string sCharNow;
-			Console.Error.Write("Parsing "+RString_ToString(val.length())+RString_ToString(" chars..."));
+			Console::Error.Write("Parsing "+RString_ToString(val.length())+RString_ToString(" chars..."));
 			for (int iNow=0; iNow<val.length(); iNow++) {
 				sCharNow=val.substr(iNow,1);
-				Console.Error.Write(" '"+sCharNow+RString_ToString("'"));
+				Console::Error.Write(" '"+sCharNow+RString_ToString("'"));
 				if (sCharNow=="\"") { bInQuotes=!bInQuotes; iLenNow++; }
 				else if (bAllowCurleyBracesRecursively_FalseIgnoresThem && !bInQuotes && sCharNow=="{") { iInCurleyBraces++; iLenNow++;}
 				else if (bAllowCurleyBracesRecursively_FalseIgnoresThem && !bInQuotes && sCharNow=="}") { iInCurleyBraces--; iLenNow++;}
@@ -1407,7 +1407,7 @@ namespace ExpertMultimediaBase {
 						}
 					}
 					else {
-						Console.Error.Write("("+RString_ToString(iStartNow)+RString_ToString(",")+RString_ToString(iLenNow)+RString_ToString(")"));
+						Console::Error.Write("("+RString_ToString(iStartNow)+RString_ToString(",")+RString_ToString(iLenNow)+RString_ToString(")"));
 					}
 					iLenNow=0;
 					iStartNow=iNow+1;
@@ -1425,7 +1425,7 @@ namespace ExpertMultimediaBase {
 				}
 			}
 			iCols++;
-			if (bCountOnlyAndDontTouchArray) Console.Error.Write("done parsing "+RString_ToString(iCols)+RString_ToString(" cols..."));
+			if (bCountOnlyAndDontTouchArray) Console::Error.Write("done parsing "+RString_ToString(iCols)+RString_ToString(" cols..."));
 		}
 		catch (exception& exn) { ShowExn(exn,"GetCSVRow");
 		}
@@ -1717,7 +1717,7 @@ namespace ExpertMultimediaBase {
 		const static float DMINEXP=-15;
 		while ( (d>0 && iExp10>=DMINEXP && iExp10>iExp10Max) || iExp10>=-1 ) {
 			if ( (Uint32)( d/pow(10.0f,iExp10) ) < 10 ) {
-				//error_txt+"["+(Uint32)( d/pow(10,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console.Error.Flush();
+				//error_txt+"["+(Uint32)( d/pow(10,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console::Error.Flush();
 				strcat(sNum, sDigit[(Uint32)( d/pow(10.0f,iExp10) )]);
 				if (iExp10==0) strcat(sNum, ".");
 			}
@@ -1748,7 +1748,7 @@ namespace ExpertMultimediaBase {
 		const static double DMINEXP=-15;
 		while ( (d>0 && iExp10>=DMINEXP && iExp10>iExp10Max) || iExp10>=-1 ) {
 			if ( (Uint32)( d/pow(10.0/*d*/,iExp10) ) < 10 ) {
-				//error_txt+"["+(Uint32)( d/pow(10.0/*d*/,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console.Error.Flush();
+				//error_txt+"["+(Uint32)( d/pow(10.0/*d*/,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console::Error.Flush();
 				strcat(sNum, sDigit[(Uint32)( d/pow(10.0/*d*/,iExp10) )]);
 				if (iExp10==0) strcat(sNum, ".");
 			}
@@ -1779,7 +1779,7 @@ namespace ExpertMultimediaBase {
 		const static double DMINEXP=-15;
 		while ( (d>0 && iExp10>=DMINEXP && iExp10>iExp10Max) || iExp10>=-1 ) {
 			if ( (Uint32)( d/pow(10.0L,iExp10) ) < 10 ) {
-				//error_txt+"["+(Uint32)( d/pow(10.0L,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console.Error.Flush();
+				//error_txt+"["+(Uint32)( d/pow(10.0L,iExp10) )+"](e="+RString_ToString(iExp10)+")"); Console::Error.Flush();
 				strcat(sNum, sDigit[(Uint32)( d/pow(10.0L,iExp10) )]);
 				if (iExp10==0) strcat(sNum, ".");
 			}
@@ -1851,24 +1851,24 @@ namespace ExpertMultimediaBase {
 		}
 		catch(...) {
 			try {
-				Console.Error.WriteLine("Exception in substrcpy(\""+RString_ToString(sDest)+"\",\""+RString_ToString(sSrc)+"\","+RString_ToString(iStart)+","+RString_ToString(iLen)+")");
+				Console::Error.WriteLine("Exception in substrcpy(\""+RString_ToString(sDest)+"\",\""+RString_ToString(sSrc)+"\","+RString_ToString(iStart)+","+RString_ToString(iLen)+")");
 			}
 			catch (...) {
-	            Console.Error.WriteLine("Exception:");
+	            Console::Error.WriteLine("Exception:");
 				try {
-					Console.Error.WriteLine("  substrcpy Dest:"+RString_ToString(sDest));
+					Console::Error.WriteLine("  substrcpy Dest:"+RString_ToString(sDest));
 				}
 				catch (...) {
-					Console.Error.WriteLine("  substrcpy(bad Dest sz sent)");
+					Console::Error.WriteLine("  substrcpy(bad Dest sz sent)");
 				}
 				try {
-					Console.Error.WriteLine("  substrcpy Src:"+RString_ToString(sSrc));
+					Console::Error.WriteLine("  substrcpy Src:"+RString_ToString(sSrc));
 				}
 				catch (...) {
-					Console.Error.WriteLine("  substrcpy(bad Source sz sent)");
+					Console::Error.WriteLine("  substrcpy(bad Source sz sent)");
 				}
-				Console.Error.WriteLine("  substrcpy iStart:"+RString_ToString(iStart));
-				Console.Error.WriteLine("  substrcpy iLen:"+RString_ToString(iLen));
+				Console::Error.WriteLine("  substrcpy iStart:"+RString_ToString(iStart));
+				Console::Error.WriteLine("  substrcpy iLen:"+RString_ToString(iLen));
 			}
 		}
 		if (!bGood) {
@@ -1891,7 +1891,7 @@ namespace ExpertMultimediaBase {
 			bGood=true;
 		}
 		catch (...){
-			Console.Error.WriteLine("Exception in Crop char*");
+			Console::Error.WriteLine("Exception in Crop char*");
 			bGood=false;
 		}
 		return bGood;
@@ -2039,7 +2039,7 @@ namespace ExpertMultimediaBase {
 			bPermission=true;
 		}
 		else if (iErrors==iMaxErrors) {
-			Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last one that will be shown:");
+			Console::Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last one that will be shown:");
 			bPermission=true;
 		}
 		iErrors++;
@@ -2051,13 +2051,13 @@ namespace ExpertMultimediaBase {
 		bool bGood=true;
 		if (iErrors<iMaxErrors) {
 			try {
-				Console.Error.WriteLine(sMsg);
+				Console::Error.WriteLine(sMsg);
 			}
-			catch (exception& exn) { Console.Error.WriteLine("ShowError (self-exception)"+RString_ToString(exn.what())); }
-			catch (...) { Console.Error.WriteLine("Default self-exception during exception output."); }
+			catch (exception& exn) { Console::Error.WriteLine("ShowError (self-exception)"+RString_ToString(exn.what())); }
+			catch (...) { Console::Error.WriteLine("Default self-exception during exception output."); }
 		}
 		else if (iErrors==iMaxErrors) { //if > do nothing!
-			Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sMsg);
+			Console::Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sMsg);
 		}
 		iErrors++;
 		return bGood;
@@ -2067,7 +2067,7 @@ namespace ExpertMultimediaBase {
 	}
 	bool ShowError(string sMsg, string sCurrentFunction) {
 		bool bGood=true;
-		if (ShowError()) Console.Error.WriteLine(sCurrentFunction+": "+sMsg);
+		if (ShowError()) Console::Error.WriteLine(sCurrentFunction+": "+sMsg);
 		return bGood;
 	}
 	bool ShowError(int iSivErrNo, string sMsg, string sCurrentFunction) {
@@ -2078,13 +2078,13 @@ namespace ExpertMultimediaBase {
 				try {
 					szTemp[0]='\0';
 					strcatfromsiverrno(szTemp, iSivErrNo);
-					Console.Error.WriteLine(sCurrentFunction+": "+RString_ToString(szTemp)+": "+sMsg);
+					Console::Error.WriteLine(sCurrentFunction+": "+RString_ToString(szTemp)+": "+sMsg);
 				}
-				catch (exception& exn) { Console.Error.WriteLine("ShowError (self-exception)"+RString_ToString(exn.what())); }
-				catch (...) { Console.Error.WriteLine("Default self-exception during exception output."); }
+				catch (exception& exn) { Console::Error.WriteLine("ShowError (self-exception)"+RString_ToString(exn.what())); }
+				catch (...) { Console::Error.WriteLine("Default self-exception during exception output."); }
 			}
 			else if (iErrors==iMaxErrors) { //if > do nothing!
-				Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sCurrentFunction+" {szTemp:"+RString_ToString(szTemp)+"}: "+sMsg);
+				Console::Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sCurrentFunction+" {szTemp:"+RString_ToString(szTemp)+"}: "+sMsg);
 			}
 			iErrors++;
 		}//end if iSivErrNo!=0
@@ -2095,7 +2095,7 @@ namespace ExpertMultimediaBase {
 		if (ShowError()) {
 			char szTemp[2048];
 			strcpyfromsiverrno(szTemp,iSivErrNo);
-			Console.Error.WriteLine(sCurrentFunction+": "+szTemp);
+			Console::Error.WriteLine(sCurrentFunction+": "+szTemp);
 		}
 		return bGood;
 	}
@@ -2104,7 +2104,7 @@ namespace ExpertMultimediaBase {
 	}
 	void ShowAndDeleteException(char* &sExn, string sFuncNow, string sVerbNow) {
 		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) Console.Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+sExn);
+		if (ShowErr()) Console::Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+sExn);
 		SafeFree(sExn);
 	}
 	void ShowExn(exception& exn, string sFuncNow) {
@@ -2112,11 +2112,11 @@ namespace ExpertMultimediaBase {
 	}
 	void ShowExn(exception& exn, string sFuncNow, string sVerbNow) {
 		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) Console.Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+RString_ToString(exn.what()));
+		if (ShowErr()) Console::Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+RString_ToString(exn.what()));
 	}
 	void ShowUnknownExn(string sFuncNow, string sVerbNow) {
 		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) Console.Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+".");
+		if (ShowErr()) Console::Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+".");
 	}
 	void ShowUnknownExn(string sFuncNow) {
 		ShowUnknownExn(sFuncNow,"");
@@ -2124,13 +2124,13 @@ namespace ExpertMultimediaBase {
 	void FakeException(string sExn) { //TODO: remove this and all calls to it
 		if (iErrors<iMaxErrors) {
 			try {
-				Console.Error.WriteLine("Could not finish: "+sExn);
+				Console::Error.WriteLine("Could not finish: "+sExn);
 			}
-			catch (exception& exn) { Console.Error.WriteLine("Could not finish while showing exception: "+RString_ToString(exn.what())); }
-			catch (...) { Console.Error.WriteLine("Could not finish while showing exception."); }
+			catch (exception& exn) { Console::Error.WriteLine("Could not finish while showing exception: "+RString_ToString(exn.what())); }
+			catch (...) { Console::Error.WriteLine("Could not finish while showing exception."); }
 		}
 		else if (iErrors==iMaxErrors) { //if > do nothing!
-			Console.Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sExn);
+			Console::Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last that will be shown: \n\t"+sExn);
 		}
 		iErrors++;
 	}//end FakeException
@@ -2347,7 +2347,7 @@ namespace ExpertMultimediaBase {
 		if (fToLimitBetweenZeroAnd360<0.0f) fToLimitBetweenZeroAnd360+=360.0f;
 		//static int iTest=0;//debug only
 		//if (iTest<1000) {
-		//	Console.Error.WriteLine("SafeAngle360 of "+RString_ToString(fAngleTest)+" is "+RString_ToString(fToLimitBetweenZeroAnd360)+".");
+		//	Console::Error.WriteLine("SafeAngle360 of "+RString_ToString(fAngleTest)+" is "+RString_ToString(fToLimitBetweenZeroAnd360)+".");
 		//}
 		//iTest++;
 	}
@@ -2647,31 +2647,31 @@ namespace ExpertMultimediaBase {
 	///#region file operations
 	int FileSize(const char* szFile) {
 		static bool bFirstRun=true;
-		if (bFirstRun) Console.Error.Write("FileSize--");
+		if (bFirstRun) Console::Error.Write("FileSize--");
 		int iBytes=0;
 		std::ifstream ifData;
 		string sOpNoun="start";
 		try {
 			sOpNoun="open";
-			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			if (bFirstRun) Console::Error.Write(sOpNoun+",");
 			ifData.open(szFile, std::ios_base::binary | std::ios_base::in);
 			sOpNoun="status";
-			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			if (bFirstRun) Console::Error.Write(sOpNoun+",");
 			if (!ifData.good() || ifData.eof() || !ifData.is_open()) {
-				if (bFirstRun) Console.Error.WriteLine("found zero bytes...");
+				if (bFirstRun) Console::Error.WriteLine("found zero bytes...");
 				return 0;
 			}
 			sOpNoun="init";
-			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			if (bFirstRun) Console::Error.Write(sOpNoun+",");
 			ifData.seekg(0, std::ios_base::beg);
 			sOpNoun="traverse";
-			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			if (bFirstRun) Console::Error.Write(sOpNoun+",");
 			std::ifstream::pos_type posNow = ifData.tellg();
 			sOpNoun="seek";
-			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			if (bFirstRun) Console::Error.Write(sOpNoun+",");
 			ifData.seekg(0, std::ios_base::end);
 			sOpNoun="convert";
-			if (bFirstRun) Console.Error.Write(sOpNoun+",");
+			if (bFirstRun) Console::Error.Write(sOpNoun+",");
 			iBytes=static_cast<int>(ifData.tellg() - posNow);
 			//thanks http://www.codeproject.com/file/filesize.asp
 		}
@@ -2683,7 +2683,7 @@ namespace ExpertMultimediaBase {
 		}
 		try {
 			sOpNoun="close...";
-			if (bFirstRun) Console.Error.Write(sOpNoun);
+			if (bFirstRun) Console::Error.Write(sOpNoun);
 			if (ifData!=NULL) ifData.close();
 		}
 		catch (exception& exn) {
@@ -2693,7 +2693,7 @@ namespace ExpertMultimediaBase {
 			ShowUnknownExn("ExpertMultimediaBase::FileSize",sOpNoun);
 		}
 		sOpNoun="done ("+RString_ToString(iBytes)+" bytes)...";
-		if (bFirstRun) Console.Error.Write(sOpNoun);
+		if (bFirstRun) Console::Error.Write(sOpNoun);
 		bFirstRun=false;
 		return iBytes;
 	}//end FileSize(char* szFile)

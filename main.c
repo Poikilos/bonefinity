@@ -52,21 +52,21 @@ namespace ExpertMultimediaBase {
 	int iSetScreenW=640;
 	int iSetScreenH=480;
 	int iSetScreenBytesPP=4;
-	
+
 
 	static bool Init() {
-		Console.Write("Loading data...");
+		Console::Write("Loading data...");
 		bool bGood=true;
 		int iFrames=16;
 		animTest.LoadSeq("C:\\My Documents\\Projects-cpp\\DXMan\\bin\\images\\hero*.tga");
 		iFrames=animTest.lFramesCached;
-		Console.Write("Found "+ToString(iFrames)+" frames...");
-		Console.WriteLine();
-		Console.WriteLine(animTest.Dump(true));
-		Console.Write("Init screen GBuffer...");
+		Console::Write("Found "+ToString(iFrames)+" frames...");
+		Console::WriteLine();
+		Console::WriteLine(animTest.Dump(true));
+		Console::Write("Init screen GBuffer...");
 		gbScreen.Init(iSetScreenW,iSetScreenH,4);//assumes 32-bit GBuffer is needed
-		Console.WriteLine("Done.");
-		Console.Write("Loading test ini and running dump test...");
+		Console::WriteLine("Done.");
+		Console::Write("Loading test ini and running dump test...");
 		Variables vsNow;
 		Variable* pvNow=null;
 		vsNow.Load("data/test.ini");
@@ -96,10 +96,10 @@ namespace ExpertMultimediaBase {
 				ofNow<<endl;
 			}
 		}
-		Console.WriteLine("Done.");
-		Console.Write("Closing test ini...");
+		Console::WriteLine("Done.");
+		Console::Write("Closing test ini...");
 		ofNow.close();
-		Console.WriteLine("Done.");
+		Console::WriteLine("Done.");
 		return bGood;
 	}
 	static bool Shutdown() {
@@ -135,14 +135,14 @@ namespace ExpertMultimediaBase {
 			Uint8* lpDestLine;
 			if (bGood) {
                 lpSrcLine=gbScreen.BytePtrStart();
-				if (bFirstRun) Console.Write("debug test...");
+				if (bFirstRun) Console::Write("debug test...");
 
 				//Uint8* lpbyScreen=(Uint8*)screen->pixels;//debug only
 				//*((Uint32*)lpbyScreen)=0xFFFFFF; //debug only
 				//*(Uint32*)(&lpbyScreen[32*iDestStride+32*iDestBytesPP])=0xFFFFFF; //debug only
 				//gbScreen.Fill(255);//debug only
 
-				if (bFirstRun) Console.Write("copy...");
+				if (bFirstRun) Console::Write("copy...");
 				lpDestLine=(Uint8*)screen->pixels;//8bit in order to use stride
 				switch (iDestBytesPP) {
 					case 1:
@@ -248,7 +248,7 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
   	}//end DrawScreen
-  	
+
 	static void Iterate() {
 		iTickLastIteration=SDL_GetTicks();
 	    static int iFakeValueVel = 0;
@@ -279,7 +279,7 @@ namespace ExpertMultimediaBase {
 	        }
 	    }
 
-	    if (bFirstRun) Console.Write("Starting Draw background color...");
+	    if (bFirstRun) Console::Write("Starting Draw background color...");
 	    switch (iFakeHue) {
 	      case 0:
 	          u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, 0);
@@ -302,29 +302,29 @@ namespace ExpertMultimediaBase {
 	    sdlrectPixelNow.x = (screen->w / 2) - (sdlrectPixelNow.w / 2);
 	    sdlrectPixelNow.y = (screen->h / 2) - (sdlrectPixelNow.h / 2);
 	    SDL_FillRect (screen, &sdlrectPixelNow, u32Color);
-		if (bFirstRun) Console.WriteLine("Done.");
-		if (bFirstRun) Console.Write("Clearing screen...");
+		if (bFirstRun) Console::WriteLine("Done.");
+		if (bFirstRun) Console::Write("Clearing screen...");
 		bool bTest=gbScreen.Fill(0);
-		if (bFirstRun) Console.WriteLine((bTest)?"Success.":"Failed.");
-		if (bFirstRun) Console.Write("Drawing frame...");
+		if (bFirstRun) Console::WriteLine((bTest)?"Success.":"Failed.");
+		if (bFirstRun) Console::Write("Drawing frame...");
 		bTest=animTest.DrawToLargerWithoutCropElseCancel(gbScreen,gbScreen.iWidth/2,gbScreen.iHeight/2,DrawModeBlendAlpha);
-		if (bFirstRun) Console.WriteLine((bTest)?"Success.":"Failed.");
-		if (bFirstRun) Console.Write("Drawing screen...");
+		if (bFirstRun) Console::WriteLine((bTest)?"Success.":"Failed.");
+		if (bFirstRun) Console::Write("Drawing screen...");
 		bTest=DrawScreen();
-		if (bFirstRun) Console.WriteLine((bTest)?"Success.":"Failed.");
-		if (bFirstRun) Console.Write("Advancing to next frame...");
+		if (bFirstRun) Console::WriteLine((bTest)?"Success.":"Failed.");
+		if (bFirstRun) Console::Write("Advancing to next frame...");
 		bTest=animTest.GotoNextFrame(true);
-		if (bFirstRun) Console.WriteLine((bTest)?"Success.":"Failed.");
-		if (bFirstRun) Console.Write("Flip backbuffer...");
+		if (bFirstRun) Console::WriteLine((bTest)?"Success.":"Failed.");
+		if (bFirstRun) Console::Write("Flip backbuffer...");
 	    SDL_Flip(screen);
-		if (bFirstRun) Console.WriteLine("Done.");
+		if (bFirstRun) Console::WriteLine("Done.");
 	    SDL_Delay(1);//TODO: remove this and do timing outside of iterate
 	}//end Iterate
 }//end namespace
 using namespace ExpertMultimediaBase;
 //int main(int argc, char *argv[]) {
 int main(int iArgs, char** lpsArg) {
-	Console.Write("Initializing display...");
+	Console::Write("Initializing display...");
     if (SDL_Init (SDL_INIT_VIDEO) < 0) {
 		string sMsg="Couldn't initialize SDL: ";
 		string sTemp="";
@@ -335,11 +335,11 @@ int main(int iArgs, char** lpsArg) {
     }
     atexit(SDL_Quit);
 
-	Console.WriteLine("Done.");
-	Console.Write("Setting video mode...");
+	Console::WriteLine("Done.");
+	Console::Write("Setting video mode...");
     screen=SDL_SetVideoMode(iSetScreenW, iSetScreenH, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF);//commented for debugonly: | SDL_RESIZABLE);//SDL_FULLSCREEN
     if (screen==NULL) {
-		Console.WriteLine("Fail!");
+		Console::WriteLine("Fail!");
 		string sMsg="Couldn't set "+ToString(iSetScreenW)+"x"
 		    +ToString(iSetScreenH)+"x"
 		    +ToString(iSetScreenBytesPP*8);
@@ -351,13 +351,13 @@ int main(int iArgs, char** lpsArg) {
 		ShowError(sMsg,"main init");
         exit(2);
     }
-	else Console.WriteLine("Done.");
+	else Console::WriteLine("Done.");
     //SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
 	Init();
     bDone=false;
     iTickLastIteration=SDL_GetTicks();
     while (!bDone) {
-		if (bFirstRun) Console.WriteLine("Entered main event loop.");
+		if (bFirstRun) Console::WriteLine("Entered main event loop.");
         SDL_Event event;
 		int iSetWidth;
 		int iSetHeight;
@@ -375,10 +375,10 @@ int main(int iArgs, char** lpsArg) {
 				iSetHeight=event.resize.h;
 				if ( abs(iSetWidth -gbScreen.iWidth)>2
 					 || abs(iSetHeight-gbScreen.iHeight)>2 ) {
-					if (bFirstResize) Console.Write("Resizing screen...");
+					if (bFirstResize) Console::Write("Resizing screen...");
 					screen=SDL_SetVideoMode(iSetWidth, iSetHeight, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);//, SDL_OPENGL)
 					gbScreen.Init(iSetWidth,iSetHeight,gbScreen.iBytesPP,true);
-					if (bFirstResize) Console.WriteLine("Done");
+					if (bFirstResize) Console::WriteLine("Done");
 					bFirstResize=false;
 				}
 				*/

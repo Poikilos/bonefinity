@@ -5,10 +5,11 @@
 #include <iomanip>
 #include <fstream>
 #include <memory>
-#include <byter.h>
+#include <RFile.h>//#include <byter.h>
 //#include "E:\Projects-cpp\Base\byter.h"
 
 using namespace std;
+
 
 namespace ExpertMultimediaBase {
 	//Sequential targa.TypeTarga values:

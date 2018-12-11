@@ -2,8 +2,8 @@
 #define GBUFFER_H
 
 #include <base.h>
-#include <targa.h>
-#include <gradient32bgra.h>
+#include <Targa.h>
+#include <RGradient_bgra32.h> //#include <RGradient_bgra32.h>
 
 using namespace std;
 

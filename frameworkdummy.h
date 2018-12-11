@@ -114,7 +114,7 @@ namespace ProtoArmor {
 		static string ToString(unsigned short val);
 		static string ToString(unsigned int val);
 		static string ToString(unsigned __int64 val);
- 
+
 		//static string ToString(bool val, IFormatProvider* pifmtp); //and so on with IFormatProvider* for each type
 	};
 

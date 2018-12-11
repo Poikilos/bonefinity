@@ -1,8 +1,8 @@
 #ifndef SPRITE_CPP
 #define SPRITE_CPP
 
-#include <sprite.h>
-//#include "E:\Projects-cpp\Base\sprite.h"
+#include <RSprite_bgra32.h>
+//#include "E:\Projects-cpp\Base\RSprite_bgra32.h"
 
 using namespace std;
 
