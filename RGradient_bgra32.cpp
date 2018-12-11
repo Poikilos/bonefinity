@@ -1,5 +1,6 @@
 #ifndef GRADIENT_CPP
 #define GRADIENT_CPP
+
 #include <RGradient_bgra32.h>
 #include <RImage_bgra32.h>
 

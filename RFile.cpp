@@ -6,7 +6,6 @@
 #include <fstream>
 #include <RFile.h>
 #include <base.h>
-//#include "E:\Projects-cpp\Base\byter.h"
 
 using namespace std;
 
@@ -78,19 +77,19 @@ namespace ExpertMultimediaBase {
 			if (bByterFirstRun) Console::Error.Write("Byter::OpenRead(\""+sFile+"\")...");
 			//const char* szFile=sFileNow.c_str();
 			sMsg="openread char*...";
-       		if (bByterFirstRun) Console::Error.Write(sMsg);
+			if (bByterFirstRun) Console::Error.Write(sMsg);
 			iFileSize=FileSize(szFile);
 			sMsg="done getting filesize [";
 			sMsg+=RString_ToString(iFileSize);
 			sMsg+="].  Loading all data...";
-       		if (bByterFirstRun) Console::Error.Write(sMsg);
+			if (bByterFirstRun) Console::Error.Write(sMsg);
 			iLength=iFileSize;
 			iMaxLength=iLength;
 			if (iFileSize>0) {
 			//ifstream ifData(szFile, ios::out | ios::in | ios::binary);//OFSTRUCT file_data; //the file data information
-			    sMsg="create file structure";
+				sMsg="create file structure";
 				std::ifstream ifData(szFile, std::ios::in | std::ios::binary);
-			    sMsg="checking if file is open";
+				sMsg="checking if file is open";
 				if (ifData.is_open()) {// ((file_handle=OpenFile("by3dAlphaLookup.raw",&file_data,OF_READ))==-1) //open the file if it exists
 					//std::istringstream issData;
 
@@ -117,7 +116,7 @@ namespace ExpertMultimediaBase {
 					//arrbySrc=NULL;
 					//free(szData);
 					sMsg="done...";
-       				if (bByterFirstRun) Console::Error.Write(sMsg);
+					if (bByterFirstRun) Console::Error.Write(sMsg);
 				}
 				else {
 					sMsg="ifstream fails to open file";
@@ -310,7 +309,7 @@ namespace ExpertMultimediaBase {
 		string sMsg="Initialization";
 		bool bGood=true;
 		try {
-	        u32BytesWritten=0;
+			u32BytesWritten=0;
 			for (Uint32 iNow=0; iNow<u32BytesToWrite; iNow++) {
 				if (iPlace>=iMaxLength) {
 					bGood=SetMax(IROUNDF((long double)iMaxLength*(long double)1.25));
@@ -391,10 +390,10 @@ namespace ExpertMultimediaBase {
 		bool bGood=true;
 		try {
 			Uint32 u32BytesToWrite=val.length();
-	        u32BytesWritten=0;
+			u32BytesWritten=0;
 
-	        char* szSrc=NULL;
-	        if (val.length()>0) {
+			char* szSrc=NULL;
+			if (val.length()>0) {
 				szSrc=(char*)malloc(val.length()*sizeof(char));
 				for (Uint32 iNow=0; iNow<u32BytesToWrite; iNow++) {
 					if (iPlace>=iMaxLength) {
@@ -526,7 +525,7 @@ namespace ExpertMultimediaBase {
 		return (Length()-Place()) + 1;
 	}
 	bool Byter::Position(int iNewPosition) {
-   		bool bGood=false;
+		bool bGood=false;
 		if (iNewPosition>Length()) {
 			iPlace=Length();
 		}

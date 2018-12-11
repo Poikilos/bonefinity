@@ -80,7 +80,7 @@ namespace ExpertMultimediaBase {
 			int i2ndDimLenNow=vsNow.Indeces(sName,i1st);
 			ofNow<<i2ndDimLenNow<<" indeces found for dimension 2 at dimension 1 index "<<i1st<<endl;
 			if (i2ndDimLenNow==0) {
-                pvNow=vsNow.PointerOf(sName);
+				pvNow=vsNow.PointerOf(sName);
 				if (pvNow!=null) bGood=pvNow->Get(sTemp,i1st);
 				else { bGood=false; sTemp="(VAR NAME NOT FOUND)"; }
 				ofNow<<sTemp<<endl;
@@ -134,7 +134,7 @@ namespace ExpertMultimediaBase {
 			Uint8* lpDestPix;
 			Uint8* lpDestLine;
 			if (bGood) {
-                lpSrcLine=gbScreen.BytePtrStart();
+				lpSrcLine=gbScreen.BytePtrStart();
 				if (bFirstRun) Console::Write("debug test...");
 
 				//Uint8* lpbyScreen=(Uint8*)screen->pixels;//debug only
@@ -247,61 +247,61 @@ namespace ExpertMultimediaBase {
 			bGood=false;
 		}
 		return bGood;
-  	}//end DrawScreen
+	}//end DrawScreen
 
 	static void Iterate() {
 		iTickLastIteration=SDL_GetTicks();
-	    static int iFakeValueVel = 0;
-	    static int iFakeValue = 128;
-	    static int iFakeHue = 0;
-	    SDL_Rect sdlrectPixelNow;
-	    Uint32 u32Color;
-	    /* Create a black background */
-	    u32Color = SDL_MapRGB (screen->format, 0, 0, 0);
-	    SDL_FillRect (screen, NULL, u32Color);
+		static int iFakeValueVel = 0;
+		static int iFakeValue = 128;
+		static int iFakeHue = 0;
+		SDL_Rect sdlrectPixelNow;
+		Uint32 u32Color;
+		/* Create a black background */
+		u32Color = SDL_MapRGB (screen->format, 0, 0, 0);
+		SDL_FillRect (screen, NULL, u32Color);
 
-	    /* Determine which u32Color the layer should have */
-	    if (iFakeValueVel == 0) {
-	        iFakeValue += 2;
-	        if (iFakeValue >= 256) {
-	            iFakeValue = 255;
-	            iFakeValueVel = 1;
-	        }
-	    }
-	    else {
-	        iFakeValue -= 2;
-	        if (iFakeValue <= 5) {
-	            iFakeValue = 0;
-	            iFakeValueVel = 0;
-	            iFakeHue++;
-	            if (iFakeHue == 5)
-	                iFakeHue = 0;
-	        }
-	    }
+		/* Determine which u32Color the layer should have */
+		if (iFakeValueVel == 0) {
+			iFakeValue += 2;
+			if (iFakeValue >= 256) {
+				iFakeValue = 255;
+				iFakeValueVel = 1;
+			}
+		}
+		else {
+			iFakeValue -= 2;
+			if (iFakeValue <= 5) {
+				iFakeValue = 0;
+				iFakeValueVel = 0;
+				iFakeHue++;
+				if (iFakeHue == 5)
+					iFakeHue = 0;
+			}
+		}
 
-	    if (bFirstRun) Console::Write("Starting Draw background color...");
-	    switch (iFakeHue) {
-	      case 0:
-	          u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, 0);
-	          break;
-	      case 1:
-	          u32Color = SDL_MapRGB (screen->format, 0, iFakeValue, 0);
-	          break;
-	      case 2:
-	          u32Color = SDL_MapRGB (screen->format, 0, 0, iFakeValue);
-	          break;
-	      case 3:
-	          u32Color = SDL_MapRGB (screen->format, iFakeValue, iFakeValue, iFakeValue);
-	          break;
-	      case 4:
-	          u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, iFakeValue);
-	          break;
-	    }
-	    sdlrectPixelNow.w = screen->w / 2;
-	    sdlrectPixelNow.h = screen->h / 2;
-	    sdlrectPixelNow.x = (screen->w / 2) - (sdlrectPixelNow.w / 2);
-	    sdlrectPixelNow.y = (screen->h / 2) - (sdlrectPixelNow.h / 2);
-	    SDL_FillRect (screen, &sdlrectPixelNow, u32Color);
+		if (bFirstRun) Console::Write("Starting Draw background color...");
+		switch (iFakeHue) {
+			case 0:
+				u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, 0);
+				break;
+			case 1:
+				u32Color = SDL_MapRGB (screen->format, 0, iFakeValue, 0);
+				break;
+			case 2:
+				u32Color = SDL_MapRGB (screen->format, 0, 0, iFakeValue);
+				break;
+			case 3:
+				u32Color = SDL_MapRGB (screen->format, iFakeValue, iFakeValue, iFakeValue);
+				break;
+			case 4:
+				u32Color = SDL_MapRGB (screen->format, iFakeValue, 0, iFakeValue);
+				break;
+		}
+		sdlrectPixelNow.w = screen->w / 2;
+		sdlrectPixelNow.h = screen->h / 2;
+		sdlrectPixelNow.x = (screen->w / 2) - (sdlrectPixelNow.w / 2);
+		sdlrectPixelNow.y = (screen->h / 2) - (sdlrectPixelNow.h / 2);
+		SDL_FillRect (screen, &sdlrectPixelNow, u32Color);
 		if (bFirstRun) Console::WriteLine("Done.");
 		if (bFirstRun) Console::Write("Clearing screen...");
 		bool bTest=gbScreen.Fill(0);
@@ -316,81 +316,81 @@ namespace ExpertMultimediaBase {
 		bTest=animTest.GotoNextFrame(true);
 		if (bFirstRun) Console::WriteLine((bTest)?"Success.":"Failed.");
 		if (bFirstRun) Console::Write("Flip backbuffer...");
-	    SDL_Flip(screen);
+		SDL_Flip(screen);
 		if (bFirstRun) Console::WriteLine("Done.");
-	    SDL_Delay(1);//TODO: remove this and do timing outside of iterate
+		SDL_Delay(1);//TODO: remove this and do timing outside of iterate
 	}//end Iterate
 }//end namespace
 using namespace ExpertMultimediaBase;
 //int main(int argc, char *argv[]) {
 int main(int iArgs, char** lpsArg) {
 	Console::Write("Initializing display...");
-    if (SDL_Init (SDL_INIT_VIDEO) < 0) {
+	if (SDL_Init (SDL_INIT_VIDEO) < 0) {
 		string sMsg="Couldn't initialize SDL: ";
 		string sTemp="";
 		sTemp.assign(SDL_GetError());
 		sMsg+=sTemp;
 		if (ShowError()) cerr<<sMsg<<endl;
-        exit (1);
-    }
-    atexit(SDL_Quit);
+	exit (1);
+	}
+	atexit(SDL_Quit);
 
 	Console::WriteLine("Done.");
 	Console::Write("Setting video mode...");
-    screen=SDL_SetVideoMode(iSetScreenW, iSetScreenH, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF);//commented for debugonly: | SDL_RESIZABLE);//SDL_FULLSCREEN
-    if (screen==NULL) {
+	screen=SDL_SetVideoMode(iSetScreenW, iSetScreenH, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF);//commented for debugonly: | SDL_RESIZABLE);//SDL_FULLSCREEN
+	if (screen==NULL) {
 		Console::WriteLine("Fail!");
 		string sMsg="Couldn't set "+ToString(iSetScreenW)+"x"
-		    +ToString(iSetScreenH)+"x"
-		    +ToString(iSetScreenBytesPP*8);
+			+ToString(iSetScreenH)+"x"
+			+ToString(iSetScreenBytesPP*8);
 		sMsg+=" video mode: ";
 		string sTemp="";
 		sTemp.assign(SDL_GetError());
 		sMsg+=sTemp;
 		cerr<<sMsg<<endl;
 		ShowError(sMsg,"main init");
-        exit(2);
-    }
+		exit(2);
+	}
 	else Console::WriteLine("Done.");
-    //SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
+	//SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
 	Init();
-    bDone=false;
-    iTickLastIteration=SDL_GetTicks();
-    while (!bDone) {
+	bDone=false;
+	iTickLastIteration=SDL_GetTicks();
+	while (!bDone) {
 		if (bFirstRun) Console::WriteLine("Entered main event loop.");
-        SDL_Event event;
+		SDL_Event event;
 		int iSetWidth;
 		int iSetHeight;
 		static bool bFirstResize=true;
-        while (SDL_PollEvent (&event)) {
-            switch (event.type) {
-            case SDL_KEYDOWN:
-                break;
-            case SDL_QUIT:
-                bDone=true;
-                break;
-			case SDL_VIDEORESIZE:
-				/* commented for debug only
-				iSetWidth=event.resize.w;
-				iSetHeight=event.resize.h;
-				if ( abs(iSetWidth -gbScreen.iWidth)>2
-					 || abs(iSetHeight-gbScreen.iHeight)>2 ) {
-					if (bFirstResize) Console::Write("Resizing screen...");
-					screen=SDL_SetVideoMode(iSetWidth, iSetHeight, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);//, SDL_OPENGL)
-					gbScreen.Init(iSetWidth,iSetHeight,gbScreen.iBytesPP,true);
-					if (bFirstResize) Console::WriteLine("Done");
-					bFirstResize=false;
-				}
-				*/
-				break;
-            default:
-                break;
-            }
-        }
-        Iterate();
+		while (SDL_PollEvent (&event)) {
+			switch (event.type) {
+				case SDL_KEYDOWN:
+					break;
+				case SDL_QUIT:
+					bDone=true;
+					break;
+				case SDL_VIDEORESIZE:
+					/* commented for debug only
+					iSetWidth=event.resize.w;
+					iSetHeight=event.resize.h;
+					if ( abs(iSetWidth -gbScreen.iWidth)>2
+						 || abs(iSetHeight-gbScreen.iHeight)>2 ) {
+						if (bFirstResize) Console::Write("Resizing screen...");
+						screen=SDL_SetVideoMode(iSetWidth, iSetHeight, iSetScreenBytesPP*8, SDL_SWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);//, SDL_OPENGL)
+						gbScreen.Init(iSetWidth,iSetHeight,gbScreen.iBytesPP,true);
+						if (bFirstResize) Console::WriteLine("Done");
+						bFirstResize=false;
+					}
+					*/
+					break;
+				default:
+					break;
+			}
+		}
+		Iterate();
 		bFirstRun=false;
-    }//end while !bDone
-    Shutdown();
-    return 0;
+	}//end while !bDone
+	Shutdown();
+	return 0;
 }//end main (using ExpertMultimediaBase [see above for part of it])
 #endif

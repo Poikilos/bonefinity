@@ -21,7 +21,7 @@ namespace RMath {
 	extern const int LineRelationshipIntersectionNotTouchingEndsOfLineB;//=3;
 	extern const int LineRelationshipLineBPoint1IsOnLineA;//=4;
 	extern const int LineRelationshipLineBPoint2IsOnLineA;//=5;
-	extern const int LineRelationshipThisOrHigherNotCrossingInRange;//=100;
+	extern const int LineRelationshipThisOrHigherNotCrossingInRange;  // =100;
 	extern const int LineRelationshipIntersectionNotCrossingInRangeCouldNotFinish;//=100;
 	extern const int LineRelationshipIntersectionNotCrossingInRangeWouldIntersect;//=101;
 	extern const int LineRelationshipIntersectionNotCrossingInRangeWouldntIntersect;//=102;

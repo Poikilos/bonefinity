@@ -283,7 +283,7 @@ namespace ExpertMultimediaBase {
 		void CreateOrIgnore(string sName, float val);
 		void CreateOrIgnore(string sName, string val);
 		void SetOrCreate(string sName, int val);
-	    void SetOrCreate(string sName, float val);
+		void SetOrCreate(string sName, float val);
 		void SetOrCreate(string sName, string val);
 		void GetOrCreate(int &val, string sName);
 		void GetOrCreate(float &val, string sName);
@@ -434,6 +434,7 @@ namespace ExpertMultimediaBase {
 	void DetectSlashType(char *sFullPath);
 	void ValidateSlash(char *sDir);
 	bool IsLikeMask(char *sFullPath1, char *sMask1);
+
 	void strcatfrom(char *sz, int i);
 	void strcatfrom(char *sz, long val);
 	void strcatfrom(char *sz, Uint32 val);

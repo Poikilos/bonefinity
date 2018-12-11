@@ -3,6 +3,7 @@
 #include <RGradient_bgra32.h>
 #include <RAnim_bgra32.h>
 
+
 using namespace std;
 
 /*
@@ -13,7 +14,9 @@ using namespace std;
  *
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-#define GFont_iGlyphTypes	1 //debug should be 4 in fully implemented version or however many Glyph* constants there are
+
+#define GFont_iGlyphTypes	1  // debug: should be 4 (or however many Glyph* constants there are) in fully implemented version
+
 //using System.IO;
 namespace ExpertMultimediaBase {
 	extern const int GFont_GlyphTypePlain;

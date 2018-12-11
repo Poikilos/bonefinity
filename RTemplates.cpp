@@ -1,6 +1,8 @@
 #include "RTemplates.h"
 #include <iostream>
-using namespace std;//NULL etc
+
+
+using namespace std;  // NULL etc
 
 //compilers don't like dividing class templates:
 
@@ -48,14 +50,14 @@ namespace exm {
 			if (lplpval!=NULL) {
 				T** lplpvalOld=lplpval;
 				lplpval=NULL;
-				set_Maximum(maximum);//recursion is safe since this case won't run since just set lplpval=NULL
+				set_Maximum(maximum);  // recursion is safe since this case won't run since just set lplpval=NULL
 				int set_Maximum_result=get_Maximum();
 				for (int i=0; i<set_Maximum_result; i++) {
 					lplpval[i]=(i<iUsed)?(lplpvalOld[i]):(NULL);
 				}
 			}
 			else {
-				lplpval=new T *[maximum];//lplpval=(T**)malloc(sizeof(T*)*maximum);
+				lplpval=new T *[maximum];  // lplpval=(T**)malloc(sizeof(T*)*maximum);
 				memset(lplpval,'\0',maximum*sizeof(T*));
 				//for (int i=0; i<maximum; i++) {
 				//	lplpval[i]=NULL;

@@ -1,6 +1,6 @@
 #ifndef ANIM_CPP
 #define ANIM_CPP
-#include <RAnim_bgra32.h> //#include "E:\Projects-cpp\Base\RAnim_bgra32.h"
+#include <RAnim_bgra32.h>
 #include <base.h>
 #include <RMath.h>
 
@@ -263,34 +263,34 @@ namespace ExpertMultimediaBase {
 			animReturn.lFramesCached=lFramesCached;
 			//Console::Error.Write("Copying Frame");
 			if (lFramesCached==lFrames) {
-				Console::Error.Write("writing ");
-				Console::Error.Flush();
-				animReturn.gbarrAnim=new GBuffer[lFramesCached];
-				Console::Error.Write(RString_ToString(lFramesCached)+" frames:");
-				Console::Error.Flush();
-				if ((iChannelOffset<0)||(iChannelOffset>=gbarrAnim[0].iBytesPP)) {
-					if (iChannelOffset>=gbarrAnim[0].iBytesPP) {
-						Console::Error.Write("Source channel is out of range {iChannelOffset:"+RString_ToString(iChannelOffset)+"; gbarrAnim[0].iBytesPP:"+RString_ToString(gbarrAnim[0].iBytesPP)+"} so defaulting to average color for value!  ");
-						Console::Error.Flush();
-					}
-					for (long index=0; index<lFrames; index++) {
-						if (!MaskFromValue(animReturn.gbarrAnim[index], gbarrAnim[index])) {
-							bGood=false;
-							ShowErr("<failed>");
-							break;
-						}
-						//else Console::Error.Write(".");
-					}
+			Console::Error.Write("writing ");
+			Console::Error.Flush();
+			animReturn.gbarrAnim=new GBuffer[lFramesCached];
+			Console::Error.Write(RString_ToString(lFramesCached)+" frames:");
+			Console::Error.Flush();
+			if ((iChannelOffset<0)||(iChannelOffset>=gbarrAnim[0].iBytesPP)) {
+				if (iChannelOffset>=gbarrAnim[0].iBytesPP) {
+					Console::Error.Write("Source channel is out of range {iChannelOffset:"+RString_ToString(iChannelOffset)+"; gbarrAnim[0].iBytesPP:"+RString_ToString(gbarrAnim[0].iBytesPP)+"} so defaulting to average color for value!  ");
+					Console::Error.Flush();
 				}
-				else {
-					for (long index=0; index<lFrames; index++) {
-						if (!MaskFromChannel(animReturn.gbarrAnim[index], gbarrAnim[index], iChannelOffset)) {
-							bGood=false;
-							ShowErr("<failed>");
-						}
-						//else Console::Error.Write(".");
+				for (long index=0; index<lFrames; index++) {
+					if (!MaskFromValue(animReturn.gbarrAnim[index], gbarrAnim[index])) {
+						bGood=false;
+						ShowErr("<failed>");
+						break;
 					}
+					//else Console::Error.Write(".");
 				}
+			}
+			else {
+				for (long index=0; index<lFrames; index++) {
+					if (!MaskFromChannel(animReturn.gbarrAnim[index], gbarrAnim[index], iChannelOffset)) {
+						bGood=false;
+						ShowErr("<failed>");
+					}
+					//else Console::Error.Write(".");
+				}
+			}
 			}
 			else ShowError("Uncached Anim not yet implemented","Anim CopyAsGray");
 			Console::Error.Write(".");
@@ -364,7 +364,7 @@ namespace ExpertMultimediaBase {
 			ShowExn(exn, "Anim CopyAsGray");
 		}
 		catch (...) {
-            ShowUnknownExn("Anim CopyAsGray");
+			ShowUnknownExn("Anim CopyAsGray");
 		}
 		return animReturn;
 	}//end CopyAsGray
@@ -399,18 +399,18 @@ namespace ExpertMultimediaBase {
 				if (gbFrame.arrbyData!=null) {
 					if (gbFrame.iBytesTotal>0) {
 						try {
-						sReturn+="; gbFrame.iBytesTotal:"+RString_ToString(gbFrame.iBytesTotal)
-							+"; gbFrame.iWidth:"+RString_ToString(gbFrame.iWidth)
-							+"; gbFrame.iHeight:"+RString_ToString(gbFrame.iHeight)
-							+"; gbFrame.iWidth:"+RString_ToString(gbFrame.iWidth)
-							+"; gbFrame.iBytesPP:"+RString_ToString(gbFrame.iBytesPP)
-							+"; gbFrame.iStride:"+RString_ToString(gbFrame.iStride);
+							sReturn+="; gbFrame.iBytesTotal:"+RString_ToString(gbFrame.iBytesTotal)
+								+"; gbFrame.iWidth:"+RString_ToString(gbFrame.iWidth)
+								+"; gbFrame.iHeight:"+RString_ToString(gbFrame.iHeight)
+								+"; gbFrame.iWidth:"+RString_ToString(gbFrame.iWidth)
+								+"; gbFrame.iBytesPP:"+RString_ToString(gbFrame.iBytesPP)
+								+"; gbFrame.iStride:"+RString_ToString(gbFrame.iStride);
 						}
 						catch (exception& exn) {
 							ShowExn(exn,"Anim Dump("+RString_ToString(bDumpVars)+") while accessing gbFrame");
 						}
 						catch (...) {
-				            ShowUnknownExn("Anim Dump("+RString_ToString(bDumpVars)+") while accessing gbFrame");
+							ShowUnknownExn("Anim Dump("+RString_ToString(bDumpVars)+") while accessing gbFrame");
 						}
 					}
 				}
@@ -421,13 +421,13 @@ namespace ExpertMultimediaBase {
 				ShowExn(exn, "Anim Dump("+RString_ToString(bDumpVars)+")");
 			}
 			catch (...) {
-	            ShowUnknownExn("Anim Dump("+RString_ToString(bDumpVars)+")");
+				ShowUnknownExn("Anim Dump("+RString_ToString(bDumpVars)+")");
 			}
 			bFirstRun=false;
 			return sReturn;
 		}
 		else {
-            bFirstRun=false;
+			bFirstRun=false;
 			return Dump();
 		}
 	}//end Dump(bDumpVars);
@@ -598,10 +598,10 @@ namespace ExpertMultimediaBase {
 		sFileBaseName=sSetFileBaseName;
 		sFileExt=sSetFileExt;
 		bool bGood=true;
-       	static bool bFirstRun=true;
-       	if (bFirstRun) Console::Error.Write("starting LoadSeq");
-       	if (bFirstRun) Console::Error.Write("("+sSetFileBaseName+","+sSetFileExt+","+RString_ToString(iFrameCountToUseAndModify)+","+RString_ToString(iSeqDigitCountNow)+","+RString_ToString(iStartFrame)+")...");
-       	if (iFrameCountToUseAndModify<=0) {
+		static bool bFirstRun=true;
+		if (bFirstRun) Console::Error.Write("starting LoadSeq");
+		if (bFirstRun) Console::Error.Write("("+sSetFileBaseName+","+sSetFileExt+","+RString_ToString(iFrameCountToUseAndModify)+","+RString_ToString(iSeqDigitCountNow)+","+RString_ToString(iStartFrame)+")...");
+		if (iFrameCountToUseAndModify<=0) {
 			ShowError("Tried to load zero-length frame array!","LoadSeq("+sSetFileBaseName+","+sSetFileExt+","+RString_ToString(iFrameCountToUseAndModify)+",...)");
 			bGood=false;
 		}
@@ -609,16 +609,16 @@ namespace ExpertMultimediaBase {
 		//long iFrameRel=0;
 		string sFrameFileNow="";
 		if (bGood) {
-	       	if (bFirstRun) Console::Error.Write("buffer array...");
+			if (bFirstRun) Console::Error.Write("buffer array...");
 			GBuffer* gbarrTemp=new GBuffer[iFrameCountToUseAndModify];
 			lFrames=(long)iFrameCountToUseAndModify;
 			lFramesCached=(long)iFrameCountToUseAndModify;
 			iFrameCountToUseAndModify=0;
-	       	if (bFirstRun) Console::Error.Write("("+RString_ToString(lFramesCached)+")frames...");
+			if (bFirstRun) Console::Error.Write("("+RString_ToString(lFramesCached)+")frames...");
 			for (long iNow=0; iNow<lFramesCached; iNow++) {
-		       	if (bFirstRun) Console::Error.Write(" ["+RString_ToString(iNow)+"]as("+RString_ToString(iNow+iStartFrame)+")");
-		       	sFrameFileNow=ExpertMultimediaBase::PathFileOfSeqFrame(sSetFileBaseName, sSetFileExt, (long)iNow, iSeqDigitCountNow);
-		       	//if (gbarrTemp[iFrameRel]==null) gbarrTemp[iFrameRel]=new GBuffer(sFrameFileNow)
+				if (bFirstRun) Console::Error.Write(" ["+RString_ToString(iNow)+"]as("+RString_ToString(iNow+iStartFrame)+")");
+				sFrameFileNow=ExpertMultimediaBase::PathFileOfSeqFrame(sSetFileBaseName, sSetFileExt, (long)iNow, iSeqDigitCountNow);
+				//if (gbarrTemp[iFrameRel]==null) gbarrTemp[iFrameRel]=new GBuffer(sFrameFileNow)
 				//else
 				if (gbarrTemp[iNow].Load(sFrameFileNow)) iFrameCountToUseAndModify++;
 				else {
@@ -636,10 +636,10 @@ namespace ExpertMultimediaBase {
 				if (bFirstRun) Console::Error.Write("FrameArray:ok...");
 			}
 			if (bGood) {
-		       	if (bFirstRun) Console::Error.Write("GotoFrame(0)--");
+				if (bFirstRun) Console::Error.Write("GotoFrame(0)--");
 				if (!GotoFrame(0)) {
 					bGood=false;
-	                if (bFirstRun) Console::Error.Write("failed...");
+					if (bFirstRun) Console::Error.Write("failed...");
 				}
 				else Console::Error.Write("yes...");
 			}
@@ -715,31 +715,31 @@ namespace ExpertMultimediaBase {
 		try {
 			if (lFramesCached>0) {
 				if (lFramesCached==lFrames) {
-					if (gbarrAnim==null) {
-						ShowError("null frame array!","GotoFrame {sFileBaseName:"+sFileBaseName+"}");
+			if (gbarrAnim==null) {
+				ShowError("null frame array!","GotoFrame {sFileBaseName:"+sFileBaseName+"}");
+				bGood=false;
+			}
+			if (bGood) {
+				if (lFrameX<lFramesCached && lFrameX>=0) {
+					gbarrAnim[lFrameX].CopyToByDataRef(gbFrame);
+					lFrame=lFrameX;
+					if (gbFrame.arrbyData==null) {
 						bGood=false;
+						ShowError("Null frame!","GotoFrame("+RString_ToString(lFrameX)+") {sFileBaseName:"+sFileBaseName+"}");
 					}
-					if (bGood) {
-						if (lFrameX<lFramesCached && lFrameX>=0) {
-							gbarrAnim[lFrameX].CopyToByDataRef(gbFrame);
-							lFrame=lFrameX;
-							if (gbFrame.arrbyData==null) {
-								bGood=false;
-								ShowError("Null frame!","GotoFrame("+RString_ToString(lFrameX)+") {sFileBaseName:"+sFileBaseName+"}");
-							}
-							else if (gbFrame.iWidth==0) {
-								bGood=false;
-								ShowError("Bad frame data ("+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"X"+RString_ToString(gbFrame.iBytesPP*8)+")!","GotoFrame("+RString_ToString(lFrameX)+") {sFileBaseName:"+sFileBaseName+"}");
-							}
-							else if (bFirstRun) {
-								Console::Error.Write("GotoFrame {sFileBaseName:"+sFileBaseName+"} dimensions:"+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"X"+RString_ToString(gbFrame.iBytesPP*8)+"... ");
-							}
-						}
-						else {
-							bGood=false;
-							ShowError("Frame "+RString_ToString(lFrameX)+" is out of range! {sFileBaseName:"+sFileBaseName+"}");
-						}
+					else if (gbFrame.iWidth==0) {
+						bGood=false;
+						ShowError("Bad frame data ("+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"X"+RString_ToString(gbFrame.iBytesPP*8)+")!","GotoFrame("+RString_ToString(lFrameX)+") {sFileBaseName:"+sFileBaseName+"}");
 					}
+					else if (bFirstRun) {
+						Console::Error.Write("GotoFrame {sFileBaseName:"+sFileBaseName+"} dimensions:"+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"X"+RString_ToString(gbFrame.iBytesPP*8)+"... ");
+					}
+				}
+				else {
+					bGood=false;
+					ShowError("Frame "+RString_ToString(lFrameX)+" is out of range! {sFileBaseName:"+sFileBaseName+"}");
+				}
+			}
 				}
 				else {//if ((sPathFile!=null) && (sPathFile.length()>0)) {
 					bGood=false;
@@ -755,8 +755,8 @@ namespace ExpertMultimediaBase {
 			ShowExn(exn,"Anim GotoFrame("+RString_ToString(lFrameX)+")");
 		}
 		catch (...) {
-            bGood=false;
-            ShowUnknownExn("Anim GotoFrame");
+			bGood=false;
+			ShowUnknownExn("Anim GotoFrame");
 		}
 		bFirstRun=false;
 		return bGood;
@@ -902,25 +902,24 @@ namespace ExpertMultimediaBase {
 						iSrcByteOfCellNow=iSrcByteOfCellTopLeft + yCell*iCellPitchY + xCell*iCellPitchX;
 						iSrcByte=iSrcByteOfCellNow;
 						GotoFrame(lFrameLoad);
-						for (int iLine=0; iLine<iHeight; iLine++) {
-							//TODO: finish this--make it safer:
-							//if (gbFrame.arrbyData==null) {bGood=false; ShowErr("this->gbFrame: "+gbFrame.Description(true)+"!  ");}
-							if (gbFrame.arrbyData==null) {bGood=false; ShowErr("gb source: "+gbSrc.Description(true)+"!  ");}
-							else if (iDestStride<=0) {bGood=false; ShowErr("DestStride was "+RString_ToString(iDestStride)+"!  ");}
-							else if (iDestByte<0||iDestByte>=gbFrame.iBytesTotal) {bGood=false; ShowErr("dest loc "+RString_ToString(iDestByte)+" out of range!  ");}
-							else if (iSrcByte<0||iSrcByte>=gbSrc.iBytesTotal) {bGood=false; ShowErr("source loc "+RString_ToString(iSrcByte)+" out of range!  ");}
-							else memcpy(&gbFrame.arrbyData[iDestByte],&gbSrc.arrbyData[iSrcByte],iDestStride);
-							//if (Byter.CopyFast(gbFrame.arrbyData, gbSrc.arrbyData, iDestByte, iSrcByte, iDestStride)==false)
-							//	bGood=false;
-							iDestByte+=iDestStride;
-							iSrcByte+=iSrcStride;
-						}
-						//Console::Error.Write(gbFrame.Description()+" ");
+							for (int iLine=0; iLine<iHeight; iLine++) {
+								//TODO: finish this--make it safer:
+								//if (gbFrame.arrbyData==null) {bGood=false; ShowErr("this->gbFrame: "+gbFrame.Description(true)+"!  ");}
+								if (gbFrame.arrbyData==null) {bGood=false; ShowErr("gb source: "+gbSrc.Description(true)+"!  ");}
+								else if (iDestStride<=0) {bGood=false; ShowErr("DestStride was "+RString_ToString(iDestStride)+"!  ");}
+								else if (iDestByte<0||iDestByte>=gbFrame.iBytesTotal) {bGood=false; ShowErr("dest loc "+RString_ToString(iDestByte)+" out of range!  ");}
+								else if (iSrcByte<0||iSrcByte>=gbSrc.iBytesTotal) {bGood=false; ShowErr("source loc "+RString_ToString(iSrcByte)+" out of range!  ");}
+								else memcpy(&gbFrame.arrbyData[iDestByte],&gbSrc.arrbyData[iSrcByte],iDestStride);
+								//if (Byter.CopyFast(gbFrame.arrbyData, gbSrc.arrbyData, iDestByte, iSrcByte, iDestStride)==false)
+								//	bGood=false;
+								iDestByte+=iDestStride;
+								iSrcByte+=iSrcStride;
+							}
 						lFrameLoad++;
 					}
 				}
 				if (!bGood) ShowError("There was data copy error while interpreting the gbuffer to a font, make sure the iCellWidth etc. variables are set correctly.",sFuncNow);
-				//else bGood=GrayMapFromPixMapChannel(3);
+				// else bGood=GrayMapFromPixMapChannel(3);
 				lFramesCached=lFrames;
 			}
 		}

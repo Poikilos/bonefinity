@@ -5,6 +5,7 @@
 #include <RMath.h>
 #include <preporting.h>
 
+
 using namespace std;
 using namespace ExpertMultimediaBase;
 
@@ -445,9 +446,9 @@ namespace RMath {
 		else if (LineRelationshipA==LineRelationshipIntersectionNotTouchingEndsOfLineB) return "IntersectionNotTouchingEndsOfLineB";
 		else if (LineRelationshipA==LineRelationshipLineBPoint1IsOnLineA) return "LineBPoint1IsOnLineA";
 		else if (LineRelationshipA==LineRelationshipLineBPoint2IsOnLineA) return "LineBPoint2IsOnLineA";
+		else if (LineRelationshipA==LineRelationshipIntersectionNotCrossingInRangeCouldNotFinish) return "NotCrossingInRangeCouldNotFinish";
 		else if (LineRelationshipA==LineRelationshipIntersectionNotCrossingInRangeWouldIntersect) return "NotCrossingInRangeWouldIntersect";
 		else if (LineRelationshipA==LineRelationshipIntersectionNotCrossingInRangeWouldntIntersect) return "NotCrossingInRangeWouldntIntersect";
-		else if (LineRelationshipA==LineRelationshipIntersectionNotCrossingInRangeCouldNotFinish) return "NotCrossingInRangeCouldNotFinish";
 
 		else return "Unknown Line Relationship Type #"+RString_ToString(LineRelationshipA);
 	}
@@ -629,7 +630,6 @@ namespace RMath {
 		y=0;
 		int iReturn=IntersectionError;
 		try {
-
 			float Line1_A, Line1_B, Line1_C, Line2_A, Line2_B, Line2_C;//line in format Ax+Bx==C
 			Line1_A = Line1_y2-Line1_y1;
 			Line1_B = Line1_x1-Line1_x2;
@@ -660,7 +660,7 @@ namespace RMath {
 				+(string)"}");
 		}
 		return iReturn;
-	}//end Intersection(float,...)
+	}  // end Intersection(float,...)
 	int Intersection(out_double x, out_double y, double Line1_x1, double Line1_y1, double Line1_x2, double Line1_y2, double Line2_x1, double Line2_y1, double Line2_x2, double Line2_y2, bool bReturn1IfWithinSegmentElseIfNotThen2_IfThisVarIsFalseOrMissingAndDoesIntersectThenReturn1) {
 		x=0;
 		y=0;
@@ -697,7 +697,7 @@ namespace RMath {
 				+(string)"}");
 		}
 		return iReturn;
-	}//end Intersection(double,...)
+	}  // end Intersection(double,...)
 	int SafeIntersection(out_int x, out_int y, int Line1_x1, int Line1_y1, int Line1_x2, int Line1_y2, int Line2_x1, int Line2_y1, int Line2_x2, int Line2_y2) {
 		return SafeIntersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2, true);
 	}
@@ -727,7 +727,7 @@ namespace RMath {
 			else iReturn=IntersectionYes;
 		}
 		return iReturn;
-	}//end SafeIntersection
+	}  // end SafeIntersection
 
 	//TODO: test IntersectionAndRelationship
 	//#ifndef FloatAsInt
@@ -743,14 +743,14 @@ namespace RMath {
 		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		x=0; y=0;
 		if (iIntersection!=IntersectionYes) {//Line1_theta==Line2_theta
-			if (Line1_x1==Line2_x2&&Line1_y1==Line2_y2) {
+			if (Line1_x1==Line2_x2 && Line1_y1==Line2_y2) {
 				return LineRelationshipParallelSameLine;
 			}
 			else {
 				RConvert_RectToPolar(Line1_r, Line1_theta, Line1_x2-Line1_x1, Line1_y2-Line1_y1);
 				RConvert_RectToPolar(relative_r, relative_theta, Line2_x2-Line1_x1, Line2_y2-Line1_y1);
 				if (relative_theta==Line1_theta) {
-					return LineRelationshipParallelSameLine;//another way of finding if same line
+					return LineRelationshipParallelSameLine;  // a slower way of finding if same line
 				}
 			}
 			return LineRelationshipParallelDifferentLine;
@@ -799,7 +799,7 @@ namespace RMath {
 		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		x=0; y=0;
 		if (iIntersection!=IntersectionYes) {//Line1_theta==Line2_theta
-			if (Line1_x1==Line2_x2&&Line1_y1==Line2_y2) {
+			if (Line1_x1==Line2_x2 && Line1_y1==Line2_y2) {
 				return LineRelationshipParallelSameLine;
 			}
 			else {
@@ -1086,8 +1086,8 @@ namespace RMath {
 		double ang;//AngDeg ang;
 		try {
 			d = RMath::Dist(c1_X,c1_Y,c2_X,c2_Y);//getCenter().getDistanceTo( c2_Center() ); // dist between two centers
-			if( d > c2_Radius + c1_Radius )           // larger than sum radii
-				return 0.0;                                   // circles do not intersect
+			if( d > c2_Radius + c1_Radius )  // larger than sum radii
+				return 0.0;  // circles do not intersect
 			if( d <= System_Math_Abs(c2_Radius - c1_Radius ) ) {  // one totally in the other
 				double dR = System_Math_Min( c2_Radius, c1_Radius );// return area smallest circ
 				return RMath::DPI*dR*dR;
@@ -1811,12 +1811,12 @@ Truncate                 -2       0      0      1      2
 Round (ToEven)           -3       0      0      2      3
 Round (AwayFromZero)     -3      -1      0      2      3
 
-Pax, I think you've got a mistake with: Round(AwayFromZero) -3 -2 1 2 3 System_Math_Round(-1.2, MidpointRounding.AwayFromZero) == -1 System_Math_Round(0.3, MidpointRounding.AwayFromZero)==0.0 etc.. – dtroy May 5 at 3:49
+	Pax, I think you've got a mistake with: Round(AwayFromZero) -3 -2 1 2 3 System_Math_Round(-1.2, MidpointRounding.AwayFromZero) == -1 System_Math_Round(0.3, MidpointRounding.AwayFromZero)==0.0 etc.. ' dtroy May 5 at 3:49
 
-Pax Diablo answer for "What’s the difference between System_Math_Floor() and System_Math_Truncate() in .NET?" <http://stackoverflow.com/questions/14/whats-the-difference-between-math-floor-and-math-truncate-in-c/580252#580252> 2009-12-12
+	Pax Diablo answer for "What's the difference between System_Math_Floor() and System_Math_Truncate() in .NET?" <http://stackoverflow.com/questions/14/whats-the-difference-between-math-floor-and-math-truncate-in-c/580252#580252> 2009-12-12
 
-*/
-/*
+	*/
+	/*
 	///NOTE: CEILING rounds UP (in positive direction) even if number is negative!
 	/// - FLOOR rounds DOWN (in negative direction) even if number is negative!
 	/// - TRUNCATE rounds TOWARD ZERO regardless of sign
@@ -2089,7 +2089,7 @@ Pax Diablo answer for "What’s the difference between System_Math_Floor() and Sys
 	///#region math
 
 	///#region utilities
-/*
+	/*
 	int DaysAbsoluteValueOfDifferenceIgnoringHours(DateTime datetime1, DateTime datetime2) { //formerly DaysAbsoluteDifferenceIgnoringHours
 		int iReturn=DaysDifferenceIgnoringHours(datetime1,datetime2);
 		if (iReturn<0) iReturn=0-iReturn;
@@ -2121,8 +2121,8 @@ Pax Diablo answer for "What’s the difference between System_Math_Floor() and Sys
 			//	bNeg=true;
 			//}
 			//while (dtDestruct.Year<dtLast.Year
-			//       ||dtDestruct.Month<dtLast.Month
-			//       ||dtDestruct.Day<dtLast.Day) {
+			//	 || dtDestruct.Month<dtLast.Month
+			//	 || dtDestruct.Day<dtLast.Day) {
 			//	iReturn++;
 			//	dtDestruct.AddDays(1.0d);
 			//}

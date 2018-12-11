@@ -1,6 +1,6 @@
 #ifndef BASE_CPP
 #define BASE_CPP
-//#pragma once
+// #pragma once
 
 #include <cstdlib>
 #include <iostream>
@@ -8,7 +8,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
-#include <base.h> //#include "E:\Projects-cpp\Base\base.h"
+#include <base.h>
 #include <frameworkdummy.h>
 #include <float.h>
 #include <limits.h>
@@ -1128,7 +1128,7 @@ namespace ExpertMultimediaBase {
 			refToFreeAndSetToNull=NULL;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		    ShowExn(exn, "SafeFree(byte*)");
+			ShowExn(exn, "SafeFree(byte*)");
 		}
 		catch (...) {
 			ShowUnknownExn("SafeFree(byte*)");
@@ -1140,7 +1140,7 @@ namespace ExpertMultimediaBase {
 			refToFreeAndSetToNull=NULL;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		    ShowExn(exn, "SafeFree(char*)");
+			ShowExn(exn, "SafeFree(char*)");
 		}
 		catch (...) {
 			ShowUnknownExn("SafeFree(char*)");
@@ -1152,7 +1152,7 @@ namespace ExpertMultimediaBase {
 			refToFreeAndSetToNull=NULL;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		    ShowExn(exn, "SafeFree(int*)");
+			ShowExn(exn, "SafeFree(int*)");
 		}
 		catch (...) {
 			ShowUnknownExn("SafeFree(int*)");
@@ -1161,7 +1161,7 @@ namespace ExpertMultimediaBase {
 	/*inline*/ void SafeFree(int** &refToFreeAndSetToNull, int iIndeces) {
 		try {
 			for (int index=0; index<iIndeces; index++) {
-                if (refToFreeAndSetToNull[index]!=NULL) {
+				if (refToFreeAndSetToNull[index]!=NULL) {
 					free(refToFreeAndSetToNull[index]);
 					refToFreeAndSetToNull[index]=NULL;
 				}
@@ -1170,7 +1170,7 @@ namespace ExpertMultimediaBase {
 			refToFreeAndSetToNull=NULL;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		    ShowExn(exn, "SafeFree(int**,"+RString_ToString(iIndeces)+")");
+			ShowExn(exn, "SafeFree(int**,"+RString_ToString(iIndeces)+")");
 		}
 		catch (...) {
 			ShowUnknownExn("SafeFree(int**,"+RString_ToString(iIndeces)+")");
@@ -1892,7 +1892,7 @@ namespace ExpertMultimediaBase {
 				Console::Error.WriteLine("Exception in substrcpy(\""+RString_ToString(sDest)+"\",\""+RString_ToString(sSrc)+"\","+RString_ToString(iStart)+","+RString_ToString(iLen)+")");
 			}
 			catch (...) {
-	            Console::Error.WriteLine("Exception:");
+				Console::Error.WriteLine("Exception:");
 				try {
 					Console::Error.WriteLine("  substrcpy Dest:"+RString_ToString(sDest));
 				}

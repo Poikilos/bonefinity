@@ -1,8 +1,5 @@
 #ifndef GFONT_CPP
 #define GFONT_CPP
-#include <RFont_bgra32.h>
-#include <base.h>
-
 /*
  * Created by SharpDevelop.
  * User: Jake Gustafson
@@ -11,6 +8,10 @@
  *
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
+
+#include <RFont_bgra32.h>
+#include <base.h>
+
 using namespace std;
 
 namespace ExpertMultimediaBase {
@@ -19,7 +20,7 @@ namespace ExpertMultimediaBase {
 	const int GFont_GlyphTypeBold=2;
 	const int GFont_GlyphTypeBoldItalic=3;
 	SizeF GFont_sizeTemp;
-	bool GFont_bFirstRun; //#include <../../dxman-crossplatform/dxman.h> //GFont_bFirstRun etc
+	bool GFont_bFirstRun;  // #include <../../dxman-crossplatform/dxman.h> //GFont_bFirstRun etc
 
 
 	bool GFont::SaveSeq(string sFileBaseName, string sFileExt, int iGlyphType) {
@@ -106,8 +107,8 @@ namespace ExpertMultimediaBase {
 				if ( (szText[i]=='\r') || (szText[i]=='\n') ) {
 					if (  ( (szText[i]=='\r') && (cPrev!='\n') )
 					  ||  ( (szText[i]=='\n') && (cPrev!='\r') )  ) {
-					  	ipDestNow.X=ipDest.X;
-					  	ipDestNow.Y+=arranimGlyphType[iGlyphType].gbFrame.iHeight;
+						ipDestNow.X=ipDest.X;
+						ipDestNow.Y+=arranimGlyphType[iGlyphType].gbFrame.iHeight;
 						//if (ipDestNow.Y+arranimGlyphType[iGlyphType].gbFrame.iHeight>sizeReturn.Height) sizeReturn.Height=ipDestNow.Y+arranimGlyphType[iGlyphType].gbFrame.iHeight;//+width to go to other side of it
 					}
 					bSpacingChar=true;
@@ -259,8 +260,8 @@ namespace ExpertMultimediaBase {
 				Console::Error.Write("Splitting font image...");
 				bGood=panimTemp->SplitFromImage32(sFile, iCharWidth, iCharHeight, iRows, iColumns);
 				Console::Error.Write(bGood?"Done.  CopyAsGrayTo...":"Splitting Failed!  ");
-				//panimTemp->SaveSeq("0.debug-glyph", "png");
-				//RawOverlayNoClipToBig(RetroEngine.gbScreenMain, ipAt, panimTemp->gbFrame.arrbyData, iCharWidth, iCharHeight, 4);
+				// panimTemp->SaveSeq("0.debug-glyph", "png");
+				// RawOverlayNoClipToBig(RetroEngine.gbScreenMain, ipAt, panimTemp->gbFrame.arrbyData, iCharWidth, iCharHeight, 4);
 				if (bGood) {
 					bGood=panimTemp->CopyAsGrayTo(arranimGlyphType[GFont_GlyphTypePlain]);
 					Console::Error.Write(bGood?"CopyAsGrayTo Succeeded.  ":"CopyAsGrayTo Failed!  ");
@@ -308,8 +309,8 @@ namespace ExpertMultimediaBase {
 				Console::Error.Write("Splitting font image...");
 				bGood=panimTemp->SplitFromImage32(sFile, iCharWidth, iCharHeight, iRows, iColumns);
 				Console::Error.Write(bGood?"Done.  CopyAsGrayTo...":"Splitting Failed!  ");
-				//panimTemp->SaveSeq("0.debug-glyph", "png");
-				//RawOverlayNoClipToBig(RetroEngine.gbScreenMain, ipAt, panimTemp->gbFrame.arrbyData, iCharWidth, iCharHeight, 4);
+				// panimTemp->SaveSeq("0.debug-glyph", "png");
+				// RawOverlayNoClipToBig(RetroEngine.gbScreenMain, ipAt, panimTemp->gbFrame.arrbyData, iCharWidth, iCharHeight, 4);
 				if (bGood) {
 					bGood=panimTemp->CopyTo(arranimGlyphType[GFont_GlyphTypePlain]);
 					Console::Error.Write(bGood?"CopyAsGrayTo Succeeded.  ":"CopyAsGrayTo Failed!  ");
@@ -352,14 +353,15 @@ namespace ExpertMultimediaBase {
 			ipAt.X=xAt;
 			ipAt.Y=yAt;
 			int lChar=0;
+
 			for (int yChar=0; yChar<16; yChar++) {
 				ipAt.X=xAt;
 				for (int xChar=0; xChar<16; xChar++) {
 					arranimGlyphType[GFont_GlyphTypePlain].GotoFrame(lChar);
-					RawOverlayNoClipToBig(gbDest, ipAt,
-													arranimGlyphType[GFont_GlyphTypePlain].gbFrame.arrbyData,
-													arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iWidth,
-													arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight, 1);
+						RawOverlayNoClipToBig(gbDest, ipAt,
+							arranimGlyphType[GFont_GlyphTypePlain].gbFrame.arrbyData,
+							arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iWidth,
+							arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight, 1);
 					ipAt.X+=arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iWidth;
 					lChar++;
 				}

@@ -1,13 +1,13 @@
 #ifndef GRADIENT_H
 #define GRADIENT_H
-//#include <cstdlib>
+
 #include <base.h>
+
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
-	class GBuffer;//end class GBuffer
-
+	class GBuffer;
 
 	class Gradient {
 	private:

@@ -455,11 +455,11 @@ namespace ExpertMultimediaBase {
 		//NO LONGER returns 90 when radius_pixels<=1 which
 		// would assume center is in intersection of 4-pixel block
 		//How many radians are in the arc (rRA) is how many radius_pixels pixels there are in the arc
-		//  --since segment is 1 degree:
-		//    -- rad = 1 * PMath::DPi/180.0
-		//    -- simplify:
-		//    -- PIXELS_per_degree = PMath::DPi/180.0 * radius_pixels
-		//  --USE INVERSE since we want DEGREES per pixel:
+		//  * since segment is 1 degree:
+		//    * rad = 1 * PMath::DPi/180.0
+		//    * simplify:
+		//    * PIXELS_per_degree = PMath::DPi/180.0 * radius_pixels
+		//  * USE INVERSE since we want DEGREES per pixel:
 		if (radius_pixels>0.0) return 180.0/(radius_pixels*PMath::DPi);//simplified equation (see above)
 		else return 360.0;
 	}//end DegreesPerPixelAt

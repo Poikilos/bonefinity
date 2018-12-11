@@ -15,6 +15,7 @@
 #define ref_MPoint MPoint&
 #endif
 
+
 using namespace std;
 //using namespace ProtoArmor;
 
@@ -74,12 +75,12 @@ namespace ExpertMultimediaBase {
 	};
 	double Dist(DPoint &point1, DPoint &point2);//see also pmath.h
 
- 	class MPoint {
+	class MPoint {
 	public:
- 		decimal X;
- 		decimal Y;
+		decimal X;
+		decimal Y;
 		string ToString();
- 	};
+	};
 	string ToString(MPoint& pX);
 	string ToString(decimal x, decimal y);
 

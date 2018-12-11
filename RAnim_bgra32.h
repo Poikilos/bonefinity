@@ -1,7 +1,7 @@
 #ifndef ANIM_H
 #define ANIM_H
 #include <RImage_bgra32.h>
-//#include "E:\Projects-cpp\Base\RImage_bgra32.h"
+
 
 using namespace std;
 //using System.Drawing.Text;
@@ -45,8 +45,8 @@ namespace ExpertMultimediaBase {
 		string sFileBaseName;
 		string sFileExt;
 		string sPathFileNonSeq();
-		//int iMaxEffects;
-		//PixelFormat pixelformatNow=PixelFormat.Format32bppArgb;
+		// int iMaxEffects;
+		// PixelFormat pixelformatNow=PixelFormat.Format32bppArgb;
 		GBuffer* gbarrAnim;
 	public:
 		GBuffer gbFrame;

@@ -2,7 +2,7 @@
 #define SPRITE_CPP
 
 #include <RSprite_bgra32.h>
-//#include "E:\Projects-cpp\Base\RSprite_bgra32.h"
+
 
 using namespace std;
 

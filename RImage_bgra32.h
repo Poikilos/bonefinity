@@ -3,7 +3,8 @@
 
 #include <base.h>
 #include <Targa.h>
-#include <RGradient_bgra32.h> //#include <RGradient_bgra32.h>
+#include <RGradient_bgra32.h>  // #include <RGradient_bgra32.h>
+
 
 using namespace std;
 

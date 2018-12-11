@@ -4,12 +4,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <climits> //<limits.h>
+#include <climits>  // <limits.h>
 #include "preporting.h"
 #include "frameworkdummy.h"
 #include "pointinfo.h"
 #include "pixelinfo.h"
-#include <base.h> //DPoint etc
+#include <base.h>  // DPoint etc
 
 using namespace std;
 

@@ -5,8 +5,8 @@
 #include <iomanip>
 #include <fstream>
 #include <memory>
-#include <RFile.h>//#include <byter.h>
-//#include "E:\Projects-cpp\Base\byter.h"
+#include <RFile.h>
+
 
 using namespace std;
 
@@ -49,9 +49,9 @@ namespace ExpertMultimediaBase {
 		byte *dump;
 		uint u32SizeofDump;
 	public:
-	    TargaFooter();
-	    TargaFooter(byte* lpbyDataPointerToKeep, uint u32Size);
-	    TargaFooter(byte* arrbyDataSrcToCopyFrom, uint u32Start, uint u32Count, uint u32ActualSourceBufferSize);
+		TargaFooter();
+		TargaFooter(byte* lpbyDataPointerToKeep, uint u32Size);
+		TargaFooter(byte* arrbyDataSrcToCopyFrom, uint u32Start, uint u32Count, uint u32ActualSourceBufferSize);
 		~TargaFooter();
 		bool Init();
 		bool Init(byte* lpbyDataPointerToKeep, uint u32Size);
