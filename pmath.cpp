@@ -1,23 +1,20 @@
 #ifndef PMATH_CPP
 #define PMATH_CPP
 
-#include "pmath.h"
-#include <cmath>//<math.h>
-#include <cstdlib> //malloc, free
-#include <cstring> //memcpy
+#include <pmath.h>
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
-	float** PMath::pfDistCache=NULL;
+	float** PMath::pfDistCache=nullptr;
 	int PMath::pfDistCache_w=0;
 	int PMath::pfDistCache_h=0;
 
-	POINTINFO* PMath::ppiCache=NULL;//std::vector<POINTINFO> PMath::ppiCache;
+	POINTINFO* PMath::ppiCache=nullptr;//std::vector<POINTINFO> PMath::ppiCache;
 	unsigned int PMath::ppiCache_Max=0;
 	unsigned int PMath::ppiCache_Used=0;
 
-	PIXELINFO* PMath::ppxiCache=NULL;
+	PIXELINFO* PMath::ppxiCache=nullptr;
 	bool PMath::ppxiCache_bHorizontalMovement=true;
 	bool PMath::ppxiCache_bVerticalMovement=true;
 	unsigned int PMath::ppxiCache_Max=0;
@@ -43,44 +40,44 @@ namespace ExpertMultimediaBase {
 		ResizePixelInfoCache(72*48,false);
 	}
 	void PMath::staticdeconstructorPMath() {
-		if (ppxiCache!=NULL) {
+		if (ppxiCache!=nullptr) {
 			free(ppxiCache);
-			ppxiCache=NULL;
+			ppxiCache=nullptr;
 		}
-		if (ppiCache!=NULL) {
+		if (ppiCache!=nullptr) {
 			free(ppiCache);
-			ppiCache=NULL;
+			ppiCache=nullptr;
 		}
-		if (pfDistCache!=NULL) {
+		if (pfDistCache!=nullptr) {
 			for (int x=0; x<pfDistCache_w; x++) {
-				if (pfDistCache[x]!=NULL) {
+				if (pfDistCache[x]!=nullptr) {
 					free(pfDistCache[x]);
-					pfDistCache[x]=NULL;
+					pfDistCache[x]=nullptr;
 				}
 			}
 			free(pfDistCache);
-			pfDistCache=NULL;
+			pfDistCache=nullptr;
 		}
 	}//end staticdeconstructorPMath
 
 	void PMath::ResizeDistanceCache(int w, int h) {
 		int x;
 		int y;
-		if (PMath::pfDistCache_w<w||PMath::pfDistCache_h<h||PMath::pfDistCache==NULL) {
+		if (PMath::pfDistCache_w<w||PMath::pfDistCache_h<h||PMath::pfDistCache==nullptr) {
 			//TODO: debug performance--preserve any existing data to avoid recalculation
 			Console::Error.Write((string)"Creating PMath distance cache, size "+Convert::ToString(w)+(string)"x"+Convert::ToString(h)+(string)"...");
 			Console::Out.Flush();
-			if (PMath::pfDistCache!=NULL) {
+			if (PMath::pfDistCache!=nullptr) {
 				PReporting::setParticiple("freeing old pfDistCache inner arrays");
 				for (x=0; x<PMath::pfDistCache_w; x++) {
-					if (PMath::pfDistCache[x]!=NULL) {
+					if (PMath::pfDistCache[x]!=nullptr) {
 						free(PMath::pfDistCache[x]);
-						PMath::pfDistCache[x]=NULL;
+						PMath::pfDistCache[x]=nullptr;
 					}
 				}
 				PReporting::setParticiple("freeing old pfDistCache");
 				free(PMath::pfDistCache);
-				PMath::pfDistCache=NULL;
+				PMath::pfDistCache=nullptr;
 			}
 			PReporting::setParticiple("creating pfDistCache");
 			PMath::pfDistCache=(float**)malloc(sizeof(float*)*w);
@@ -116,7 +113,7 @@ namespace ExpertMultimediaBase {
 		unsigned int iDesiredSize=iRadius*iRadius;
 		PReporting::setParticiple("checking ppiCache size");
 		if ( PMath::ppiCache_Max<iDesiredSize
-				|| PMath::ppiCache==NULL
+				|| PMath::ppiCache==nullptr
 				|| PMath::ppxiCache_bHorizontalMovement!=bHorizontalMovement
 				|| PMath::ppxiCache_bVerticalMovement!=bVerticalMovement
 			) {
@@ -127,10 +124,10 @@ namespace ExpertMultimediaBase {
 				//int ppiTemp_Max=iDesiredSize;
 				Console::Error.Write("Creating PMath POINTINFO cache, size "+Convert::ToString(iRadius)+"...");
 				Console::Out.Flush();
-				if (PMath::ppiCache!=NULL) {
+				if (PMath::ppiCache!=nullptr) {
 					PReporting::setParticiple("deleting old ppiCache");
 					free(PMath::ppiCache);
-					PMath::ppiCache=NULL;
+					PMath::ppiCache=nullptr;
 					PMath::ppiCache_Max=0;
 				}
 				PReporting::setParticiple("creating new ppiCache");
@@ -238,12 +235,12 @@ namespace ExpertMultimediaBase {
 				PReporting::setParticiple("freeing 2d flags inner arrays");
 				for (unsigned int i=0; i<iRadius; i++) {
 					free(b2dDone[i]);
-					b2dDone[i]=NULL;
+					b2dDone[i]=nullptr;
 				}
 				PReporting::setParticiple("freeing 2d flags array");
 				free(b2dDone);
 				//free(ppiTemp);
-				//ppiTemp=NULL;
+				//ppiTemp=nullptr;
 				Console::Error.WriteLine("done. (PMath::ppiCache["+Convert::ToString(ppiCache_Max)+"])");//ppiCache.size()
 				PMath::ppxiCache_bHorizontalMovement=bHorizontalMovement;
 				PMath::ppxiCache_bVerticalMovement=bVerticalMovement;
@@ -260,10 +257,10 @@ namespace ExpertMultimediaBase {
 	///Resizes the array ppxiCache
 	///</summary>
 	void PMath::ResizePixelInfoCache(unsigned int iDesiredSize, bool bPreservePreviousData) {
-		if (ppxiCache_Max<iDesiredSize||ppxiCache==NULL) {
+		if (ppxiCache_Max<iDesiredSize||ppxiCache==nullptr) {
 			Console::Error.Write("Resizing pixel cache to "+Convert::ToString(iDesiredSize)+"...");
 			PIXELINFO* ppxiCacheNew=(PIXELINFO*)malloc(sizeof(PIXELINFO)*iDesiredSize);
-			if (ppxiCache!=NULL) {
+			if (ppxiCache!=nullptr) {
 				if (bPreservePreviousData) {
 					if (ppxiCache_Used<iDesiredSize) {
 						Console::Error.Write("WARNING: Truncating used pixel buffer data (had "+Convert::ToString(ppxiCache_Used)+" entries, truncated to max size "+Convert::ToString(iDesiredSize)+"...");
@@ -281,9 +278,9 @@ namespace ExpertMultimediaBase {
 				free(ppxiCache);
 				ppxiCache=ppxiCacheNew;
 			}
-			else {//was previously NULL
+			else {//was previously nullptr
 				ppxiCache_Used=0;
-				ppxiCache=NULL;//ok since set to ppxiCacheNew below
+				ppxiCache=nullptr;//ok since set to ppxiCacheNew below
 			}
 			ppxiCache=ppxiCacheNew;
 			ppxiCache_Max=iDesiredSize;

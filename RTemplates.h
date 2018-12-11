@@ -1,7 +1,11 @@
 #ifndef RTEMPLATES_H_INCLUDED
 #define RTEMPLATES_H_INCLUDED
+
 #include <iostream>
+
+
 using namespace std;
+
 namespace exm {
 	// forward declaration of class templates used
 	//template <typename T> class nondumbset;
@@ -12,7 +16,7 @@ namespace exm {
 	class nondumbset {
 		int lplpval_Length;
 		void InitNull() {
-			lplpval=NULL;
+			lplpval=nullptr;
 			lplpval_Length=-1;
 			iUsed=0;
 		}
@@ -22,15 +26,15 @@ namespace exm {
 			//and
 			//delete [] lplpval
 			//?
-			if (lplpval!=NULL) {
+			if (lplpval!=nullptr) {
 				for (int i=0; i<iUsed; i++) {
-					if (lplpval[i]!=NULL) {
+					if (lplpval[i]!=nullptr) {
 						delete (lplpval[i]);
-						lplpval[i]=NULL;
+						lplpval[i]=nullptr;
 					}
 				}
 				delete[] lplpval;
-				lplpval=NULL;
+				lplpval=nullptr;
 			}
 		}
 	public:
@@ -53,20 +57,20 @@ namespace exm {
 					cerr<<"warning: nondumbset can't set max to "<<maximum<<" since below "<<iUsed<<" used--setting to "<<iUsed<<" instead."<<endl;
 					maximum=iUsed;//TODO: debug unpredictable memory usage
 				}
-				if (lplpval!=NULL) {
+				if (lplpval!=nullptr) {
 					T** lplpvalOld=lplpval;
-					lplpval=NULL;
-					set_Maximum(maximum);//recursion is safe since this case won't run since just set lplpval=NULL
+					lplpval=nullptr;
+					set_Maximum(maximum);//recursion is safe since this case won't run since just set lplpval=nullptr
 					int set_Maximum_result=get_Maximum();
 					for (int i=0; i<set_Maximum_result; i++) {
-						lplpval[i]=(i<iUsed)?(lplpvalOld[i]):(NULL);
+						lplpval[i]=(i<iUsed)?(lplpvalOld[i]):(nullptr);
 					}
 				}
 				else {
 					lplpval=new T *[maximum];//lplpval=(T**)malloc(sizeof(T*)*maximum);
 					//memset(lplpval,'\0',maximum*sizeof(T*));
 					for (int i=0; i<maximum; i++) {
-						lplpval[i]=NULL;
+						lplpval[i]=nullptr;
 					}
 					lplpval_Length=maximum;
 				}
@@ -76,10 +80,10 @@ namespace exm {
 			}
 		}//end set_Maximum
 		int get_Maximum() {
-			return (lplpval!=NULL)?lplpval_Length:-1;
+			return (lplpval!=nullptr)?lplpval_Length:-1;
 		}
 		T* operator[](int index) {
-			return (   ( lplpval!=NULL )  ?  ( (index>=0) ? ((index<iUsed)?(lplpval[index]):(NULL)) : NULL )  :  NULL   );
+			return (   ( lplpval!=nullptr )  ?  ( (index>=0) ? ((index<iUsed)?(lplpval[index]):(nullptr)) : nullptr )  :  nullptr   );
 		}
 	};
 

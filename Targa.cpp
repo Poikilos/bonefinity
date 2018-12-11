@@ -1,10 +1,6 @@
 #ifndef TARGA_CPP
 #define TARGA_CPP
 
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <memory>
 #include <Targa.h>
 
 using namespace std;
@@ -12,7 +8,7 @@ using namespace std;
 namespace ExpertMultimediaBase {
 	//#region static targa functions
 	int RLESizeUncompressed(byte* arrbySrc, int iStart, int iSrcSize, int iBytesPerChunk) {
-		byte* arrbyNull=null;
+		byte* arrbyNull=nullptr;
 		return RLEUncompress(arrbyNull, 0, arrbySrc, iSrcSize, iBytesPerChunk, 0, iStart, true);
 	}
 	bool Compare(byte* arrbySrc1, int iSrcLoc1, byte* arrbySrc2, int iSrcLoc2, int iRun) {
@@ -40,7 +36,7 @@ namespace ExpertMultimediaBase {
 		bool bGood=true;
 		iReturnLength=0;
 		int iTotal=0;
-		byte* arrbyReturn=null;
+		byte* arrbyReturn=nullptr;
 		try {
 			if (!bCountOnlyAndReturnNull) {
 				byte* arrbyNull=RLECompress(iTotal,arrbySrc,iSrcStart,iBytesToParse,iBytesPerChunk,true);//OK since counts & doesn't recurse from there!
@@ -189,20 +185,20 @@ namespace ExpertMultimediaBase {
 		Init(lpbyDataPointerToKeep,u32Size);
 	}
 	TargaFooter::TargaFooter() {
-		dump=null;
+		dump=nullptr;
 		u32SizeofDump=0;
 	}
 	TargaFooter::~TargaFooter() {
-		SafeFree(dump);
+		SafeFree(dump, "dump in ~TargaFooter");
 	}
 	bool TargaFooter::Init(byte* arrbyDataSrcToCopyFrom, uint u32SrcStart, uint u32Count, uint u32ActualSourceBufferSize) {
 		bool bGood=true;
-		SafeFree(dump);
+		SafeFree(dump, "dump in TargaFooter::Init");
 		try {
 			u32SizeofDump=u32Count;
 			dump=(byte*)malloc(u32Count);
 			uint iSrc=u32SrcStart;
-			for (uint iNow=0; iNow<u32Count && iSrc<u32ActualSourceBufferSize; iNow++,iSrc++) {
+			for (uint iNow=0; iNow<u32Count && iSrc<u32ActualSourceBufferSize; iNow++,iSrc++) { //debug performance
 				dump[iNow]=arrbyDataSrcToCopyFrom[iSrc];
 			}
 		}
@@ -218,21 +214,21 @@ namespace ExpertMultimediaBase {
 	bool TargaFooter::Init(byte* lpbyDataPointerToKeep, uint u32Size) {
 		bool bGood=true;
 		try {
-			if (u32Size>0 && lpbyDataPointerToKeep!=null) {
+			if (u32Size>0 && lpbyDataPointerToKeep!=nullptr) {
 				u32SizeofDump=u32Size;
 				dump=lpbyDataPointerToKeep;
 				//TODO: process the footer here
 			}
 			else {
 				u32SizeofDump=0;
-				dump=null;
+				dump=nullptr;
 			}
 		}
 		catch (exception& exn) {
 			bGood=false;
 			string sMsg="u32Size="+RString_ToString(u32Size);
 			sMsg+="; lpbyDataPointerToKeep is";
-			sMsg+=((lpbyDataPointerToKeep==null)?"null.":"not null.");
+			sMsg+=((lpbyDataPointerToKeep==nullptr)?"null.":"not null.");
 			ShowExn(exn,"TargaFooter::Init"+sMsg);
 		}
 		catch (...) {
@@ -242,7 +238,7 @@ namespace ExpertMultimediaBase {
 		return bGood;
 	}
 	bool TargaFooter::Init() {
-		return Init(null,0);
+		return Init(nullptr,0);
 	}
 	bool TargaFooter::WriteTo(Byter &byterNow) {
 		bool bGood=true;
@@ -264,7 +260,7 @@ namespace ExpertMultimediaBase {
 		InitNull();
 	}
 	Targa::~Targa() {
-		SafeFree(arrbyData);
+		SafeFree(arrbyData, "arrbyData in ~Targa");
 	}
 	int Targa::BytesPP() {
 		return iBytesPP;
@@ -281,17 +277,28 @@ namespace ExpertMultimediaBase {
 	bool Targa::Init(int iSetWidth, int iSetHeight, int iSetBytesPP, bool bReallocateBuffers) {
 		bool bGood=true;
 		if (bReallocateBuffers) {
-			SafeFree(arrbyColorMap);
+			SafeFree(arrbyColorMap, "arrbyColorMap in Targa::Init");
 			iMapLength=0;
 			sID="";
-			SafeFree(arrbyData);
+			SafeFree(arrbyData, "arrbyData in Targa::Init");
 		}
 		iWidth=iSetWidth;
 		iHeight=iSetHeight;
 		iBitDepth=iSetBytesPP*8;
 		DeriveVars();//does get iBytesPP
-		//if (iSetBytesPP==4 || iSetBytesPP==3) TypeTarga=TypeUncompressedTrueColor;
-		//else if (iSetBytesPP==1) TypeTarga=TypeUncompressedGrayscale;
+		if (iSetBytesPP==4) {
+			TypeTarga=TypeUncompressedTrueColor;
+			bitsDescriptor=lownibbleAlpha8888;
+		}
+		else if (iSetBytesPP==3) {
+			TypeTarga=TypeUncompressedTrueColor;
+			bitsDescriptor=lownibble565Or888NoAlpha;
+		}
+		else if (iSetBytesPP==1) {
+			TypeTarga=TypeUncompressedGrayscale;
+			bitsDescriptor=0;//TODO: is this right?
+		}
+		//TODO: implement palette etc modes
 		iBytesBuffer=iBytesAsUncompressed;
 		if (iBytesBuffer<=0) {
 			ShowError("iBytesBuffer="+RString_ToString(iBytesBuffer)+"!","Targa::Init");
@@ -493,7 +500,17 @@ namespace ExpertMultimediaBase {
 			}
 			else {
 				try {
-					memcpy(arrbyData,&arrbySrc[u32SrcStart],iWidthTo*iHeightTo*iBytesPP);
+					//memcpy(arrbyData,&arrbySrc[u32SrcStart],iWidthTo*iHeightTo*iBytesPP);
+					//FLIP:
+					int iDestLine=iHeight-1;
+					byte* srcPlacePointer=arrbySrc;
+					byte* destPlacePointer=&arrbyData[iStride*(iDestLine)];
+					for (int iSrcLine=0; iSrcLine<iHeightTo; iSrcLine++) {
+						memcpy(destPlacePointer,srcPlacePointer,iStride);
+						iDestLine--;
+						srcPlacePointer+=iStride;
+						destPlacePointer-=iStride;
+					}
 				}
 				catch (exception& exn) {
 					bGood=false;
@@ -523,16 +540,16 @@ namespace ExpertMultimediaBase {
 		static bool bFirstRun=true;
 		string sFuncNow="Targa::SafeCopyFrom";
 		if (bFirstRun) Console::Error.Write(sFuncNow);
-		string sArgs="(w="+RString_ToString(iWidthTo)+",h="+RString_ToString(iHeightTo)+",BytesPP="+RString_ToString(iBytesPP)+","+(arrbySrc==null?"src=null":"src=ok")+",len="+RString_ToString(u32SrcRealLen)+",start="+RString_ToString(u32SrcStart)+","+RString_ToString(bReInitializeAll)+")";
+		string sArgs="(w="+RString_ToString(iWidthTo)+",h="+RString_ToString(iHeightTo)+",BytesPP="+RString_ToString(iBytesPP)+","+(arrbySrc==nullptr?"src=null":"src=ok")+",len="+RString_ToString(u32SrcRealLen)+",start="+RString_ToString(u32SrcStart)+","+RString_ToString(bReInitializeAll)+")";
 		sFuncNow+=sArgs;
 		if (bFirstRun) Console::Error.Write(sArgs);
 		static bool bFirstFatalSafeCopyFrom=true;
-		if (arrbyData==null) {
+		if (arrbyData==nullptr) {
 			ShowError("Null image! Forcing reinitialize",sFuncNow);
 			if (bFirstFatalSafeCopyFrom) {
 				Console::Error.WriteLine();
 				Console::Error.WriteLine();
-				Console::Error.WriteLine("IMAGE BUFFER IS NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+				Console::Error.WriteLine("IMAGE BUFFER IS nullptr!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				Console::Error.WriteLine();
 				bFirstFatalSafeCopyFrom=false;
 			}
@@ -545,7 +562,7 @@ namespace ExpertMultimediaBase {
 			}
 		}
 		if (bGood) {
-			if (arrbySrc==null) {
+			if (arrbySrc==nullptr) {
 				bGood=false;
 				ShowError("null source!",sFuncNow);
 			}
@@ -582,89 +599,163 @@ namespace ExpertMultimediaBase {
 		return arrbyData;
 	}
 	bool Targa::IsLoaded() {
-		return (arrbyData!=null);
+		return (arrbyData!=nullptr);
 	}
 	bool Targa::Save(string sFileNow) {
 		sFile=sFileNow;
 		return Save();
+	}
+	int Targa::SizeofFileEstimate() {
+		int returnSize=0;
+		returnSize+=1;//id string length byte
+		returnSize+=1;//map type byte
+		returnSize+=1;//targa type byte
+		returnSize+=2;//map origin word
+		returnSize+=2;//map length word
+		returnSize+=1;//bit depth byte
+		returnSize+=2;//image left side location word
+		returnSize+=2;//image bottom location word
+		returnSize+=2;//width word
+		returnSize+=2;//height word
+		returnSize+=1;//bit depth byte
+		returnSize+=1;//descriptor bits byte
+		int idLengthOrMax=sID.length();
+		if (idLengthOrMax>255) idLengthOrMax=255;
+		returnSize+=idLengthOrMax;
+		returnSize+=iMapLength;
+		returnSize+=iBytesBuffer;
+		returnSize+=footer.ByteCount();
+		return returnSize;
 	}
 	bool Targa::Save() {
 		string sMsg="before initialization";
 		bool bGood=true;
 		try {
 			Byter byterNow;
-			byterNow.OpenWrite(sFile);
+			byterNow.OpenWrite(sFile, SizeofFileEstimate());
 			ushort wNow=0;
 			byte byNow=0;
 			int iPlacePrev=0;
 			//uint u32Test=0;
 			//(byte)(length of id)
 			iPlacePrev=byterNow.Place();
-			if (/*sID!=null && */sID.length()>255) sID=sID.substr(0,255);
-			uint u32IDLenNow=(/*sID==null || */sID=="")?0:(uint)sID.length();
+			if (sID.length()>255) sID=sID.substr(0,255);
+			uint u32IDLenNow=(sID.empty())?0:(uint)sID.length();
 			byNow=(byte)u32IDLenNow;
 			byterNow.Write(byNow);
-			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 1) {
+					Console::Error.Write("could not write id string length byte (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(byte)(int)MapType
 			iPlacePrev=byterNow.Place();
 			byNow=(byte)MapType;
 			byterNow.Write(byNow);
-			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 1) {
+					Console::Error.Write("could not write map type byte (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(byte)(int)TypeTarga
 			iPlacePrev=byterNow.Place();
 			byNow=(byte)TypeTarga;
 			byterNow.Write(byNow);
-			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 1) {
+					Console::Error.Write("could not write targa type byte (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(ushort)iMapOrigin
 			iPlacePrev=byterNow.Place();
 			wNow=(ushort)iMapOrigin;
 			byterNow.Write(wNow);
-			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 2){
+					Console::Error.Write("could not write map origin word (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(ushort)iMapLength
 			iPlacePrev=byterNow.Place();
 			wNow=(ushort)iMapLength;
 			byterNow.Write(wNow);
-			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 2) {
+					Console::Error.Write("could not write map length word (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(byte)iMapBitDepth
 			iPlacePrev=byterNow.Place();
 			byNow=(byte)iMapBitDepth;
 			byterNow.Write(byNow);
-			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 1) {
+					Console::Error.Write("could not write map bit depth byte (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(ushort)xImageLeft
 			iPlacePrev=byterNow.Place();
 			wNow=(ushort)xImageLeft;
 			byterNow.Write(wNow);
-			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 2) {
+					Console::Error.Write("could not write image left side location word (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(ushort)yImageBottom
 			iPlacePrev=byterNow.Place();
-			wNow=(uint)yImageBottom;
+			wNow=(ushort)yImageBottom;
 			byterNow.Write(wNow);
-			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 2) {
+					Console::Error.Write("could not write image bottom location word (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(ushort)iWidth
 			iPlacePrev=byterNow.Place();
 			wNow=(ushort)iWidth;
 			byterNow.Write(wNow);
-			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 2) {
+					Console::Error.Write("could not write width word (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(ushort)iHeight
 			iPlacePrev=byterNow.Place();
 			wNow=(ushort)iHeight;
 			byterNow.Write(wNow);
-			if (byterNow.Place()-iPlacePrev != 2) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 2) {
+					Console::Error.Write("could not write height word (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(byte)iBitDepth
 			iPlacePrev=byterNow.Place();
 			byNow=(byte)iBitDepth;
 			byterNow.Write(byNow);
-			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 1) {
+					Console::Error.Write("could not write bit depth byte (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(byte)bitsDescriptor
 			iPlacePrev=byterNow.Place();
 			byNow=(byte)bitsDescriptor;
 			byterNow.Write(byNow);
-			if (byterNow.Place()-iPlacePrev != 1) bGood=false;
+			if (byterNow.Place()-iPlacePrev != 1) {
+					Console::Error.Write("could not write descriptor bits byte (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+			}
 			//(byte[length of id])sID
 			if (u32IDLenNow>0) {
 				iPlacePrev=byterNow.Place();
 				byterNow.WriteAscii(sID,u32IDLenNow);
-				if (byterNow.Place()-iPlacePrev != u32IDLenNow) bGood=false;
+				if (byterNow.Place()-iPlacePrev != u32IDLenNow) {
+					Console::Error.Write("could not write id ascii string (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes)...");
+					Console::Error.Flush();
+					bGood=false;
+				}
 			}
 			//(byte[iMapLength])(arrbyColorMap)
 			if (iMapLength>0) {
@@ -674,19 +765,20 @@ namespace ExpertMultimediaBase {
 				}
 				if (byterNow.Place()-iPlacePrev != iMapLength) {
 					bGood=false;
-					sMsg="Not all "+RString_ToString(iMapLength)+" color map bytes were found.";
+					sMsg="Not all "+RString_ToString(iMapLength)+" color map bytes were found (wrote "+RString_ToString(byterNow.Place()-iPlacePrev)+" bytes).";
 				}
 			}
-			else SafeFree(arrbyColorMap);
+			else SafeFree(arrbyColorMap, "arrbyColorMap in Targa::Save");
 			//(byte[iWidth*iHeight*iBytesPP])(arrbyData)
 			if (iBytesBuffer>0) {
-				if (arrbyData!=null) {
+				if (arrbyData!=nullptr) {
+					iPlacePrev=byterNow.Place();
 					for (int iNow=0; iNow<iBytesBuffer; iNow++) {
 						byterNow.Write(arrbyData[iNow]);
 					}
 					if (byterNow.Place()-iPlacePrev != iBytesAsUncompressed) {
 						bGood=false;
-						sMsg="Not all "+RString_ToString(iBytesBuffer)+" image data bytes were saveable.";
+						sMsg="Not all "+RString_ToString(iBytesBuffer)+" image data bytes were salvageable ("+RString_ToString(byterNow.Place()-iPlacePrev)+" saved).";
 					}
 				}
 				else {
@@ -698,7 +790,11 @@ namespace ExpertMultimediaBase {
 				bGood=false;
 				sMsg="Targa::Save error: bad header wanted "+RString_ToString(iBytesBuffer)+" bytes of data";
 			}
+			iPlacePrev=byterNow.Place();
 			footer.WriteTo(byterNow);
+			if (byterNow.Place()-iPlacePrev != footer.ByteCount()) {
+				sMsg="Not all "+RString_ToString(footer.ByteCount())+" footer data bytes were salvageable ("+RString_ToString(byterNow.Place()-iPlacePrev)+" saved).";
+			}
 			if (!byterNow.Save()) {
 				bGood=false;
 				sMsg="Targa::Save couldn't write file.";
@@ -832,7 +928,7 @@ namespace ExpertMultimediaBase {
 				}
 			}
 			else {
-				SafeFree(arrbyColorMap);
+				SafeFree(arrbyColorMap, "arrbyColorMap in Targa::Load");
 				if (bFirstRun) Console::Error.Write("none;");
 			}
 			//(byte[iWidth*iHeight*iBytesPP])(arrbyData)
@@ -853,7 +949,7 @@ namespace ExpertMultimediaBase {
 					if (bFirstRun) Console::Error.Write("compression found...");
 					int iStart=byterNow.Place();
 					//iBytesBuffer=RLESizeUncompressed(byterNow.arrbyData,iStart,iBytesLeft,iBytesPP);
-					SafeFree(arrbyData);
+					SafeFree(arrbyData, "arrbyData in Targa::Load");
 					arrbyData=(byte*)malloc(iBytesBuffer);
 					for (int iNow=0; iNow<iBytesBuffer; iNow++) {
 						arrbyData[iNow]=byterNow.arrbyData[iStart+iNow];
@@ -921,7 +1017,7 @@ namespace ExpertMultimediaBase {
 		return bGood;
 	}//end Targa::Load
 	bool Targa::IsOK() {
-		bool bGood=(iWidth>0 && iHeight>0 && iBytesPP>0 && arrbyData!=null);
+		bool bGood=(iWidth>0 && iHeight>0 && iBytesPP>0 && arrbyData!=nullptr);
 		if (!IsCompressed()) {
 			if (iBytesBuffer!=(iWidth*iHeight*iBytesPP)) bGood=false;
 			if (iBytesBuffer!=iBytesAsUncompressed) bGood=false;
@@ -951,7 +1047,7 @@ namespace ExpertMultimediaBase {
 						}
 					}
 				}
-				SafeFree(arrbyData);
+				SafeFree(arrbyData, "arrbyData in Targa::Flip");
 				arrbyData=arrbyTemp;
 			}
 			catch (exception& exn) {
@@ -991,7 +1087,7 @@ namespace ExpertMultimediaBase {
 				if (bOn) {
 					if (!IsCompressed()) { //Compress
 						byte* arrbyCompressed=RLECompress(iBytesBuffer, arrbyData, 0, iBytesBuffer, iBytesPP);
-						SafeFree(arrbyData);
+						SafeFree(arrbyData, "arrbyData in Targa::SetCompressionRLE");
 						arrbyData=arrbyCompressed;
 					}
 				}
@@ -1003,7 +1099,7 @@ namespace ExpertMultimediaBase {
 						if (iTest!=iNewSize) {
 							ShowError("Uncompressed "+RString_ToString(iTest)+" bytes but expected "+RString_ToString(iNewSize)+" ("+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+" at "+RString_ToString(iBytesPP*8)+"bpp ["+RString_ToString(iBytesPP)+" bytes per pixel])","Targa::SetCompressionRLE("+RString_ToString(bOn)+")");
 						}
-						SafeFree(arrbyData);
+						SafeFree(arrbyData, "arrbyData in Targa::SetCompressionRLE");
 						arrbyData=arrbyUncompressed;
 						iBytesBuffer=iNewSize;
 					}
@@ -1028,7 +1124,7 @@ namespace ExpertMultimediaBase {
 		sReturn+="dimensions:"+RString_ToString(iWidth)
 			+"x"+RString_ToString(iHeight)
 			+"x"+RString_ToString(iBytesPP)+";";
-		sReturn+=" buffer:"+RString_ToString(((arrbyData==null)?"null":"ok"))+"; ";
+		sReturn+=" buffer:"+RString_ToString(((arrbyData==nullptr)?"null":"ok"))+"; ";
 		sReturn+=" ImageSize:"+RString_ToString(iBytesAsUncompressed)+"; ";
 		sReturn+=" BufferSize:"+RString_ToString(iBytesBuffer)+"; ";
 		if (bDumpFull) {
@@ -1041,8 +1137,8 @@ namespace ExpertMultimediaBase {
 		return Description(false);
 	}
 	string Targa::Description(bool bVerbose) {
-		if (bVerbose) return RString_ToString((arrbyData==null)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8)+" "+RString_ToString(iBytesAsUncompressed)+"-length "+RString_ToString(iBytesBuffer)+"-buffer";
-		else return RString_ToString((arrbyData==null)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8);
+		if (bVerbose) return RString_ToString((arrbyData==nullptr)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8)+" "+RString_ToString(iBytesAsUncompressed)+"-length "+RString_ToString(iBytesBuffer)+"-buffer";
+		else return RString_ToString((arrbyData==nullptr)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8);
 	}
 	//private methods:
 	void Targa::DeriveVars() {
@@ -1064,8 +1160,8 @@ namespace ExpertMultimediaBase {
 		iBitDepth=0;
 		bitsDescriptor=0;
 		sID="";
-		arrbyColorMap=null;
-		arrbyData=null;
+		arrbyColorMap=nullptr;
+		arrbyData=nullptr;
 		DeriveVars();
 		iBytesBuffer=iBytesAsUncompressed;
 	}

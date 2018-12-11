@@ -4,14 +4,17 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <climits>  // <limits.h>
-#include "preporting.h"
-#include "frameworkdummy.h"
-#include "pointinfo.h"
-#include "pixelinfo.h"
+#include <climits>  // not <limits.h>
+#include <preporting.h>
+#include <frameworkdummy.h>
+#include <pointinfo.h>
+#include <pixelinfo.h>
 #include <base.h>  // DPoint etc
+// for cpp:
+#include <cmath>  // <math.h>
+#include <cstdlib> // malloc, free
+#include <cstring> // memcpy
 
-using namespace std;
 
 namespace ExpertMultimediaBase {
 
@@ -93,7 +96,7 @@ namespace ExpertMultimediaBase {
 		~PMathStatic();
 	};
 
-	extern PMathStatic pmathstatic;//PMathStatic* pmathstatic=NULL;
+	extern PMathStatic pmathstatic;//PMathStatic* pmathstatic=nullptr;
 }//end namespace
 
 #endif

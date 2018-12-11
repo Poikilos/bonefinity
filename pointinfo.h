@@ -5,11 +5,9 @@
 #include <iomanip>
 #include <fstream>
 #include <memory>
-#include "frameworkdummy.h"
-#include "pmemory.h"
-#include "preporting.h"
-
-using namespace std;
+#include <frameworkdummy.h>
+#include <pmemory.h>
+#include <preporting.h>
 
 typedef struct POINTINFO_STRUCT {
 public:

@@ -1,12 +1,11 @@
 #ifndef RMATH_CPP
 #define RMATH_CPP
 
-#include <frameworkdummy.h>
 #include <RMath.h>
-#include <preporting.h>
 
 
 using namespace std;
+using namespace System;
 using namespace ExpertMultimediaBase;
 
 //////#region RMath
@@ -21,13 +20,16 @@ namespace RMath {
 	const int LineRelationshipIntersectionNotTouchingEndsOfLineB=3;
 	const int LineRelationshipLineBPoint1IsOnLineA=4;
 	const int LineRelationshipLineBPoint2IsOnLineA=5;
-	const int LineRelationshipThisOrHigherNotCrossingInRange=100;
+	const int LineRelationships_ConstantsThisIntegerOrHigherAreNotCrossingOnLineSegment=100;  // formerly LineRelationshipThisOrHigherNotCrossingInRange
 	const int LineRelationshipIntersectionNotCrossingInRangeCouldNotFinish=100;
 	const int LineRelationshipIntersectionNotCrossingInRangeWouldIntersect=101;
 	const int LineRelationshipIntersectionNotCrossingInRangeWouldntIntersect=102;
 	const float FPI=3.1415926535897932384626433832795f;
 	const double DPI=3.1415926535897932384626433832795d;
 	const decimal MPI=(decimal)3.1415926535897932384626433832795;
+	const float F180_DIV_PI=180.0f/3.1415926535897932384626433832795f;
+	const double D180_DIV_PI=180.0/3.1415926535897932384626433832795d;
+	const decimal M180_DIV_PI=(decimal)180.0/(decimal)3.1415926535897932384626433832795;
 	//const IPoint ipZero;
 	///#region can't be const, since passed by ref
 	int i10=10;
@@ -101,6 +103,180 @@ namespace RMath {
 	const decimal m_int_MinValue_plus_1=(decimal)int_MinValue+M_1;
 	const decimal m_long_MinValue_plus_1=(decimal)long_MinValue+M_1;
 	///#endregion IRound
+
+
+	///////////////////////////////////////////////////////////////
+
+	float fFibbo=1;
+	float fFibboPrev=0;
+
+	int IRandPositive() {
+		static int iMoreRandom=2;//keep as constant value to make it deterministic
+		iMoreRandom=SafeAddWrappedPositiveOnly(iMoreRandom,iMoreRandom/2);
+		iMoreRandom=SafeAddWrappedPositiveOnly(iMoreRandom,1);
+		static int iFibbo=1;
+		static int iFibboPrev=0;
+		int iReturn=iFibbo;
+		int iFibboTemp=iFibbo;
+		iFibbo=SafeAddWrappedPositiveOnly(iFibboTemp,iFibboPrev);
+		iFibboPrev=iFibboTemp;
+		iMoreRandom=SafeAddWrappedPositiveOnly(iMoreRandom,1);
+		iReturn=SafeAddWrappedPositiveOnly(iReturn,iMoreRandom);
+		//if (iReturn<0) Console::Error.WriteLine("SafeAddWrappedPositiveOnly returned negative for iReturn!");
+		return iReturn;
+	}
+	int IRand(int iMin, int iMax) {
+		int iRange=(iMax-iMin);
+		int iReturn=(IRandPositive()%(iRange+1));
+		if (iReturn<0) iReturn*=-1;
+		if (iReturn>iRange) iReturn%=(iRange+1);
+		iReturn+=iMin;
+		return iReturn;
+	}
+	void ResetRand() {
+		fFibbo=1;
+		fFibboPrev=0;
+	}
+	float FRand() {
+		float fReturn=fFibbo;
+		float fFibboTemp=fFibbo;
+		fFibbo=fFibboTemp+fFibboPrev;
+		fFibboPrev=fFibboTemp;
+		return fReturn;
+	}
+	float FRand(float fMin, float fMax) {
+		float fReturn=fFibbo;
+		float fFibboTemp=fFibbo;
+		if (fFibboTemp+fFibboPrev+1>=(65534.0f)) {//prevent overflow
+			fFibboTemp=1;
+			fFibbo=1;
+			fFibboPrev=0;
+		}
+		fFibbo=fFibboTemp+fFibboPrev;
+		fFibboPrev=fFibboTemp;
+		if (fMax<=fMin) fMax=fMin+1.0f;//prevent crashes
+		float fRange=fMax-fMin;
+		//fReturn=(int)(fReturn)%(int)(fRange);
+		//while (fReturn>fRange) fReturn--;
+		//fReturn+=fMin;
+		return (float)((int)(fReturn)%(int)(fRange))+fMin;
+		//return (IRandPositive()%1)?fMin:fMax;//debug re-implement this
+	}
+
+
+	///<summary>
+	///DegreesToRadians
+	///</summary>
+	float DegToRad(float degrees) {
+		return degrees*3.141592653589793238462643383279502884f/180.0f;
+	}
+	///<summary>
+	///DegreesToRadians
+	///</summary>
+	double DegToRad(double degrees) {
+		return degrees*3.141592653589793238462643383279502884/180.0;
+	}
+
+	///<summary>
+	///RadiansToDegrees
+	///</summary>
+	float RadToDeg(float radians) {
+		return radians * ( 180.0f / 3.141592653589793238462643383279502884f );
+	}
+	///<summary>
+	///RadiansToDegrees
+	///</summary>
+	double RadToDeg(double radians) {
+		return radians * ( 180.0 / 3.141592653589793238462643383279502884 );
+	}
+
+	///<summary>
+	///formerly FTHETAOFXY_DEG
+	///</summary>
+	float ThetaOfXY_Deg(float X, float Y) {
+		return ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*F180_DIV_PI) : 0;
+	}
+	///<summary>
+	///formerly DTHETAOFXY_DEG (same as THETAOFXY_DEG)
+	///</summary>
+	double ThetaOfXY_Deg(double X, double Y) {
+		return ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*D180_DIV_PI) : 0;
+	}
+	///<summary>
+	///formerly LDTHETAOFXY_DEG (same as THETAOFXY_DEG)
+	///</summary>
+	long double ThetaOfXY_Deg(long double X, long double Y) {
+		return ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*M180_DIV_PI) : 0;
+	}
+
+	///<summary>
+	///formerly THETAOFXY_RAD
+	///</summary>
+	float ThetaOfXY_Rad(float X, float Y) {
+		return ((Y)!=0.0f || (X)!=0.0f) ? (atan2((Y),(X))) : 0.0f;
+	}
+	///<summary>
+	///formerly THETAOFXY_RAD
+	///</summary>
+	double ThetaOfXY_Rad(double X, double Y) {
+		return ((Y)!=0.0 || (X)!=0.0) ? (atan2((Y),(X))) : 0.0;
+	}
+	///<summary>
+	///formerly THETAOFXY_RAD
+	///</summary>
+	long double ThetaOfXY_Rad(long double X, long double Y) {
+		return ((Y)!=0.0 || (X)!=0.0) ? (atan2((Y),(X))) : 0.0;
+	}
+
+	///<summary>
+	///formerly FXOFRTHETA_DEG (same as DXOFRTHETA_DEG and LDXOFRTHETA_DEG)
+	///</summary>
+	float XOfRTheta_Deg(float r, float theta) {
+		return (r)*cos((theta)/F180_DIV_PI); //divide since cos takes radians
+	}
+	///<summary>
+	///formerly FXOFRTHETA_DEG (same as DXOFRTHETA_DEG and LDXOFRTHETA_DEG)
+	///</summary>
+	double XOfRTheta_Deg(double r, double theta) {
+		return (r)*cos((theta)/D180_DIV_PI); //divide since cos takes radians
+	}
+	///<summary>
+	///formerly FYOFRTHETA_DEG (same as DYOFRTHETA_DEG and LDYOFRTHETA_DEG)
+	///</summary>
+	float YOfRTheta_Deg(float r, float theta) {
+		return (r)*sin((theta)/F180_DIV_PI); //divide since cos takes radians
+	}
+	///<summary>
+	///formerly FYOFRTHETA_DEG (same as DYOFRTHETA_DEG and LDYOFRTHETA_DEG)
+	///</summary>
+	double YOfRTheta_Deg(double r, double theta) {
+		return (r)*sin((theta)/D180_DIV_PI); //divide since cos takes radians
+	}
+	///<summary>
+	///formerly XOFRTHETA_RAD
+	///</summary>
+	float XOfRTheta_Rad(float r, float theta) {
+		return (r)*cos((theta)); //cos takes radians
+	}
+	///<summary>
+	///formerly XOFRTHETA_RAD
+	///</summary>
+	double XOfRTheta_Rad(double r, double theta) {
+		return (r)*cos((theta)); //cos takes radians
+	}
+	///<summary>
+	///formerly YOFRTHETA_RAD
+	///</summary>
+	float YOfRTheta_Rad(float r, float theta) {
+		return (r)*sin((theta)); //cos takes radians
+	}
+	///<summary>
+	///formerly YOFRTHETA_RAD
+	///</summary>
+	double YOfRTheta_Rad(double r, double theta) {
+		return (r)*sin((theta)); //cos takes radians
+	}
+
 	byte SafeAverage(byte by1, byte by2, byte by3) {
 		return (byte)SafeDivideRound((int)by1+(int)by2+(int)by3,3,255);
 	}
@@ -424,13 +600,13 @@ namespace RMath {
 
 
 	float SafeAngle360(float valNow) {
-		return Wrap(valNow, 0, 360);
+		return Wrap(valNow, 0.0f, 360.0f);
 	}
 	double SafeAngle360(double valNow) {
-		return Wrap(valNow, 0, 360);
+		return Wrap(valNow, 0.0, 360.0);
 	}
 	decimal SafeAngle360(decimal valNow) {
-		return Wrap(valNow, 0, 360);
+		return Wrap(valNow, (decimal)0.0, (decimal)360.0);
 	}
 	string IntersectionToString(int IntersectionA) {
 		if (IntersectionA==IntersectionYes) return "Intersection Found";
@@ -660,7 +836,7 @@ namespace RMath {
 				+(string)"}");
 		}
 		return iReturn;
-	}  // end Intersection(float,...)
+	}  // end Intersection(float&,...)
 	int Intersection(out_double x, out_double y, double Line1_x1, double Line1_y1, double Line1_x2, double Line1_y2, double Line2_x1, double Line2_y1, double Line2_x2, double Line2_y2, bool bReturn1IfWithinSegmentElseIfNotThen2_IfThisVarIsFalseOrMissingAndDoesIntersectThenReturn1) {
 		x=0;
 		y=0;
@@ -697,7 +873,7 @@ namespace RMath {
 				+(string)"}");
 		}
 		return iReturn;
-	}  // end Intersection(double,...)
+	}  // end Intersection(double&,...)
 	int SafeIntersection(out_int x, out_int y, int Line1_x1, int Line1_y1, int Line1_x2, int Line1_y2, int Line2_x1, int Line2_y1, int Line2_x2, int Line2_y2) {
 		return SafeIntersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2, true);
 	}
@@ -727,7 +903,7 @@ namespace RMath {
 			else iReturn=IntersectionYes;
 		}
 		return iReturn;
-	}  // end SafeIntersection
+	}  // end SafeIntersection(int&,...)
 
 	//TODO: test IntersectionAndRelationship
 	//#ifndef FloatAsInt
@@ -740,10 +916,13 @@ namespace RMath {
 	//	y=(float)iyReturn/rPrecisionMultiplier_WhenConvRealToInt;
 	//	return iReturn;
 		float Line1_r, Line1_theta, Line2_r, Line2_theta, relative_r, relative_theta;
-		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		x=0; y=0;
+		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		if (iIntersection!=IntersectionYes) {//Line1_theta==Line2_theta
-			if (Line1_x1==Line2_x2 && Line1_y1==Line2_y2) {
+			if (iIntersection==IntersectionBeyondSegment) {
+				return LineRelationshipIntersectionNotCrossingInRangeWouldIntersect;
+			}
+			else if (Line1_x1==Line2_x2 && Line1_y1==Line2_y2) {
 				return LineRelationshipParallelSameLine;
 			}
 			else {
@@ -796,10 +975,13 @@ namespace RMath {
 	//	y=(double)iyReturn/rPrecisionMultiplier_WhenConvRealToInt;
 	//	return iReturn;
 		double Line1_r, Line1_theta, Line2_r, Line2_theta, relative_r, relative_theta;
-		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		x=0; y=0;
+		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		if (iIntersection!=IntersectionYes) {//Line1_theta==Line2_theta
-			if (Line1_x1==Line2_x2 && Line1_y1==Line2_y2) {
+			if (iIntersection==IntersectionBeyondSegment) {
+				return LineRelationshipIntersectionNotCrossingInRangeWouldIntersect;
+			}
+			else if (Line1_x1==Line2_x2 && Line1_y1==Line2_y2) {
 				return LineRelationshipParallelSameLine;
 			}
 			else {
@@ -847,10 +1029,13 @@ namespace RMath {
 	}//end IntersectionAndRelationship(double,...)
 	int IntersectionAndRelationship(out_int x, out_int y, int Line1_x1, int Line1_y1, int Line1_x2, int Line1_y2, int Line2_x1, int Line2_y1, int Line2_x2, int Line2_y2) {
 		int Line1_r, Line1_theta, Line2_r, Line2_theta, relative_r, relative_theta;
-		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		x=0; y=0;
+		int iIntersection=Intersection(x, y, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2);
 		if (iIntersection!=IntersectionYes) {//Line1_theta==Line2_theta
-			if (Line1_x1==Line2_x2&&Line1_y1==Line2_y2) {
+			if (iIntersection==IntersectionBeyondSegment) {
+				return LineRelationshipIntersectionNotCrossingInRangeWouldIntersect;
+			}
+			else if (Line1_x1==Line2_x2&&Line1_y1==Line2_y2) {
 				return LineRelationshipParallelSameLine;
 			}
 			else {
@@ -1024,7 +1209,7 @@ namespace RMath {
 	00027 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 	00028 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	00029 */
-	int GetCircleIntersectionPoints(ref_DPoint p1, ref_DPoint p2, double c1_X, double c1_Y, double c1_Radius, double c2_X, double c2_Y, double c2_Radius) { //from "int Circle::getIntersectionPoints( Circle c, VecPosition *p1, VecPosition *p2) {" <http://staff.science.uva.nl/~jellekok/robocup/2003/html/Geometry_8cpp-source.html> 2009-08-14
+	int GetCircleIntersectionPoints(DPoint& p1, DPoint& p2, double c1_X, double c1_Y, double c1_Radius, double c2_X, double c2_Y, double c2_Radius) { //from "int Circle::getIntersectionPoints( Circle c, VecPosition *p1, VecPosition *p2) {" <http://staff.science.uva.nl/~jellekok/robocup/2003/html/Geometry_8cpp-source.html> 2009-08-14
 		double x0, y0, r0;
 		double x1, y1, r1;
 
@@ -1071,7 +1256,7 @@ namespace RMath {
 
 		return (arg < 0.0) ? 0 : ((arg == 0.0 ) ? 1 :  2);
 	}//end GetCircleIntersectionPoints
-	void GetPointOnLineByRatio(ref_DPoint dpReturn, DPoint p1, DPoint p2, double dRatioTo1) { //VecPosition VecPosition::getVecPositionOnLineFraction( VecPosition &p,
+	void GetPointOnLineByRatio(DPoint& dpReturn, DPoint p1, DPoint p2, double dRatioTo1) { //VecPosition VecPosition::getVecPositionOnLineFraction( VecPosition &p,
 		// determine point on line that lies at fraction dRatioTo1 of whole line
 		// example: this --- 0.25 ---------  p2
 		// formula: this + dRatioTo1 * ( p2 - p1 ) = p1 - dRatioTo1 * p1 + dRatioTo1 * p2 =
@@ -1165,7 +1350,7 @@ namespace RMath {
 		}
 		return 0;
 	}
-	float Dist(ref_FPoint p1, ref_FPoint p2) {
+	float Dist(FPoint& p1, FPoint& p2) {
 		try {
 			return SafeSqrt(System_Math_Abs(p2.X-p1.X)+System_Math_Abs(p2.Y-p1.Y));
 		}
@@ -1174,7 +1359,7 @@ namespace RMath {
 		}
 		return 0;
 	}
-	double Dist(ref_DPoint p1, ref_DPoint p2) {
+	double Dist(DPoint& p1, DPoint& p2) {
 		try {
 			return SafeSqrt(System_Math_Abs(p2.X-p1.X)+System_Math_Abs(p2.Y-p1.Y));
 		}
@@ -1183,7 +1368,7 @@ namespace RMath {
 		}
 		return 0;
 	}
-	decimal Dist(ref_MPoint p1, ref_MPoint p2) {
+	decimal Dist(MPoint& p1, MPoint& p2) {
 		try {
 			return SafeSqrt(System_Math_Abs(p2.X-p1.X)+System_Math_Abs(p2.Y-p1.Y));
 		}
@@ -1714,9 +1899,9 @@ namespace RMath {
 		xToMove-=xCenter;
 		yToMove-=yCenter;
 		float rTemp=RConvert_ROFXY(xToMove,yToMove), thetaTemp=RConvert_THETAOFXY_RAD(xToMove,yToMove);
-		thetaTemp+=rRotate;
-		xToMove=XOFRTHETA_RAD(rTemp,thetaTemp);
-		yToMove=YOFRTHETA_RAD(rTemp,thetaTemp);
+		thetaTemp+=RMath::DegToRad(rRotate);
+		xToMove=RMath::XOfRTheta_Rad(rTemp,thetaTemp);
+		yToMove=RMath::YOfRTheta_Rad(rTemp,thetaTemp);
 		xToMove+=xCenter;
 		yToMove+=yCenter;
 	}
@@ -1724,23 +1909,23 @@ namespace RMath {
 		xToMove-=xCenter;
 		yToMove-=yCenter;
 		double rTemp=RConvert_ROFXY(xToMove,yToMove), thetaTemp=RConvert_THETAOFXY_RAD(xToMove,yToMove);
-		thetaTemp+=rRotate;
-		xToMove=XOFRTHETA_RAD(rTemp,thetaTemp);
-		yToMove=YOFRTHETA_RAD(rTemp,thetaTemp);
+		thetaTemp+=RMath::DegToRad(rRotate);
+		xToMove=RMath::XOfRTheta_Rad(rTemp,thetaTemp);
+		yToMove=RMath::YOfRTheta_Rad(rTemp,thetaTemp);
 		xToMove+=xCenter;
 		yToMove+=yCenter;
 	}
 	void Rotate(ref_float xToMove, ref_float yToMove, float rRotate) {
 		float rTemp=RConvert_ROFXY(xToMove,yToMove), thetaTemp=RConvert_THETAOFXY_RAD(xToMove,yToMove);
-		thetaTemp+=rRotate;
-		xToMove=XOFRTHETA_RAD(rTemp,thetaTemp);
-		yToMove=YOFRTHETA_RAD(rTemp,thetaTemp);
+		thetaTemp+=RMath::DegToRad(rRotate);
+		xToMove=RMath::XOfRTheta_Rad(rTemp,thetaTemp);
+		yToMove=RMath::YOfRTheta_Rad(rTemp,thetaTemp);
 	}
 	void Rotate(ref_double xToMove, ref_double yToMove, double rRotate) {
 		double rTemp=RConvert_ROFXY(xToMove,yToMove), thetaTemp=RConvert_THETAOFXY_RAD(xToMove,yToMove);
-		thetaTemp+=rRotate;
-		xToMove=XOFRTHETA_RAD(rTemp,thetaTemp);
-		yToMove=YOFRTHETA_RAD(rTemp,thetaTemp);
+		thetaTemp+=RMath::DegToRad(rRotate);
+		xToMove=RMath::XOfRTheta_Rad(rTemp,thetaTemp);
+		yToMove=RMath::YOfRTheta_Rad(rTemp,thetaTemp);
 	}
 	float Round(float val) {
 		return RConvert_ToFloat(System_Math_Round((double)val));

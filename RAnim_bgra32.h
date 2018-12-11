@@ -1,12 +1,18 @@
 #ifndef ANIM_H
 #define ANIM_H
 #include <RImage_bgra32.h>
+#include <vector>
+// for cpp:
+#include <base.h>
+#include <RMath.h>
+#include <cstring>  // memcpy etc
 
 
 using namespace std;
 //using System.Drawing.Text;
 
 namespace ExpertMultimediaBase {
+	extern int RAnim_debug_index;
 	string PathFileOfSeqFrame(string sSetFileBaseName, string sSetFileExt, long lFrameTarget, int iDigitsMin);
 	const int ResourceTypeNone = 0;
 	const int ResourceTypeAnim = 1;
@@ -47,16 +53,15 @@ namespace ExpertMultimediaBase {
 		string sPathFileNonSeq();
 		// int iMaxEffects;
 		// PixelFormat pixelformatNow=PixelFormat.Format32bppArgb;
-		GBuffer* gbarrAnim;
+		std::vector<GBuffer*> frame_ptrs;
+		long lFrame;
+		long lFrames;
 	public:
-		GBuffer gbFrame;
+		GBuffer* frame_ptr;
 		bool bLoop;
-		long lFramesCached;
 		//private string sPathFile="";
 		bool bFileSequence;//if true, use sFileBaseName+digits+"."+sExt, and sPathFile is first frame
 		int iSeqDigitCountMin;//, 0 if variable (i.exn. frame1.png...frame10.png)
-		long lFrame;
-		long lFrames;
 		int iEffects;
 		int iMaxEffects;
 		Effect* effectarr;
@@ -93,24 +98,30 @@ namespace ExpertMultimediaBase {
 		bool GotoFrame(int iFrameX);
 		bool GotoNextFrame();
 		bool GotoNextFrame(bool bLoop);
-		bool DrawFrameOverlay(GBuffer &gbDest, IPoint &ipDest, long lFrame);
-		bool DrawFrameOverlay(GBuffer &gbDest, IPoint &ipDest);
+		bool DrawFrameOverlay(GBuffer* gbDest, IPoint &ipDest, long lFrame);
+		bool DrawFrameOverlay(GBuffer* gbDest, IPoint &ipDest);
 		int MinDigitsRequired(int iNumber);
-		bool LastFrame();
+		bool isLastFrame();
 		string PathFileOfSeqFrame(long lFrameTarget);
 		bool SplitFromImage32(string sFile, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool SplitFromImage32(string sFileImage, int iCellWidth, int iCellHeight, int iRows, int iColumns);
-		bool SplitFromImage32(GBuffer &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
+		bool SplitFromImage32(GBuffer* gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool TransposeFramesAsMatrix(int iResultRows, int iResultCols);
 		//GBuffer ToOneImage(int iCellW, int iCellH, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
-		//bool SplitFromImage32(GBuffer &gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
+		//bool SplitFromImage32(GBuffer* gbSrc, int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins) {
 		GBuffer* ToOneImage(int iCellWidth, int iCellHeight, int iRows, int iColumns, IPoint ipAsCellSpacing, IRect irectAsMargins);
 		bool SafeDeleteAnim();
 		bool SafeDeleteEffects();
 		int Width();
 		int Height();
-		bool DrawToLargerWithoutCropElseCancel(GBuffer &gbDest, int xDest, int yDest, int iDrawMode);
+		int get_BytesPP();
+		int get_stride();
+		int get_byte_count();
+		int get_frame_number();
+		bool DrawToLargerWithoutCropElseCancel(GBuffer* gbDest, int xDest, int yDest, int iDrawMode);
 		int IFrames();
+		void reserve(size_t this_frame_count);
+		GBuffer* GetFramePtr(int this_frame_number);
 	};//end class Anim;
 
 	class Clip {
@@ -126,7 +137,7 @@ namespace ExpertMultimediaBase {
 		int iMaxEffects;
 	};
 
-	void SafeFree(Anim*& arranimX);
+	void SafeFree(Anim*& arranimX, string DebugNote);
 
 }
 #endif

@@ -4,8 +4,6 @@
 #include <RAnim_bgra32.h>
 
 
-using namespace std;
-
 namespace ExpertMultimediaBase {
 
 	class Sprite {
@@ -28,7 +26,7 @@ namespace ExpertMultimediaBase {
 		int** arr2iDelay; //(1 to 1 match with arr2iSeq) millisecond delays for each frame, calculated from "RLE" arr2iFrameRates
 
 		void InitNull();
-		void SafeFree();
+		void SafeFree(string DebugNote);
 	public:
 		//runtime-only vars:
 		int iAnim; //references an anim in arranim

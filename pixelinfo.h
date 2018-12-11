@@ -5,11 +5,10 @@
 #include <iomanip>
 #include <fstream>
 #include <memory>
-#include "frameworkdummy.h"
-#include "pmemory.h"
-#include "preporting.h"
+#include <frameworkdummy.h>
+#include <pmemory.h>
+#include <preporting.h>
 
-using namespace std;
 
 typedef struct PIXELINFO_STRUCT {
 public:

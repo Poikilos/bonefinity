@@ -2,9 +2,9 @@
 #define GFONT_H
 #include <RGradient_bgra32.h>
 #include <RAnim_bgra32.h>
-
-
-using namespace std;
+// for cpp:
+#include <base.h>
+#include <RMath.h>
 
 /*
  * Created by SharpDevelop.
@@ -37,20 +37,25 @@ namespace ExpertMultimediaBase {
 
 		GFont();
 		bool SaveSeq(string sFileBaseName, string sFileExt, int iGlyphType);
-		bool TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText);
-		bool TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode);
-		bool TypeFast(SizeF& sizeReturn, GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode, bool bTestOnlyNoDraw);
-		bool TypeHTML(GBuffer& gbDest, IPoint& ipAt, IRect& irectReturn, string sText,  bool bVisible);
-		bool TypeHTML(GBuffer& gbDest, IPoint& ipAt, IRect& irectReturn, string sText);
+		bool TypeFast(GBuffer* gbDest, IPoint& ipDest, bool MoveThePoint, string sText);
+		bool TypeFast(GBuffer* gbDest, IPoint& ipDest, bool MoveThePoint, string sText, int iGlyphType, int iDrawMode);
+		bool TypeFast(GBuffer* gbDest, IPoint& ipDest, bool MoveThePoint, string sText, int iGlyphType, int iDrawMode, bool bTestOnlyNoDraw, SizeF& sizeReturn);
+		bool TypeFast_NewLine(GFont* ContinueFrom_ElseNull, IPoint& ipDest);
+		bool TypeHTML(GBuffer* gbDest, IPoint& ipAt, IRect& irectReturn, string sText,  bool bVisible);
+		bool TypeHTML(GBuffer* gbDest, IPoint& ipAt, IRect& irectReturn, string sText);
 		bool ResetGlyphTypeArray();
 		bool FromImageAsPredefinedColorFont(string sFile, int iCharWidth, int iCharHeight, int iRows, int iColumns);
 		bool FromImageValue(string sFile, int iCharWidth, int iCharHeight, int iRows, int iColumns);
-		bool MeasureTextByRef_UsingTypeFast(SizeF& sizeReturn, GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType);
+		bool MeasureTextByRef_UsingTypeFast(SizeF& sizeReturn, GBuffer* gbDest, IPoint& ipDest, string sText, int iGlyphType);
+		void SetColor(byte r, byte g, byte b);
+		int marginLeftX=0;
+		int lineGap=1;
 	private:
 		Gradient gradNow;
 		bool Init();
 		void InitNull();
-		void ShowAsciiTable(GBuffer& gbDest, int xAt, int yAt);
+		void ShowAsciiTable(GBuffer* gbDest, int xAt, int yAt);
 	};//end class GFont
+	bool GBuffer_FX_Scaled(GBuffer* gbDest, GBuffer* gbSrc, int x2D, int y2D, float fOpacity, float fExplodedness, bool bOutline, float fScale, string DebugNote, GFont* debug_gfont);
 }//end namespace
 #endif

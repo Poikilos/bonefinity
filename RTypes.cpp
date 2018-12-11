@@ -1,9 +1,7 @@
 #ifndef RTYPES_CPP
 #define RTYPES_CPP
 
-#include "RTypes.h"
-#include "base.h"
-#include "preporting.h"
+#include <RTypes.h>
 
 
 using namespace std;
@@ -47,7 +45,7 @@ namespace ExpertMultimediaBase {
 		return ExpertMultimediaBase::ToString(X,Y);//calls previous method (above)
 	}
 	IPoint* IPoint::Copy() {
-		IPoint* ipReturn=null;
+		IPoint* ipReturn=nullptr;
 		try {
 			ipReturn=new IPoint();
 			ipReturn->X=X;
@@ -84,12 +82,6 @@ namespace ExpertMultimediaBase {
 	}
 	string FPoint::ToString() {
 		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
-	}
-	/*inline*/ float FDist(FPoint &point1, FPoint &point2) {
-		register float xSquaring=(point1.X-point2.X);
-		register float ySquaring=(point1.Y-point2.Y);
-		register float fSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
-		return ((fSumOfSquares>0)?sqrt(fSumOfSquares):0);
 	}
 
 	DPoint::DPoint() {

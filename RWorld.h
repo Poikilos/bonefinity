@@ -5,22 +5,20 @@
 #include <RSprite_bgra32.h>
 
 
-using namespace std;
-
 namespace ExpertMultimediaBase {
 
 	class World {
 	private:
 		//runtime vars (to save):
-		string sAnimsFile;
-		string sSpritesFile;
-		string sWorldFile;
-		string sBasePath;
+		std::string sAnimsFile;
+		std::string sSpritesFile;
+		std::string sWorldFile;
+		std::string sBasePath;
 		//save-only (non-runtime) vars (commented purposely)
 		//runtime-only vars:
 
 		void InitNull();
-		void SafeFree();
+		void SafeFree(std::string DebugNote);
 	public:
 		//runtime vars (to save):
 		//string sBasePath;
@@ -31,7 +29,7 @@ namespace ExpertMultimediaBase {
 		World();
 		~World();
 		//bool Init();
-		bool Load(string sWorldFileRelToBasePath, string sBasePathWithEndSlash);
+		bool Load(std::string sWorldFileRelToBasePath, std::string sBasePathWithEndSlash);
 		bool Pause(bool val);
 	};
 

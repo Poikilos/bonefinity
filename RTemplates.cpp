@@ -1,8 +1,10 @@
-#include "RTemplates.h"
-#include <iostream>
+#ifndef RTEMPLATES_CPP
+#define RTEMPLATES_CPP
+
+#include <RTemplates.h>
 
 
-using namespace std;  // NULL etc
+using namespace std;  // nullptr etc
 
 //compilers don't like dividing class templates:
 
@@ -27,17 +29,17 @@ namespace exm {
 		//and
 		//delete [] lplpval
 		//?
-		if (lplpval!=NULL) {
+		if (lplpval!=nullptr) {
 			for (int i=0; i<iUsed; i++) {
-				if (lplpval[i]!=NULL) {
+				if (lplpval[i]!=nullptr) {
 					delete (lplpval[i]);
-					lplpval[i]=NULL;
+					lplpval[i]=nullptr;
 				}
 			}
 		}
 	}
 	template <typename T> void nondumbset<T>::InitNull() {
-		lplpval=NULL;
+		lplpval=nullptr;
 		lplpval_Length=-1;
 		iUsed=0;
 	}
@@ -47,20 +49,20 @@ namespace exm {
 				cerr<<"warning: nondumbset can't set max to "<<maximum<<" since below "<<iUsed<<" used--setting to "<<iUsed<<" instead."<<endl;
 				maximum=iUsed;//TODO: debug unpredictable memory usage
 			}
-			if (lplpval!=NULL) {
+			if (lplpval!=nullptr) {
 				T** lplpvalOld=lplpval;
-				lplpval=NULL;
-				set_Maximum(maximum);  // recursion is safe since this case won't run since just set lplpval=NULL
+				lplpval=nullptr;
+				set_Maximum(maximum);  // recursion is safe since this case won't run since just set lplpval=nullptr
 				int set_Maximum_result=get_Maximum();
 				for (int i=0; i<set_Maximum_result; i++) {
-					lplpval[i]=(i<iUsed)?(lplpvalOld[i]):(NULL);
+					lplpval[i]=(i<iUsed)?(lplpvalOld[i]):(nullptr);
 				}
 			}
 			else {
 				lplpval=new T *[maximum];  // lplpval=(T**)malloc(sizeof(T*)*maximum);
 				memset(lplpval,'\0',maximum*sizeof(T*));
 				//for (int i=0; i<maximum; i++) {
-				//	lplpval[i]=NULL;
+				//	lplpval[i]=nullptr;
 				//}
 				lplpval_Length=maximum;
 			}
@@ -70,16 +72,18 @@ namespace exm {
 		}
 	}//end set_Maximum
 	template <typename T> int nondumbset<T> ::get_Maximum() {
-		return (lplpval!=NULL)?lplpval_Length:-1;
+		return (lplpval!=nullptr)?lplpval_Length:-1;
 	}
 	///<summary>
 	///usage:
 	///MyClass* lpmc=myclassnondumbset[3];
 	///int iWantThatValueAt3=-1;
-	///if (lpmc!=NULL) iWantThatValueAt3 = lpmc->iValue;
+	///if (lpmc!=nullptr) iWantThatValueAt3 = lpmc->iValue;
 	///</summary>
 	template <typename T> T* nondumbset<T> ::operator[](int index) {
-		return (   ( lplpval!=NULL )  ?  ( (index>=0) ? ((index<iUsed)?(lplpval[index]):(NULL)) : NULL )  :  NULL   );
+		return (   ( lplpval!=nullptr )  ?  ( (index>=0) ? ((index<iUsed)?(lplpval[index]):(nullptr)) : nullptr )  :  nullptr   );
 	}
 	*/
 }//end namespace
+
+#endif RTEMPLATES_CPP

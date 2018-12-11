@@ -14,21 +14,21 @@ namespace ExpertMultimediaBase {
 	}
 	void Sprite::InitNull() {
 		//runtime vars (to save):
-		arr2iSeq=null;
+		arr2iSeq=nullptr;
 		iSeq=0; //index in 1st dimension of arr2iSeq
 		iFrame=0; //index in 2nd dimension of arr2iSeq
-		arriFrames=null; //size of sub-arrays of arr2iSeq
+		arriFrames=nullptr; //size of sub-arrays of arr2iSeq
 		iSeqs=1; //number of sub-arrays of arr2iSeq
 		//sarrNames=null; //names of the sequences, i.e. "walk"
 		//save-only (non-runtime) vars (commented purposely)
 		//int** arr2iFrameRates; //(NOT 1 to 1 match with arr2iSeq) FPS of each frame,
 				//followed by how many frames for which to use that speed
 				//(if doesn't have a second value, keep for whole anim!)
-		barrAutoAnimate=false;
+		barrAutoAnimate=nullptr;
 		bDieIfAdvanceAfterLastFrame=false;
 		//runtime-only vars:
 		bActive=true;
-		arr2iDelay=null; //(1 to 1 match with arr2iSeq) millisecond delays for each frame, calculated from "RLE" arr2iFrameRates
+		arr2iDelay=nullptr; //(1 to 1 match with arr2iSeq) millisecond delays for each frame, calculated from "RLE" arr2iFrameRates
 		//runtime-only vars:
 		iAnim=-1; //references an anim in arranim
 		//runtime vars (to save):
@@ -36,10 +36,10 @@ namespace ExpertMultimediaBase {
 		sName="";
 		bLoop=false;
 	}
-	void Sprite::SafeFree() {
-		ExpertMultimediaBase::SafeFree(arr2iSeq,iSeqs);
-		ExpertMultimediaBase::SafeFree(arriFrames);
-		ExpertMultimediaBase::SafeFree(arr2iDelay,iSeqs);
+	void Sprite::SafeFree(string DebugNote) {
+		ExpertMultimediaBase::SafeFree(arr2iSeq,iSeqs, "Sprite Sequence Integer Array-Array for "+DebugNote);
+		ExpertMultimediaBase::SafeFree(arriFrames, "arriFrames in Sprite::SafeFree() for "+DebugNote);
+		ExpertMultimediaBase::SafeFree(arr2iDelay,iSeqs, "Sprite Delay Integer Array-Array for "+DebugNote);
 	}
 	//public methods:
 	bool Sprite::Load(string sFileNow) {
@@ -47,7 +47,7 @@ namespace ExpertMultimediaBase {
 		//TODO: finish this (rewrite adding array count functions etc (see *.sprite)
 		Variables vsTemp;
 		vsTemp.Load(sFileNow);
-		SafeFree();
+		this->SafeFree("Sprite Load");
 		InitNull();
 		bool bMulti=false;
 		if (vsTemp.Exists("sequences")) {
@@ -65,12 +65,12 @@ namespace ExpertMultimediaBase {
 			if (iTempFPS<0) iTempFPS=30;
 			iSeq=0;
 			iFrame=0;
-			arriFrames=null;
+			arriFrames=nullptr;
 			iSeqs=1;
-			barrAutoAnimate=false;
+			barrAutoAnimate=nullptr;
 			bDieIfAdvanceAfterLastFrame=false;
 			bActive=true;
-			arr2iDelay=null;
+			arr2iDelay=nullptr;
 			iAnim=-1;//references an Anim in animarr
 			sAnim="";
 			sName="";

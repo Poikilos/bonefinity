@@ -1,33 +1,47 @@
 #ifndef RMATH_H
 #define RMATH_H
 
-#include <frameworkdummy.h>
 #include <RTypes.h>
+#include <frameworkdummy.h>
 #include <string>
+// for cpp:
+#include <preporting.h>
 
 
-using namespace std;
-using namespace System;
-using namespace ExpertMultimediaBase;
+namespace ExpertMultimediaBase {
+	class IPoint;
+	class DPoint;
+	class FPoint;
+	class ILine;
+}
+
 
 namespace RMath {
+
+	///#region Intersections
 	extern const int IntersectionError;//=-1;
 	extern const int IntersectionNo;//=0;
 	extern const int IntersectionYes;//=1;
 	extern const int IntersectionBeyondSegment;//=2;
+	///#endregion Intersections
+	///#region Line relationships
 	extern const int LineRelationshipNone;//=0;
 	extern const int LineRelationshipParallelDifferentLine;//=1;
 	extern const int LineRelationshipParallelSameLine;//=2;
 	extern const int LineRelationshipIntersectionNotTouchingEndsOfLineB;//=3;
 	extern const int LineRelationshipLineBPoint1IsOnLineA;//=4;
 	extern const int LineRelationshipLineBPoint2IsOnLineA;//=5;
-	extern const int LineRelationshipThisOrHigherNotCrossingInRange;  // =100;
+	extern const int LineRelationships_ConstantsThisIntegerOrHigherAreNotCrossingOnLineSegment;  // =100;  // formerly LineRelationshipThisOrHigherNotCrossingInRange
 	extern const int LineRelationshipIntersectionNotCrossingInRangeCouldNotFinish;//=100;
 	extern const int LineRelationshipIntersectionNotCrossingInRangeWouldIntersect;//=101;
 	extern const int LineRelationshipIntersectionNotCrossingInRangeWouldntIntersect;//=102;
+	///#endregion Line relationships
 	extern const float FPI;//=3.1415926535897932384626433832795f;
 	extern const double DPI;//=3.1415926535897932384626433832795d;
 	extern const decimal MPI;//=3.1415926535897932384626433832795m;
+	extern const float F180_DIV_PI;//=180.0f/3.1415926535897932384626433832795f;
+	extern const double D180_DIV_PI;//=180.0/3.1415926535897932384626433832795d;
+	extern const decimal M180_DIV_PI;//=(decimal)180.0/(decimal)3.1415926535897932384626433832795;
 	//extern const IPoint ipZero;
 	///#region can't be const, since passed by ref
 	extern int i10;//=10;
@@ -102,6 +116,35 @@ namespace RMath {
 	extern const decimal m_long_MinValue_plus_1;//=(decimal)long.MinValue+1.0m;
 	///#endregion IRound
 
+	extern float fFibbo;
+	extern float fFibboPrev;
+
+	int IRandPositive();
+	int IRand(int iMin, int iMax);
+	void ResetRand();
+	float FRand();
+	float FRand(float fMin, float fMax);
+	///////////////////////////////////////////////////////////////
+
+	float DegToRad(float val);
+	double DegToRad(double val);
+	float RadToDeg(float radians);
+	double RadToDeg(double radians);
+	float ThetaOfXY_Deg(float X, float Y);
+	double ThetaOfXY_Deg(double X, double Y);
+	long double ThetaOfXY_Deg(long double X, long double Y);
+	float ThetaOfXY_Rad(float X, float Y);
+	double ThetaOfXY_Rad(double X, double Y);
+	long double ThetaOfXY_Rad(long double X, long double Y);
+
+	float XOfRTheta_Deg(float r, float theta);
+	double XOfRTheta_Deg(double r, double theta);
+	float YOfRTheta_Deg(float r, float theta);
+	double YOfRTheta_Deg(double r, double theta);
+	float XOfRTheta_Rad(float r, float theta);
+	double XOfRTheta_Rad(double r, double theta);
+	float YOfRTheta_Rad(float r, float theta);
+	double YOfRTheta_Rad(double r, double theta);
 
 	byte SafeAverage(byte by1, byte by2, byte by3);
 	float SafeAdd(float var1, float var2);
@@ -134,8 +177,8 @@ namespace RMath {
 	int SafeMultiply(int val1, int val2);
 	float SafeMultiply(float val1, float val2);
 	double SafeMultiply(double val1, double val2);
-	//float SafeAngle360(float valNow);
-	//double SafeAngle360(double valNow);
+	float SafeAngle360(float valNow);
+	double SafeAngle360(double valNow);
 	decimal SafeAngle360(decimal valNow);
 	string IntersectionToString(int IntersectionA);
 	string LineRelationshipToString(int LineRelationshipA);
@@ -154,7 +197,7 @@ namespace RMath {
 	bool PointIsOnLine(int x, int y, int x1, int y1, int x2, int y2, bool bLinePointOrderHasBeenFixedAlready);
 	bool PointIsOnLine(int x, int y, int x1, int y1, int x2, int y2, bool bLinePointOrderHasBeenFixedAlready, bool bOnlyTrueIfOnSegment);
 	bool PointIsOnLine(int x, int y, int x1, int y1, int x2, int y2, bool bLinePointOrderHasBeenFixedAlready, bool bOnlyTrueIfOnSegment, int line_r, int line_theta);
-	int Intersection(out_int x, out_int y, ILine line1, ILine line2);
+	int Intersection(out_int x, out_int y, ExpertMultimediaBase::ILine line1, ExpertMultimediaBase::ILine line2);
 	int Intersection(out_int x, out_int y, int Line1_x1, int Line1_y1, int Line1_x2, int Line1_y2, int Line2_x1, int Line2_y1, int Line2_x2, int Line2_y2);
 	int Intersection(out_float x,out_float y, float Line1_x1, float Line1_y1, float Line1_x2, float Line1_y2, float Line2_x1, float Line2_y1, float Line2_x2, float Line2_y2);
 	int Intersection(out_double x,out_double y, double Line1_x1, double Line1_y1, double Line1_x2, double Line1_y2, double Line2_x1, double Line2_y1, double Line2_x2, double Line2_y2);
@@ -182,17 +225,17 @@ namespace RMath {
 	decimal Floor(decimal val);//debug performance VERY SLOW
 	int GetSignedCropped(uint uiNow);
 	ushort GetUnsignedLossless(short val);
-	int GetCircleIntersectionPoints(ref_DPoint p1, ref_DPoint p2, double c1_X, double c1_Y, double c1_Radius, double c2_X, double c2_Y, double c2_Radius); //from "int Circle::getIntersectionPoints( Circle c, VecPosition *p1, VecPosition *p2);" <http://staff.science.uva.nl/~jellekok/robocup/2003/html/Geometry_8cpp-source.html> 2009-08-14
-	void GetPointOnLineByRatio(ref_DPoint dpReturn, DPoint p1, DPoint p2, double dRatioTo1); //VecPosition VecPosition::getVecPositionOnLineFraction( VecPosition &p,
+	int GetCircleIntersectionPoints(ExpertMultimediaBase::DPoint& p1, ExpertMultimediaBase::DPoint& p2, double c1_X, double c1_Y, double c1_Radius, double c2_X, double c2_Y, double c2_Radius); //from "int Circle::getIntersectionPoints( Circle c, VecPosition *p1, VecPosition *p2);" <http://staff.science.uva.nl/~jellekok/robocup/2003/html/Geometry_8cpp-source.html> 2009-08-14
+	void GetPointOnLineByRatio(ExpertMultimediaBase::DPoint& dpReturn, ExpertMultimediaBase::DPoint p1, ExpertMultimediaBase::DPoint p2, double dRatioTo1); //VecPosition VecPosition::getVecPositionOnLineFraction( VecPosition &p,
 	double GetAreaOfCirclesIntersection(double c1_X, double c1_Y, double c1_Radius, double c2_X, double c2_Y, double c2_Radius); //from "double Circle::getIntersectionArea( Circle c );//" <http://staff.science.uva.nl/~jellekok/robocup/2003/html/Geometry_8cpp-source.html> 2009-08-14
 	byte Dist(byte by1, byte by2);
 	double Dist(double x1, double y1, double x2, double y2);
 	float Dist(float x1, float y1, float x2, float y2);
 	int Dist1D(int x1, int x2);
 	int Dist(int x1, int y1, int x2, int y2);
-	float Dist(ref_FPoint p1, ref_FPoint p2);
-	double Dist(ref_DPoint p1, ref_DPoint p2);
-	decimal Dist(ref_MPoint p1, ref_MPoint p2);
+	float Dist(ExpertMultimediaBase::FPoint& p1, ExpertMultimediaBase::FPoint& p2);
+	double Dist(ExpertMultimediaBase::DPoint& p1, ExpertMultimediaBase::DPoint& p2);
+	decimal Dist(decimal& p1, decimal& p2);
 	float SafeDivide(float val, float valDivisor, float valMax);
 	double SafeDivide(double val, double valDivisor, double valMax);
 	decimal SafeDivide(decimal val, decimal valDivisor, decimal valMax);
@@ -284,9 +327,9 @@ namespace RMath {
 	//ulong SafeSqrt(ulong val);
 	//int DaysAbsoluteValueOfDifferenceIgnoringHours(DateTime datetime1, DateTime datetime2); //formerly DaysAbsoluteDifferenceIgnoringHours
 	//int DaysDifferenceIgnoringHours(DateTime datetime1, DateTime datetime2);
-	string ToString(IPoint& point);
-	string ToString(FPoint& point);
-	string ToString(DPoint& point);
+	string ToString(ExpertMultimediaBase::IPoint& point);
+	string ToString(ExpertMultimediaBase::FPoint& point);
+	string ToString(ExpertMultimediaBase::DPoint& point);
 	//int IndexOf(int arrVal[], int valX);
 	//string RemoveExpNotation(string sNum);
 	void RemoveExpNotation(ref_string sNum);

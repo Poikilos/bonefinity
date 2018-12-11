@@ -6,10 +6,12 @@
 #include <fstream>
 #include <memory>
 #include <RFile.h>
-
-
-using namespace std;
-
+// for cpp:
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <memory>
+#include <cstring>  // memcpy etc
 
 namespace ExpertMultimediaBase {
 	//Sequential targa.TypeTarga values:
@@ -63,7 +65,7 @@ namespace ExpertMultimediaBase {
 
 	class Targa {
 	public:
-		string sFile;
+		std::string sFile;
 		TargaFooter footer;
 		byte *arrbyData;
 
@@ -85,19 +87,20 @@ namespace ExpertMultimediaBase {
 		int SafeCopyFrom(int iWidthTo, int iHeightTo, int iBytesPP, byte* arrbySrc, uint u32SrcRealLen, uint u32SrcStart, bool bReInitializeAll);
 		byte* GetBufferPointer();
 		bool IsLoaded();
+		int SizeofFileEstimate();
 		bool Save();
-		bool Save(string sFileNow);
-		bool Load(string sFileNow);
+		bool Save(std::string sFileNow);
+		bool Load(std::string sFileNow);
 		bool IsOK();
 		bool Flip();
 		bool HasAttrib(byte bit);
 		bool IsSavedAsFlipped();
 		bool IsCompressed();
 		bool SetCompressionRLE(bool bOn);
-		string Dump();
-		string Dump(bool bDumpFull);
-		string Description();
-		string Description(bool bVerbose);
+		std::string Dump();
+		std::string Dump(bool bDumpFull);
+		std::string Description();
+		std::string Description(bool bVerbose);
 	private:
 		void DeriveVars();
 		void InitNull();
@@ -116,7 +119,7 @@ namespace ExpertMultimediaBase {
 		int iHeight; //2 bytes
 		int iBitDepth; //1 byte //TODO: 16 is 5.5.5.1 (!!!)IF(!!!) low nibble of descriptor is 1 (otherwise 5.6.5 and descriptor low nibble is zero)
 		byte bitsDescriptor; //1 byte  //(default zero)
-		string sID; //array of [iTagLength] bytes  //[bySizeofID] -- custom non-terminated string
+		std::string sID; //array of [iTagLength] bytes  //[bySizeofID] -- custom non-terminated std::string
 		byte *arrbyColorMap; //array of [] bytes  //[byMapBitDepth*wMapLength] -- the palette
 		//arrbyData
 		//derived fields:

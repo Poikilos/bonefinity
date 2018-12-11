@@ -2,14 +2,13 @@
 #define GBUFFER_CPP
 
 #include <RImage_bgra32.h>
-#include <PMath.h>//TODO: eliminate PMath
-#include <RMath.h>
 
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
 	byte by2d_ByteAsByte_times_ByteAsFloatLookup[256][256];
+	int GBuffer_debug_index=0;
 	bool bInit_by2d_ByteAsByte_times_ByteAsFloatLookup=false;
 	double dDiagonalUnit = 1.4142135623730950488016887242097;//the sqrt. of 2, dist of diagonal pixel (e.g. one to next diagonally, or corner to corner diagonally)
 	/////////////////////////// class GBuffer methods //////////////////////////////
@@ -18,6 +17,7 @@ namespace ExpertMultimediaBase {
 		return arrbyData;
 	}
 	void GBuffer::InitNull() {
+		arrbyData=nullptr;
 		if (!bInit_by2d_ByteAsByte_times_ByteAsFloatLookup) {
 			bInit_by2d_ByteAsByte_times_ByteAsFloatLookup=true;
 			Console::Error.Write("GBuffer: generating byte-as-byte times byte-as-float lookup table...");
@@ -30,15 +30,332 @@ namespace ExpertMultimediaBase {
 			Console::Error.WriteLine("done.");
 		}
 		sErrBy="GBuffer";
-		sFile="1.unnamed-gbuffer.raw";
-		arrbyData=NULL;
+		sFile=".unnamed-gbuffer "+RString_ToString(GBuffer_debug_index)+".raw";
+		GBuffer_debug_index++;
+		if (bMegaDebug) {
+			Console::Error.WriteLine("Initialized a GBuffer as: "+sFile);
+		}
 		iWidth=0;
 		iHeight=0;
 		iBytesPP=0;
 		iStride=0;
 		iBytesTotal=0;
 		bBufferAsPointerNotCopy=false;
+
+		Text_ColumnCount=1;
+		Text_ColumnIndex=0;
+		Text_marginTopRatio=0.01f;
+		Text_marginBottomRatio=0.01f;
+		Text_marginLeftRatio=0.01f;
+		Text_marginColumnsRatio=0.01f;
+		Text_marginRightRatio=0.01f;
+		Text_X=-1;
+		Text_Y=-1;
+		Text_SetColumn(0);
+	}  // end GBuffer::InitNull()
+	void GBuffer::ShadeAlpha(Gradient* gradient_ptr, Uint32 u32DestBufferLoc, byte bySrcValue, int iDrawMode) {  // bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, byte bySrcValue) {
+		ShadeAlpha(gradient_ptr, u32DestBufferLoc, (Uint32)bySrcValue, iDrawMode);//return Shade(arrbyDest, u32DestLoc, (Uint32)bySrcValue);
 	}
+	void GBuffer::ShadeAlpha(Gradient* gradient_ptr, Uint32 u32DestBufferLoc, Uint32 u32SrcValue, int iDrawMode) {  // bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, Uint32 u32SrcValue) {
+		//bool bGood=false;
+		try {
+			if (gradient_ptr!=nullptr) {
+				Uint32 src_u32BytesPP=gradient_ptr->get_u32BytesPP();
+				Uint32 u32SrcLoc=u32SrcValue*src_u32BytesPP;
+				Uint32 u32DestBytesPP=(Uint32)this->iBytesPP;
+				byte* gradient_band=gradient_ptr->get_lpbyShade();
+				//if (lpbyShade!=null) {
+					//if (this!=null) {
+					if (u32SrcLoc<gradient_ptr->get_u32BytesTotal()) { //if (u32SrcValue<gradient_ptr->u32Levels) {
+						/*
+						if (this->iBytesPP==gradient_ptr->u32BytesPP) {
+							if (gradient_ptr->u32BytesPP==4) {
+							}//end if 32-bit to 32-bit
+							else if (gradient_ptr->u32BytesPP=1) {
+								byte* lpbySrcNow=&gradient_band[u32SrcLoc];// *gradient_ptr->u32BytesPP];
+								byte* lpbyDestNow=&this->arrbyData[u32DestBufferLoc];
+								if (*lpbySrcNow==255) {//copy the value, multiple times if dest is greater bitdepth
+									*lpbyDestNow=*lpbySrcNow;
+									if (u32DestBytesPP>1) {
+										lpbyDestNow++;
+										*lpbyDestNow=*lpbySrcNow;
+										if (u32DestBytesPP>2) {
+											lpbyDestNow++;
+											*lpbyDestNow=*lpbySrcNow;
+											if (u32DestBytesPP>3) {
+												if ( (iDrawMode==DrawModeCopyAlpha) || (iDrawMode==DrawModeKeepGreaterAlpha) ) { //these draw modes behave the same since alpha==255
+													lpbyDestNow++;
+													*lpbyDestNow=*lpbySrcNow;
+												}
+												else if ( iDrawMode==DrawModeBlendAlpha ) {
+													lpbyDestNow++;
+													*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][*lpbySrcNow];
+												}
+												//else DrawModeKeepDestAlpha so do nothing
+											}
+										}
+									}
+								}
+								else if (*lpbySrcNow>0) { //else if blend alpha from 1-channel gradient to any# of channels on dest
+									///modes: DrawModeCopyAlpha, DrawModeBlendAlpha, DrawModeKeepGreaterAlpha, DrawModeKeepDestAlpha
+									*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][*lpbySrcNow];//intentionally using *lpbySrcNow as source and alpha since grayscale
+									if (u32DestBytesPP>1) {
+										lpbyDestNow++;
+										*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][*lpbySrcNow];//intentionally using *lpbySrcNow as source and alpha since grayscale
+										if (u32DestBytesPP>2) {
+											lpbyDestNow++;
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][*lpbySrcNow];//intentionally using *lpbySrcNow as source and alpha since grayscale
+											if (u32DestBytesPP>3) {
+												if (iDrawMode=DrawModeBlendAlpha) {
+													lpbyDestNow++;
+													*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][*lpbySrcNow];//intentionally using *lpbySrcNow as source and alpha since grayscale
+												}
+												else if (iDrawMode==DrawModeKeepGreaterAlpha) {
+													lpbyDestNow++;
+													*lpbyDestNow=(*lpbySrcNow>*lpbyDestNow)?*lpbySrcNow:*lpbyDestNow;//intentionally using *lpbySrcNow as source and alpha since grayscale
+												}
+												else if (iDrawMode==DrawModeCopyAlpha) {
+													lpbyDestNow++;
+													*lpbyDestNow=*lpbySrcNow;//intentionally using *lpbySrcNow as source and alpha since grayscale
+												}
+												//else DrawModeKeepDestAlpha so do nothing
+											}
+										}
+									}
+								}
+								//else do nothing since alpha==0
+							}//end if gradient is 1-channel
+							else {
+								memcpy(&this->arrbyData[u32DestBufferLoc],&gradient_band[u32SrcLoc],u32BytesPP);
+							}//end else 24-bit to 24-bit (or something other than 8-bit or 32-bit)
+						}//end if same bitdepths
+						///if ( (u32DestBytesPP==1) && (u32BytesPP>u32DestBytesPP) ) return;
+						else { //different bitdepths
+
+							*/
+							if (gradient_ptr->get_u32BytesPP()==4) {
+								if (u32DestBytesPP==3) { //32-bit to 24-bit
+									if (iDrawMode==DrawModeCopyAlpha) {
+										memcpy(&this->arrbyData[u32DestBufferLoc],&gradient_band[u32SrcLoc],3);
+									}
+									else { //since dest is 24-bit (see slightly above), DrawModeKeepGreaterAlpha, DrawModeBlendAlpha, and DrawModeKeepDestAlpha all behave the same (as DrawModeKeepDestAlpha)
+										byte* lpbyDestNow=&this->arrbyData[u32DestBufferLoc];
+										byte* lpbySrcNow=&gradient_band[u32SrcLoc];
+										byte alpha=lpbySrcNow[3];
+										if (alpha==255) {
+											memcpy(lpbyDestNow,&gradient_band[u32SrcLoc],3);
+										}
+										else if (alpha>0) {
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+											lpbySrcNow++;
+											lpbyDestNow++;
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+											lpbySrcNow++;
+											lpbyDestNow++;
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+										}
+										//else alpha==0 so do nothing
+									}
+								}
+								else if (u32DestBytesPP==4) { //32-bit to 32-bit
+									byte* lpbySrcNow=&gradient_band[u32SrcLoc];
+									byte alpha=lpbySrcNow[3];
+									byte* lpbyDestNow=&this->arrbyData[u32DestBufferLoc];
+									if (iDrawMode==DrawModeCopyAlpha) {//already handled above
+										memcpy(lpbyDestNow,lpbySrcNow,4);
+									}
+									else if (alpha==255) {
+										memcpy(lpbyDestNow,lpbySrcNow,3);
+										if ( (iDrawMode==DrawModeKeepGreaterAlpha) || (iDrawMode==DrawModeBlendAlpha) ) { //these DrawModes behave the same since source is 255
+											lpbyDestNow+=3;
+											*lpbyDestNow=255;//(*lpbySrcNow>*lpbyDestNow)?*lpbySrcNow:*lpbyDestNow;
+										}
+									}
+									else if (alpha>0) {//else not 255, and either DrawModeBlendAlpha, DrawModeKeepGreaterAlpha, or DrawModeKeepDestAlpha
+										*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+										lpbyDestNow++;
+										lpbySrcNow++;
+										*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+										lpbyDestNow++;
+										lpbySrcNow++;
+										*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+										if (iDrawMode==DrawModeKeepGreaterAlpha) {
+											lpbyDestNow++;
+											lpbySrcNow++;
+											*lpbyDestNow=(*lpbySrcNow>*lpbyDestNow)?*lpbySrcNow:*lpbyDestNow;
+										}
+										else if (iDrawMode==DrawModeBlendAlpha) {
+											lpbyDestNow++;
+											lpbySrcNow++;
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+										}
+										//else DrawModeKeepDestAlpha so do nothing
+									}
+									//else do nothing since alpha==0
+								}//32-bit to 32-bit (dest is 32-bit)
+								else if (u32DestBytesPP==1) {//32-bit to 1-channel (dest is 1-channel)
+									byte* lpbySrcNow=&gradient_band[u32SrcLoc+3];//+3 for alpha
+									//byte alpha=lpbySrcNow[3];
+									byte* lpbyDestNow=&this->arrbyData[u32DestBufferLoc];
+									if (iDrawMode==DrawModeCopyAlpha) {//already handled above
+										*lpbyDestNow=*lpbySrcNow;
+									}
+									else if (*lpbySrcNow==255) {
+										if ( (iDrawMode==DrawModeKeepGreaterAlpha) || (iDrawMode==DrawModeBlendAlpha) ) { //these DrawModes behave the same since source is 255
+											*lpbyDestNow=255;//(*lpbySrcNow>*lpbyDestNow)?*lpbySrcNow:*lpbyDestNow;
+										}
+									}
+									else if (*lpbySrcNow>0) {
+										if (iDrawMode==DrawModeKeepGreaterAlpha) {
+											*lpbyDestNow=(*lpbySrcNow>*lpbyDestNow)?*lpbySrcNow:*lpbyDestNow;
+										}
+										else if (iDrawMode==DrawModeBlendAlpha) {
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][*lpbySrcNow];
+										}
+									}
+								}
+								else {
+									Console::Error.Write("<gradient skipping "+RString_ToString(gradient_ptr->get_u32BytesPP())+"- to "+RString_ToString(u32DestBytesPP)+"-BytesPP>");
+									Console::Error.Flush();
+								}
+							}//end if gradient bitdepth is 4
+							else if (gradient_ptr->get_u32BytesPP()==1) {//1-channel gradient
+								byte* lpbyDestNow=&this->arrbyData[u32DestBufferLoc];
+								byte* lpbySrcNow=&gradient_band[u32SrcLoc];
+								byte alpha=*lpbySrcNow;
+								if (iDrawMode==DrawModeCopyAlpha) {
+									*lpbyDestNow=*lpbySrcNow;
+									lpbyDestNow++; //do NOT increment source, since 1-channel source
+									if (u32DestBytesPP>1) {
+										lpbyDestNow++;
+										*lpbyDestNow=*lpbySrcNow;
+										if (u32DestBytesPP>2) {
+											lpbyDestNow++;
+											*lpbyDestNow=*lpbySrcNow;
+											if (u32DestBytesPP>3) {
+												lpbyDestNow++;
+												//no clauses since DrawModeCopyAlpha was already found
+												*lpbyDestNow=*lpbySrcNow;
+											}
+										}
+									}
+								}//end if DrawModeCopyAlpha
+								else { ///DrawModeBlendAlpha, DrawModeKeepDestAlpha, or DrawModeKeepGreaterAlpha
+									*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+									lpbyDestNow++; //do NOT increment source, since 1-channel source
+									if (u32DestBytesPP>1) {
+										lpbyDestNow++;
+										*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+										if (u32DestBytesPP>2) {
+											lpbyDestNow++;
+											*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+											if (u32DestBytesPP>3) {
+												if (iDrawMode==DrawModeBlendAlpha) {
+													lpbyDestNow++;
+													*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+												}
+												else if (iDrawMode==DrawModeKeepGreaterAlpha) {
+													lpbyDestNow++;
+													*lpbyDestNow=ExpertMultimediaBase::by3dAlphaLookup[*lpbySrcNow][*lpbyDestNow][alpha];
+												}
+												//else DrawModeKeepDestAlpha so do nothing
+											}
+										}
+									}
+								}//end DrawModeBlendAlpha, DrawModeKeepDestAlpha, or DrawModeKeepGreaterAlpha
+							}//end else if 1-channel gradient
+							else if (gradient_ptr->get_u32BytesPP()==3) { //24-bit gradient
+								Uint32 u32SrcChanRel=0;
+								int src_u32BytesTotal = gradient_ptr->get_u32BytesTotal();
+								for (int iChan=0; (iChan<this->iBytesPP)&&(u32SrcLoc<src_u32BytesTotal); iChan++) {
+									this->arrbyData[u32DestBufferLoc]=gradient_band[u32SrcLoc];
+									u32DestBufferLoc++;
+									if (u32SrcChanRel<src_u32BytesPP) {
+										u32SrcLoc++;
+										u32SrcChanRel++;
+									}
+									//arrbyDest[u32DestLoc]=lpbyShade[u32SrcValue];//TODO: finish this, write and entire pixel to this
+								}
+							}
+							else {
+								Console::Error.Write("<gradient skipping "+RString_ToString(src_u32BytesPP)+"- to "+RString_ToString(u32DestBytesPP)+"-BytesPP>");
+								Console::Error.Flush();
+							}
+						//}//end else dissimilar bitdepths
+					}//end if value is within range
+					//}//end this!=null
+				//}//end lpbyShade!=null
+			}
+			else Console::Error.WriteLine("ShadeAlpha Error: gradient_ptr is nullptr");
+		}
+		catch (exception& exn) {
+			ShowExn(exn,"Shade");
+			//return false;
+		}
+		catch(...) {
+			ShowUnknownExn("Shade");
+			//return false;
+		}
+		//return bGood;
+	}  // end ShadeAlpha
+	void GBuffer::Text_SetColumn(int set_ColumnIndex) {
+		//ColumnCount=1;
+		Text_ColumnIndex=set_ColumnIndex;
+		//if (ColumnIndex>ColumnCount) ColumnIndex=0;
+		//marginTopRatio=0.1f;
+		//marginBottomRatio=0.1f;
+		//marginLeftRatio=0.1f;
+		//marginColumnsRatio=0.1f;
+		//marginRightRatio=0.1f;
+		Text_X=-1;
+		Text_Y=-1;
+		double ColumnCount_DBL=(double)Text_ColumnCount;
+		double ColumnIndex_DBL=(double)Text_ColumnIndex;
+		double totalColumnSpacingSlackRatio=0.0;
+		if (Text_ColumnCount>1) {
+			totalColumnSpacingSlackRatio=(ColumnCount_DBL-1.0)*Text_marginColumnsRatio;
+		}
+		double xRemainingSpaceRatio=1.0-Text_marginLeftRatio-Text_marginRightRatio;
+		double yRemainingSpaceRatio=1.0-Text_marginTopRatio-Text_marginTopRatio;
+		Text_columnWidthRatio=(xRemainingSpaceRatio-totalColumnSpacingSlackRatio)/ColumnCount_DBL;
+		if (Text_columnWidthRatio<.01) {
+			Console::Error.WriteLine("WARNING: Columns are "+RString_ToString(Text_columnWidthRatio));
+		}
+		//int marginLeft=(int)((double)iWidth*marginLeftRatio+.5); //+.5 for rounding
+		//int marginTop=(int)((double)iHeight*marginTopRatio+.5); //+.5 for rounding
+		double FirstColumn_minLeft=(double)iWidth*Text_marginLeftRatio;
+		Text_minTop=(double)iHeight*Text_marginTopRatio;
+		double marginRight=(double)iWidth-(double)iWidth*Text_marginRightRatio;
+		double marginBottom=(double)iHeight-(double)iHeight*Text_marginBottomRatio;
+		double LastColumn_maxRight=((double)(iWidth-1))-marginRight;
+		Text_maxBottom=((double)(iHeight-1))-marginBottom;
+		Text_Column_minLeft = FirstColumn_minLeft  +  (double)iWidth  *  ( ColumnIndex_DBL * (Text_columnWidthRatio+Text_marginColumnsRatio) );
+		Text_Column_maxRight = LastColumn_maxRight  -  (double)iWidth  *  ( (ColumnCount_DBL-1.0-ColumnIndex_DBL) * (Text_columnWidthRatio+Text_marginColumnsRatio) );
+		Text_X=Text_Column_minLeft;
+		Text_Y=Text_minTop;
+	}  // end GBuffer::Text_SetColumn(int set_ColumnIndex)
+	void GBuffer::Text_SetMargins(double set_marginLeftRatio, double set_marginTopRatio, double set_marginRightRatio, double set_marginBottomRatio,
+											double set_columnWidthRatio, double set_marginColumnsRatio) {
+		Text_marginLeftRatio=set_marginLeftRatio;
+		Text_marginTopRatio=set_marginBottomRatio;
+		Text_marginRightRatio=set_marginRightRatio;
+		Text_marginBottomRatio=set_marginBottomRatio;
+		Text_columnWidthRatio=set_columnWidthRatio;
+		Text_marginColumnsRatio=set_marginColumnsRatio;
+	}  // end GBuffer::Text_SetMargins(double set_marginLeftRatio, double set_marginTopRatio, double set_marginRightRatio, double set_marginBottomRatio, double set_columnWidthRatio, double set_marginColumnsRatio)
+	double GBuffer::Text_getTop() {
+		return Text_minTop;
+	}
+	double GBuffer::Text_getBottom() {
+		return Text_maxBottom;
+	}
+	double GBuffer::Text_getColumnLeft() {
+		return Text_Column_minLeft;
+	}
+	double GBuffer::Text_getColumnRight() {
+		return Text_Column_maxRight;
+	}
+
 	GBuffer::GBuffer() {
 		InitNull();
 	}
@@ -86,12 +403,12 @@ namespace ExpertMultimediaBase {
 		}
 		catch (exception& exn) {
 			bGood=false;
-			if (&sFile==null) sFile="null";
+			if (&sFile==nullptr) sFile="null";
 			ShowExn(exn, "gbuffer32bgra.Load(\""+sFile+"\")");
 		}
 		catch (...) {
 			bGood=false;
-			if (&sFile==null) sFile="null";
+			if (&sFile==nullptr) sFile="null";
 			ShowUnknownExn("gbuffer32bgra.Load(\""+sFile+"\")");
 		}
 		bFirstRun=false;
@@ -103,7 +420,7 @@ namespace ExpertMultimediaBase {
 		try {
 			//TODO: finish this--other formats, and check extension/header
 			if (!targaLoaded.IsLoaded()) {  // if (!targaLoaded.IsLike(iWidth,iHeight,iBytesPP))
-				targaLoaded.From(iWidth,iHeight,iBytesPP,arrbyData,true);
+				targaLoaded.From(iWidth,iHeight,iBytesPP,arrbyData,false);
 			}
 			//targaLoaded.ChangeType(TypeAs);
 			targaLoaded.Save(sFileNow);
@@ -112,12 +429,12 @@ namespace ExpertMultimediaBase {
 		}
 		catch (exception& exn) {
 			bGood=false;
-			if (&sFile==null) sFile="null";
+			if (&sFile==nullptr) sFile="null";
 			ShowExn(exn, "gbuffer32bgra.Save(\""+sFileNow+"\")");
 		}
 		catch (...) {
 			bGood=false;
-			if (&sFile==null) sFile="null";
+			if (&sFile==nullptr) sFile="null";
 			ShowUnknownExn("gbuffer32bgra.Save(\""+sFileNow+"\")");
 		}
 		return bGood;
@@ -136,12 +453,12 @@ namespace ExpertMultimediaBase {
 		}
 		catch (exception& exn) {
 			bGood=false;
-			if (&sFile==null) sFile="null";
+			if (&sFile==nullptr) sFile="null";
 			ShowExn(exn, "gbuffer32bgra.Save(\""+sFileNow+"\")");
 		}
 		catch (...) {
 			bGood=false;
-			if (&sFile==null) sFile="null";
+			if (&sFile==nullptr) sFile="null";
 			ShowUnknownExn("gbuffer32bgra.Save(\""+sFileNow+"\")");
 		}
 		return bGood;
@@ -184,7 +501,7 @@ namespace ExpertMultimediaBase {
 	}
 	void GBuffer::Dispose() {
 		if (!bBufferAsPointerNotCopy) {
-			SafeFree(arrbyData);
+			SafeFree(arrbyData, "GBuffer::Dispose {sFile:"+sFile+"}");
 		}
 	}
 	void GBuffer::Init(int iSetWidth, int iHeightNow, int iSetBytesPP) {
@@ -202,7 +519,7 @@ namespace ExpertMultimediaBase {
 		if (bInitializeBuffer) {
 			try {
 				if (bFirstRun) Console::Error.Write("free...");
-				SafeFree(arrbyData);
+				SafeFree(arrbyData, "arrbyData in GBuffer::Init");
 				if (bFirstRun) Console::Error.Write("allocate...");
 				arrbyData=(byte*)malloc(iBytesTotal);
 				if (bFirstRun) Console::Error.Write("done gbuffer32bgra.Init...");
@@ -215,8 +532,9 @@ namespace ExpertMultimediaBase {
 	}  // end init
 	GBuffer* GBuffer::Copy() {
 		bool bGood=true;
-		GBuffer* gbNew=NULL;
+		GBuffer* gbNew=nullptr;
 		gbNew=new GBuffer(iWidth,iHeight,iBytesPP,false);
+		gbNew->arrbyData=nullptr;  // otherwise exception will occur when SafeFree is called later (when CopyTo calls Init(w,h,bytesPP), because false above says to not touch this member
 		bGood=CopyTo(gbNew);
 		return gbNew;
 		//TODO: make sure delete not free is called if Copy is deleted!!!!!!!
@@ -225,8 +543,8 @@ namespace ExpertMultimediaBase {
 		return Description(false);
 	}
 	string GBuffer::Description(bool bVerbose) {
-		if (bVerbose) return RString_ToString((arrbyData==null)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8)+" "+RString_ToString(iBytesTotal)+"-length buffer";
-		else return RString_ToString((arrbyData==null)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8);
+		if (bVerbose) return RString_ToString((arrbyData==nullptr)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8)+" "+RString_ToString(iBytesTotal)+"-length buffer";
+		else return RString_ToString((arrbyData==nullptr)?"null":"")+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP*8);
 	}
 	bool GBuffer::CopyTo(GBuffer* gbBlankNonNullObjectToSet) {
 		bool bGood=true;
@@ -247,12 +565,6 @@ namespace ExpertMultimediaBase {
 	bool GBuffer::CopyTo(GBuffer &gbBlankNonNullObjectToSet) {
 		return CopyTo(&gbBlankNonNullObjectToSet);
 	}  // end CopyTo(&)
-	bool GBuffer::CopyToByDataRef(GBuffer &gbBlankNonNullObjectToSet) {
-		bool bGood=true;
-		gbBlankNonNullObjectToSet.Init(iWidth,iHeight,iBytesPP,false);
-		gbBlankNonNullObjectToSet.arrbyData=arrbyData;
-		return bGood;
-	}
 	bool GBuffer::SetBrushColor(byte r, byte g, byte b, byte a) {
 		string sFuncNow="SetBrushColor(r,g,b,a)";
 		bool bGood=true;
@@ -315,6 +627,57 @@ namespace ExpertMultimediaBase {
 	}  // end SetBrushColor from hex code
 
 	//#region Draw methods
+	void GBuffer::DrawExclusiveRect(int left, int top, int right, int bottom, Uint32 u32Pixel, bool bFilled) {
+		if (left<0||right>this->iWidth||top<0||bottom>this->iHeight)//error checking
+			return;
+		bool bGood=true;
+		Uint32* lpu32Dest=(UInt32*)this->arrbyData; //TODO: avoid low-level operations
+		int iScreenW=this->iWidth;
+		//int iScreenH=this->iHeight;
+		if (bottom<=top) {//if bad, draw vert line
+			bottom=top+6;
+			right=left+1;
+			DrawExclusiveRect(left,top,right,bottom,u32Pixel,false);
+			if (right<=left) {//if bad, draw horz line too
+				top+=2;
+				bottom=top+1;
+				left-=2;
+				right=left+6;
+				DrawExclusiveRect(left,top,right,bottom,u32Pixel,false);
+			}
+			bGood=false;
+		}
+		else if (right<=left) {//if bad, draw horz line
+			bottom=top+1;
+			right=left+6;
+			DrawExclusiveRect(left,top,right,bottom,u32Pixel,false);
+			bGood=false;
+		}
+		int iStart=top*iScreenW+left;//no stride since using UInt32* to buffer
+		lpu32Dest+=iStart;
+		int iSkipEdge=iScreenW-(right-left);
+		if (bGood) {
+			if (bFilled) {
+				for (int yNow=top; yNow<bottom; yNow++) {
+					for (int xNow=left; xNow<right; xNow++) {
+						*lpu32Dest=u32Pixel;
+						lpu32Dest++;
+					}
+					lpu32Dest+=iSkipEdge;
+				}
+			}//end if bFilled
+			else {//only draw outline
+				for (int yNow=top; yNow<bottom; yNow++) {
+					for (int xNow=left; xNow<right; xNow++) {
+						if (yNow==top||yNow==bottom-1||xNow==left||xNow==right-1)
+							*lpu32Dest=u32Pixel;
+						lpu32Dest++;
+					}
+					lpu32Dest+=iSkipEdge;
+				}
+			}
+		}//end if bGood
+	}  // end DrawExclusiveRect
 
 	bool GBuffer::DrawRect(int xDest, int yDest, int iRectWidth, int iRectHeight) {
 		bool bGood=false;
@@ -497,11 +860,12 @@ namespace ExpertMultimediaBase {
 			// There only needs to be TWO ++ operations for 3 channels:
 			if ((iChannel+2>=0) && (iChannel+2<iStride*iHeight)) {
 				if (((iChannel+3)/4)<(iWidth*iBytesPP*iHeight)) {
-					arrbyData[iChannel]=by3dAlphaLookup[b][arrbyData[iChannel]][a];
+					float fPremultA=(float)a/255.0f;
+					arrbyData[iChannel]=(APPROACH(arrbyData[iChannel],b,fPremultA)); //commented for debug only: by3dAlphaLookup[b][arrbyData[iChannel]][a];
 					iChannel++;
-					arrbyData[iChannel]=by3dAlphaLookup[g][arrbyData[iChannel]][a];
+					arrbyData[iChannel]=APPROACH(arrbyData[iChannel],g,fPremultA); //commented for debug only: by3dAlphaLookup[g][arrbyData[iChannel]][a];
 					iChannel++;
-					arrbyData[iChannel]=by3dAlphaLookup[r][arrbyData[iChannel]][a];
+					arrbyData[iChannel]=APPROACH(arrbyData[iChannel],r,fPremultA); //commented for debug only: by3dAlphaLookup[r][arrbyData[iChannel]][a];
 				}
 			}
 		}
@@ -551,7 +915,7 @@ namespace ExpertMultimediaBase {
 	void GBuffer::DrawSubpixelDot(float xDot, float yDot, byte* lpbySrcPixel) {
 		try {
 			bool bMake=false;
-			if (lpbySrcPixel==NULL) {
+			if (lpbySrcPixel==nullptr) {
 				lpbySrcPixel=(byte*)malloc(4);
 				lpbySrcPixel[0]=0;
 				lpbySrcPixel[1]=0;
@@ -564,7 +928,7 @@ namespace ExpertMultimediaBase {
 			DrawSubpixelDot(xDot,yDot,pixelNow);
 			if (bMake) {
 				free(lpbySrcPixel);
-				lpbySrcPixel=NULL;
+				lpbySrcPixel=nullptr;
 			}
 		}
 		catch (exception& exn) {
@@ -578,13 +942,13 @@ namespace ExpertMultimediaBase {
 			Pixel &pixelStart, Pixel* pixelEndOrNull, float fPrecisionIncrement) {
 		int iLoops=0;
 		static int iMaxLoops=1000000; //debug hard-coded limitation
-		static float xNow, yNow, xRelMax, yRelMax, rRelMax, theta, rRel;
+		static float xNow, yNow, xRelMax, yRelMax, rRelMax, thetaRadians, rRel;
 		xNow=xStart;
 		yNow=yStart;
 		xRelMax=xEnd-xStart;
 		yRelMax=yEnd-yStart;
 		rRelMax=ROFXY(xRelMax,yRelMax);
-		theta=THETAOFXY_RAD(xRelMax,yRelMax);
+		thetaRadians=RMath::ThetaOfXY_Rad(xRelMax,yRelMax);
 		rRel=0;
 		rRel-=fPrecisionIncrement; //the "0th" value
 		static Pixel pixelColor;
@@ -594,15 +958,15 @@ namespace ExpertMultimediaBase {
 		pixelColor.a=pixelStart.a;
 		while (rRel<rRelMax && iLoops<iMaxLoops) {
 			rRel+=fPrecisionIncrement;
-			if (pixelEndOrNull!=NULL) {
+			if (pixelEndOrNull!=nullptr) {
 				pixelColor.r=SafeByte(APPROACH(pixelStart.r,pixelEndOrNull->r,rRel/rRelMax));
 				pixelColor.g=SafeByte(APPROACH(pixelStart.g,pixelEndOrNull->g,rRel/rRelMax));
 				pixelColor.b=SafeByte(APPROACH(pixelStart.b,pixelEndOrNull->b,rRel/rRelMax));
 				pixelColor.a=SafeByte(APPROACH(pixelStart.a,pixelEndOrNull->a,rRel/rRelMax));
 			}
-			xNow=(XOFRTHETA_RAD(rRel,theta))+xStart;
-			yNow=(YOFRTHETA_RAD(rRel,theta))+yStart;
-			if (xNow>0&&yNow>0 && xNow<iWidth && yNow<iHeight)
+			xNow=(RMath::XOfRTheta_Rad(rRel,thetaRadians))+xStart;
+			yNow=(RMath::YOfRTheta_Rad(rRel,thetaRadians))+yStart;
+			if (xNow>0&&yNow>0 && xNow<(iWidth-1) && yNow<(iHeight-1))
 				DrawSubpixelDot(xNow, yNow, pixelColor);
 			iLoops++;
 			if (iLoops>=iMaxLoops) break;
@@ -633,8 +997,8 @@ namespace ExpertMultimediaBase {
 		int iLoops=0;
 		static int iMaxLoops=1000000;
 		for (float fNow=fDegStart; fNow<fDegEnd; fNow+=fPrecisionIncrement) {
-			xNow=(FXOFRTHETA_DEG(fRadius,fNow));
-			yNow=-(FYOFRTHETA_DEG(fRadius,fNow));//negative to flip to non-cartesian monitor loc
+			xNow=(RMath::XOfRTheta_Deg(fRadius,fNow));
+			yNow=-(RMath::YOfRTheta_Deg(fRadius,fNow));//negative to flip to non-cartesian monitor loc
 			xNow*=fWidthMultiplier;
 			RMath::Rotate(xNow,yNow,fRotate);
 			xNow+=xCenter;
@@ -650,11 +1014,33 @@ namespace ExpertMultimediaBase {
 			iErrors++;
 		}
 	}//DrawSubpixelArc
+	bool GBuffer::FillAlpha(byte val) {
+		bool bGood=false;
+		try {
+			if (iBytesPP==4) {
+				byte* alphaPtr=&arrbyData[3];
+				int iPixels=iWidth*iHeight;
+				for (int iPixel=0; iPixel<iPixels; iPixel++) {
+					*alphaPtr=val;
+					alphaPtr+=iBytesPP;
+				}
+			}
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"Fill");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Fill");
+		}
+		return bGood;
+	}
 	bool GBuffer::Fill(byte byGrayVal) {
 		bool bGood=false;
 		//int iNow=0;
 		try {
-			if (arrbyData!=null) {
+			if (arrbyData!=nullptr) {
 				memset(arrbyData,byGrayVal,iBytesTotal);
 				//while (iNow<iBytesTotal) {
 				//	iNow+=
@@ -677,15 +1063,16 @@ namespace ExpertMultimediaBase {
 		return bGood;
 	}  // end Fill
 	bool GBuffer::IsLoaded() {
-		return arrbyData!=null;
+		return arrbyData!=nullptr;
 	}
-	bool GBuffer::IsLike(GBuffer &gbDest) {
-		return gbDest.iBytesPP==iBytesPP
-			&& gbDest.iStride==iStride
-			&& gbDest.iHeight==iHeight
-			&& gbDest.iBytesTotal==iBytesTotal;
+	bool GBuffer::IsLike(GBuffer* gbDest) {
+		return gbDest!=nullptr
+			&& gbDest->iBytesPP==iBytesPP
+			&& gbDest->iStride==iStride
+			&& gbDest->iHeight==iHeight
+			&& gbDest->iBytesTotal==iBytesTotal;
 	}
-	bool GBuffer::NeedsToCrop(GBuffer &gbDest,int xDest, int yDest) {
+	bool GBuffer::NeedsToCrop(GBuffer* gbDest, int xDest, int yDest) {
 		static bool bFirstRun=true;
 		bool bReturn=true;
 		if (bFirstRun) Console::Error.Write("check NeedsToCrop...");
@@ -694,8 +1081,8 @@ namespace ExpertMultimediaBase {
 		}
 		try {
 			if (xDest>=0 && yDest>=0
-				&& xDest+iWidth<gbDest.iWidth
-				&& yDest+iHeight<gbDest.iHeight) bReturn=false;
+				&& xDest+iWidth<=gbDest->iWidth
+				&& yDest+iHeight<=gbDest->iHeight) bReturn=false;
 		}
 		catch (...) {bReturn=true;}
 		if (bFirstRun) Console::Error.Write(((bReturn)?"yes...":"no..."));
@@ -704,7 +1091,7 @@ namespace ExpertMultimediaBase {
 	}
 	//bool GBuffer::DrawToSmallerWithoutVoidAreasElseCancel(GBuffer gbDest, int xSrc, int ySrc, int iDrawMode) {
 	//}
-	bool GBuffer::DrawToWithClipping(GBuffer &gbDest, int xDest, int yDest, float fOpacityMultiplier) {
+	bool GBuffer::DrawToWithClipping(GBuffer* gbDest, int xDest, int yDest, float fOpacityMultiplier) {
 		bool bGood=false;
 		static int iDestW;
 		static int iDestH;
@@ -719,15 +1106,15 @@ namespace ExpertMultimediaBase {
 			Console::Error.Flush();
 		}
 		try {
-			if (&gbDest!=NULL) {
-				iDestW=gbDest.iWidth;
-				iDestH=gbDest.iHeight;
+			if (&gbDest!=nullptr) {
+				iDestW=gbDest->iWidth;
+				iDestH=gbDest->iHeight;
 				iSrcW=this->iWidth;
 				iSrcH=this->iHeight;
 				iSrcBytesPP=this->iBytesPP;
-				iDestBytesPP=(int)gbDest.iBytesPP;
+				iDestBytesPP=(int)gbDest->iBytesPP;
 				iSrcStride=this->iStride;
-				iDestStride=gbDest.iStride;
+				iDestStride=gbDest->iStride;
 				int xSrcStart=0;
 				int ySrcStart=0;
 				int xDestStart=xDest;
@@ -742,12 +1129,12 @@ namespace ExpertMultimediaBase {
 				}
 				if ( xSrcStart<iSrcW && ySrcStart<iSrcH && xDestStart<iDestW && yDestStart<iDestH ) {
 				//IF there are any pixels to draw (i.e. within bounds)
-					//register unsigned __int32* lpu32Dest=(unsigned __int32*)gbDest.arrbyData;
-					//register unsigned __int32* lpdwSrc=(unsigned __int32*)gbDest.arrbyData;
-					int iDestStride=gbDest.iStride;
+					//register unsigned __int32* lpu32Dest=(unsigned __int32*)gbDest->arrbyData;
+					//register unsigned __int32* lpdwSrc=(unsigned __int32*)gbDest->arrbyData;
+					int iDestStride=gbDest->iStride;
 
 					//register byte *lpbyDestNow=(byte*)&lpu32Dest[xDestStart + (yDestStart*iDestStride>>2)]; //dest pointer
-					register byte* lpbyDestNow=&gbDest.arrbyData[ (yDestStart*iDestStride) + (xDestStart*iDestBytesPP) ];
+					register byte* lpbyDestNow=&gbDest->arrbyData[ (yDestStart*iDestStride) + (xDestStart*iDestBytesPP) ];
 					register byte* lpbyDestLineNow=lpbyDestNow;
 					register byte* lpbySrcNow=&this->arrbyData[ (ySrcStart*iSrcStride) + (xSrcStart*iSrcBytesPP) ];
 					register byte* lpbySrcLineNow=lpbySrcNow;
@@ -755,9 +1142,9 @@ namespace ExpertMultimediaBase {
 					register byte alpha;//,blue,green,red;
 					//register unsigned __int32 pixel;
 					//int iSrcBytesPP=this->iBytesPP;
-					//int iDestBytesPP=gbDest.iBytesPP;
+					//int iDestBytesPP=gbDest->iBytesPP;
 					//int iSrcLineOffset=iSrcStride-this->iWidth*iSrcBytesPP;
-					//int iDestLineOffset=iDestStride-gbDest.iWidth*iDestBytesPP;
+					//int iDestLineOffset=iDestStride-gbDest->iWidth*iDestBytesPP;
 					if (bMegaDebug) {
 						Console::Error.WriteLine("drawing...");//if (bMegaDebug) { Console::Error.WriteLine("source lines..."); Console::Error.Flush(); }
 						Console::Error.Flush();
@@ -812,7 +1199,7 @@ namespace ExpertMultimediaBase {
 							}
 							else if (alpha==255) {
 								//lpbyDestNow+=4;
-								*(unsigned __int32*)(lpbyDestNow)=*(unsigned __int32*)(lpbySrcNow);  // _RGB32BIT(255,red,green,blue);//pixel=_RGB32BIT(255,red,green,blue);
+								*(Uint32*)(lpbyDestNow) = *(Uint32*)(lpbySrcNow);  // _RGB32BIT(255,red,green,blue);//pixel=_RGB32BIT(255,red,green,blue);
 								//no need to clip since clipping is done by loop:
 								//if (xSrc+xDest<SCREEN_WIDTH)
 								//	if (xSrc+xDest>=0)
@@ -862,10 +1249,10 @@ namespace ExpertMultimediaBase {
 		if (bMegaDebug) Console::Error.WriteLine("Finished");
 		return(bGood);
 	}  // end DrawToWithClipping
-	bool GBuffer::DrawToLargerWithoutCropElseCancel(GBuffer &gbDest, int xDest, int yDest, int iDrawMode) {
+	bool GBuffer::DrawToLargerWithoutCropElseCancel(GBuffer* gbDest, int xDest, int yDest, int iDrawMode) {
 		bool bGood=true;
 		static bool bFirstRun=true;
-		if (arrbyData==null) {
+		if (arrbyData==nullptr) {
 			ShowError("Tried to draw null buffer!","DrawToLargerWithoutCropElseCancel");
 			return false;
 		}
@@ -873,35 +1260,52 @@ namespace ExpertMultimediaBase {
 			if (bFirstRun) Console::Error.Write("DrawToLargerWithoutCropElseCancel...");
 			if (NeedsToCrop(gbDest,xDest,yDest)) {
 				if (bFirstRun) {
-					Console::Error.Write("failed since not in bounds("+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+" to "+RString_ToString(gbDest.iWidth)+"x"+RString_ToString(gbDest.iHeight)+" at ("+RString_ToString(xDest)+","+RString_ToString(yDest)+") )...");
+					Console::Error.Write("failed since not in bounds("+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+" to "+RString_ToString(gbDest->iWidth)+"x"+RString_ToString(gbDest->iHeight)+" at ("+RString_ToString(xDest)+","+RString_ToString(yDest)+") )...");
 				}
 				bGood=false;
 			}
 			if (bGood) {
 				if (bFirstRun) Console::Error.Write("offset...");
-				byte* lpDestLine=&gbDest.arrbyData[yDest*gbDest.iStride+xDest*gbDest.iBytesPP];
+				byte* lpDestLine=&gbDest->arrbyData[yDest*gbDest->iStride+xDest*gbDest->iBytesPP];
 				byte* lpDestPix;
 				byte* lpSrcLine=arrbyData;
 				byte* lpSrcPix;
-				int iStrideMin=(iStride<gbDest.iStride)?iStride:gbDest.iStride;
-				if (gbDest.iBytesPP==4 && iBytesPP==4) {
+				int iStrideMin=(iStride<gbDest->iStride)?iStride:gbDest->iStride;
+				int dest_MoreBytes=gbDest->iBytesPP-2;
+				int src_MoreBytes=iBytesPP-2;
+				int iMinBytesPP = (iBytesPP<gbDest->iBytesPP) ? iBytesPP : gbDest->iBytesPP;
+				if (gbDest->iBytesPP>=2 && iBytesPP>=2) {
 					switch (iDrawMode) {
 					case DrawModeCopyAlpha:
 						if (bFirstRun) Console::Error.Write("DrawModeCopyAlpha...");
 						if (IsLike(gbDest) && xDest==0 && yDest==0) {
-							memcpy(gbDest.arrbyData,arrbyData,iBytesTotal);
+							memcpy(gbDest->arrbyData,arrbyData,iBytesTotal);
 						}
-						else {
+						else if (gbDest->iBytesPP==iBytesPP) {
 							for (int Y=0; Y<iHeight; Y++) {
 								memcpy(lpDestLine,lpSrcLine,iStrideMin);
-								lpDestLine+=gbDest.iStride;
+								lpDestLine+=gbDest->iStride;
+								lpSrcLine+=iStride;
+							}
+						}
+						else {
+							register int X,Y;
+							for (Y=0; Y<iHeight; Y++) {
+								//if (bFirstRun) Console::Error.Write(RString_ToString(Y));
+								lpDestPix=lpDestLine;
+								lpSrcPix=lpSrcLine;
+								for (X=0; X<iWidth; X++) {
+									memcpy(lpDestPix, lpSrcPix, iMinBytesPP);
+									lpSrcPix+=iBytesPP; lpDestPix+=gbDest->iBytesPP;
+								}
+								lpDestLine+=gbDest->iStride;
 								lpSrcLine+=iStride;
 							}
 						}
 						break;
 					case DrawModeBlendAlpha:
 						if (bFirstRun) Console::Error.Write("DrawModeBlendAlpha(...)");
-						// if (bFirstRun) Console::Error.Write("("+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP)+" to "+RString_ToString(gbDest.iWidth)+"x"+RString_ToString(gbDest.iHeight)+")...");
+						// if (bFirstRun) Console::Error.Write("("+RString_ToString(iWidth)+"x"+RString_ToString(iHeight)+"x"+RString_ToString(iBytesPP)+" to "+RString_ToString(gbDest->iWidth)+"x"+RString_ToString(gbDest->iHeight)+")...");
 						// alpha result: ((Source-Dest)*alpha/255+Dest)
 						float fCookedAlpha;
 						// if (bFirstRun) Console::Error.WriteLine();
@@ -913,11 +1317,11 @@ namespace ExpertMultimediaBase {
 							for (X=0; X<iWidth; X++) {
 								//if (bFirstRun) Console::Error.Write(".");
 								if (lpSrcPix[3]==0) {
-									lpSrcPix+=4; lpDestPix+=4;//assumes 32-bit
+									lpSrcPix+=iBytesPP; lpDestPix+=gbDest->iBytesPP;
 								}
 								else if (lpSrcPix[3]==255) {
-									memcpy(lpDestPix, lpSrcPix, 3);
-									lpSrcPix+=4; lpDestPix+=4;//assumes 32-bit
+									memcpy(lpDestPix, lpSrcPix, iMinBytesPP);
+									lpSrcPix+=iBytesPP; lpDestPix+=gbDest->iBytesPP;
 								}
 								else {
 									fCookedAlpha=(float)lpSrcPix[3]/255.0f;
@@ -926,10 +1330,10 @@ namespace ExpertMultimediaBase {
 									*lpDestPix=BYROUNDF(((float)(*lpSrcPix-*lpDestPix))*fCookedAlpha+*lpDestPix); //G
 									lpSrcPix++; lpDestPix++;
 									*lpDestPix=BYROUNDF(((float)(*lpSrcPix-*lpDestPix))*fCookedAlpha+*lpDestPix); //R
-									lpSrcPix+=2; lpDestPix+=2;//assumes 32-bit
+									lpSrcPix+=src_MoreBytes; lpDestPix+=dest_MoreBytes;
 								}
 							}
-							lpDestLine+=gbDest.iStride;
+							lpDestLine+=gbDest->iStride;
 							lpSrcLine+=iStride;
 							//if (bFirstRun) Console::Error.WriteLine();
 						}
@@ -946,9 +1350,9 @@ namespace ExpertMultimediaBase {
 								*lpDestPix=(*lpSrcPix>*lpDestPix)?*lpSrcPix:*lpDestPix; //G
 								lpSrcPix++; lpDestPix++;
 								*lpDestPix=(*lpSrcPix>*lpDestPix)?*lpSrcPix:*lpDestPix; //R
-								lpSrcPix+=2; lpDestPix+=2; //assumes 32-bit
+								lpSrcPix+=src_MoreBytes; lpDestPix+=dest_MoreBytes;
 							}
-							lpDestLine+=gbDest.iStride;
+							lpDestLine+=gbDest->iStride;
 							lpSrcLine+=iStride;
 						}
 						break;
@@ -958,17 +1362,22 @@ namespace ExpertMultimediaBase {
 							lpDestPix=lpDestLine;
 							lpSrcPix=lpSrcLine;
 							for (int X=0; X<iWidth; X++) {
-								memcpy(lpDestPix,lpSrcPix,3);
-								lpDestPix+=4; lpSrcPix+=4; //assumes 32-bit
+								memcpy(lpDestPix,lpSrcPix,iMinBytesPP);
+								lpDestPix+=gbDest->iBytesPP; lpSrcPix+=iBytesPP;
 							}
-							lpDestLine+=gbDest.iStride;
+							lpDestLine+=gbDest->iStride;
 							lpSrcLine+=iStride;
 						}
 						break;
 					}//end switch
 				}
 				else {
-					ShowError("Can't draw fast unless both GBuffers are 32-bit BGRA..","GBuffer::Draw");
+					string msg="Can't draw fast unless both GBuffers are 32-bit BGRA {";
+					msg+="this->iBytesPP:"+RString_ToString(this->iBytesPP)+"; "
+						+"gbDest->iBytesPP:"+RString_ToString(gbDest->iBytesPP)+"; "
+						+"}"
+						;
+					ShowError(msg,"GBuffer::Draw");
 				}
 			}//end if does not need to crop
 		}
@@ -997,30 +1406,29 @@ namespace ExpertMultimediaBase {
 	/// <param name="iSrcHeight"></param>
 	/// <param name="iSrcBytesPP"></param>
 	/// <returns></returns>
-	bool RawOverlayNoClipToBig(GBuffer &gbDest, IPoint &ipAt, byte* arrbySrc, int iSrcWidth, int iSrcHeight, int iSrcBytesPP) {
+	bool RawOverlayNoClipToBig(GBuffer* gbDest, IPoint &ipAt, byte* arrbySrc, int iSrcWidth, int iSrcHeight, int iSrcBytesPP) {
 		int iSrcByte;
 		int iDestByte;
 		bool bGood=true;
 		int iDestAdder;
 		try {
+			if (gbDest!=nullptr) {
 				if (iSrcBytesPP==16) {
 					ShowError("16-bit source isn't implemented in this function","RawOverlayNoClipToBig");
 					bGood=false;
 				}
 				if (bGood) {
-					iDestByte=ipAt.Y*gbDest.iStride+ipAt.X*gbDest.iBytesPP;
-					GBuffer gbSrc;
-					gbSrc.Init(iSrcWidth, iSrcHeight, iSrcBytesPP, false);
-					gbSrc.arrbyData=arrbySrc;
-					iDestAdder=gbDest.iStride - gbSrc.iWidth*gbDest.iBytesPP;//intentionally gbDest.iBytesPP
+					iDestByte=ipAt.Y*gbDest->iStride+ipAt.X*gbDest->iBytesPP;
+					int gbSrc_iStride=iSrcWidth*iSrcBytesPP;
+					iDestAdder=gbDest->iStride - iSrcWidth*gbDest->iBytesPP;//intentionally gbDest->iBytesPP
 					iSrcByte=0;
-					int iSlack=(gbSrc.iBytesPP>gbDest.iBytesPP)?(gbSrc.iBytesPP-gbDest.iBytesPP):1;
+					int iSlack=(iSrcBytesPP>gbDest->iBytesPP)?(iSrcBytesPP-gbDest->iBytesPP):1;
 							//offset of next source pixel after loop
-					for (int ySrc=0; ySrc<gbSrc.iHeight; ySrc++) {
-						for (int xSrc=0; xSrc<gbSrc.iWidth; xSrc++) {
-							for (int iChannel=0; iChannel<gbDest.iBytesPP; iChannel++) {
-								gbDest.arrbyData[iDestByte]=gbSrc.arrbyData[iSrcByte];
-								if ((iChannel+1)<gbSrc.iBytesPP) iSrcByte++;//don't advance to next pixel
+					for (int ySrc=0; ySrc<iSrcHeight; ySrc++) {
+						for (int xSrc=0; xSrc<iSrcWidth; xSrc++) {
+							for (int iChannel=0; iChannel<gbDest->iBytesPP; iChannel++) {
+								gbDest->arrbyData[iDestByte]=arrbySrc[iSrcByte];
+								if ((iChannel+1)<iSrcBytesPP) iSrcByte++;//don't advance to next pixel
 								iDestByte++;
 							}
 							iSrcByte+=iSlack;
@@ -1031,6 +1439,8 @@ namespace ExpertMultimediaBase {
 						ShowError("Error copying graphics buffer data","OverlayNoClipToBigCopyAlpha(...)");
 					}
 				}//end if bGood
+			}
+			else Console::Error.WriteLine("RawOverlayNoClipToBig Error: nullptr gbDest");
 		}
 		catch (exception& exn) {
 			bGood=false;
@@ -1052,41 +1462,59 @@ namespace ExpertMultimediaBase {
 	/// <param name="gradNow"></param>
 	/// <param name="iSrcChannel"></param>
 	/// <returns></returns>
-	bool OverlayNoClipToBig(GBuffer &gbDest, GBuffer &gbSrc, IPoint &ipDest, Gradient &gradNow, int iSrcChannel) {
+	bool OverlayNoClipToBig(GBuffer* gbDest, GBuffer* gbSrc, IPoint &ipDest, Gradient &gradNow, int iSrcChannel) {
 		int iSrcByte;
 		int iDestByte;
 		int iDestAdder;
+		static bool IsFirst_OverlayNoClipToBig_Error=true;
 		bool bGood=true;
-			try {
-			iDestByte=ipDest.Y*gbSrc.iStride+ipDest.X*gbSrc.iBytesPP;
-				iSrcByte=(iSrcChannel<gbSrc.iBytesPP)?iSrcChannel:gbSrc.iBytesPP-1;
-				iDestAdder=gbDest.iStride - gbDest.iBytesPP*gbSrc.iWidth;//intentionally the dest BytesPP
-				for (int ySrc=0; ySrc<gbSrc.iHeight; ySrc++) {
-					for (int xSrc=0; xSrc<gbSrc.iWidth; xSrc++) {
-						//if (!
-						gradNow.ShadeAlpha(gbDest, iDestByte, gbSrc.arrbyData[iSrcByte], DrawModeBlendAlpha);//) {
-							//TODO: change above to ShadeAlpha
-						//	bGood=false;
-						//}
-						iSrcByte+=gbSrc.iBytesPP;
-						iDestByte+=gbDest.iBytesPP;
+		if (gbDest!=nullptr) {
+			if (gbDest->iBytesPP>0) {
+				try {
+					iDestByte=ipDest.Y*gbSrc->iStride+ipDest.X*gbSrc->iBytesPP;
+					iSrcByte=(iSrcChannel<gbSrc->iBytesPP)?iSrcChannel:gbSrc->iBytesPP-1;
+					iDestAdder=gbDest->iStride - gbDest->iBytesPP*gbSrc->iWidth;//intentionally the dest BytesPP
+					for (int ySrc=0; ySrc<gbSrc->iHeight; ySrc++) {
+						for (int xSrc=0; xSrc<gbSrc->iWidth; xSrc++) {
+							//if (!
+							gbDest->ShadeAlpha(&gradNow, iDestByte, gbSrc->arrbyData[iSrcByte], DrawModeBlendAlpha);//) {
+								//TODO: change above to ShadeAlpha
+							//	bGood=false;
+							//}
+							iSrcByte+=gbSrc->iBytesPP;
+							iDestByte+=gbDest->iBytesPP;
+						}
+						iDestByte+=iDestAdder;
 					}
-					iDestByte+=iDestAdder;
+					if (bGood==false) {
+						ShowError("Error shading","OverlayNoClipToBig gradient to "+ipDest.ToString());
+					}
 				}
-				if (bGood==false) {
-					ShowError("Error shading","OverlayNoClipToBig gradient to "+ipDest.ToString());
+				catch (exception& exn) {
+					bGood=false;
+					if (&ipDest==nullptr) ShowExn(exn,"OverlayNoClipToBig gradient to nullptr point");
+					else ShowExn(exn,"OverlayNoClipToBig gradient to "+ipDest.ToString());
+				}
+				catch (...) {
+					bGood=false;
+					if (&ipDest==nullptr) ShowUnknownExn("OverlayNoClipToBig gradient to nullptr point");
+					else ShowUnknownExn("OverlayNoClipToBig gradient to "+ipDest.ToString());
 				}
 			}
-			catch (exception& exn) {
+			else {
 				bGood=false;
-				if (&ipDest==null) ShowExn(exn,"OverlayNoClipToBig gradient to NULL point");
-				else ShowExn(exn,"OverlayNoClipToBig gradient to "+ipDest.ToString());
+				if (IsFirst_OverlayNoClipToBig_Error) {
+					cout << "<OverlayNoClipToBig ERROR: "<<gbDest->iBytesPP<<"-BytesPP destination>"<< flush;
+					IsFirst_OverlayNoClipToBig_Error=false;
+				}
 			}
-			catch (...) {
-				bGood=false;
-				if (&ipDest==null) ShowUnknownExn("OverlayNoClipToBig gradient to NULL point");
-				else ShowUnknownExn("OverlayNoClipToBig gradient to "+ipDest.ToString());
+		}
+		else {
+			if (IsFirst_OverlayNoClipToBig_Error) {
+				cout << "<OverlayNoClipToBig ERROR: nullptr destination>"<< flush;
+				IsFirst_OverlayNoClipToBig_Error=false;
 			}
+		}
 		return bGood;
 	}  // end OverlayNoClipToBig
 
@@ -1099,28 +1527,32 @@ namespace ExpertMultimediaBase {
 	/// <param name="gradNow"></param>
 	/// <param name="iSrcChannel"></param>
 	/// <returns></returns>
-	bool OverlayNoClipToBigCopyAlpha(GBuffer &gbDest, IPoint &ipAt, GBuffer &gbSrc, Gradient &gradNow, int iSrcChannel) {
+	bool OverlayNoClipToBigCopyAlpha(GBuffer* gbDest, IPoint &ipAt, GBuffer* gbSrc, Gradient &gradNow, int iSrcChannel) {
 		int iSrcByte;
 		int iDestByte;
 		int iDestLineLocNow;//int iDestAdder;
 		bool bGood=true;
+		static bool IsFirst_OverlayNoClipToBigCopyAlpha_gradient_version_Error=true;
+		if (gbSrc!=nullptr) {
+			if (gbDest!=nullptr) {
+				if (gbDest->iBytesPP>0) {
 					try {
-						iSrcByte=((iSrcChannel<gbSrc.iBytesPP)&&(iSrcChannel>=0))?iSrcChannel:gbSrc.iBytesPP-1; //default is iBytesPP-1 since that would be the alpha channel, OR value channel if 8-bit
-						iDestLineLocNow=ipAt.Y*gbDest.iStride+ipAt.X*gbDest.iBytesPP;//iDestByte;
-						//iDestByte=ipAt.Y*gbDest.iStride+ipAt.X*gbDest.iBytesPP;
-						//iDestAdder=gbDest.iStride - gbSrc.iWidth*gbDest.iBytesPP;//was intentionally the dest BytesPP, because width of source is traversed on dest for each line
-						for (int ySrc=0; ySrc<gbSrc.iHeight; ySrc++) {
+						iSrcByte=((iSrcChannel<gbSrc->iBytesPP)&&(iSrcChannel>=0))?iSrcChannel:gbSrc->iBytesPP-1; //default is iBytesPP-1 since that would be the alpha channel, OR value channel if 8-bit
+						iDestLineLocNow=ipAt.Y*gbDest->iStride+ipAt.X*gbDest->iBytesPP;//iDestByte;
+						//iDestByte=ipAt.Y*gbDest->iStride+ipAt.X*gbDest->iBytesPP;
+						//iDestAdder=gbDest->iStride - gbSrc->iWidth*gbDest->iBytesPP;//was intentionally the dest BytesPP, because width of source is traversed on dest for each line
+						for (int ySrc=0; ySrc<gbSrc->iHeight; ySrc++) {
 							iDestByte=iDestLineLocNow;
-							for (int xSrc=0; xSrc<gbSrc.iWidth; xSrc++) {
+							for (int xSrc=0; xSrc<gbSrc->iWidth; xSrc++) {
 								//if (!
-								gradNow.ShadeAlpha(gbDest, iDestByte, gbSrc.arrbyData[iSrcByte], DrawModeKeepDestAlpha);//) {
+								gbDest->ShadeAlpha(&gradNow, iDestByte, gbSrc->arrbyData[iSrcByte], DrawModeKeepDestAlpha);//) {
 								//	bGood=false;
 								//}
-								iSrcByte+=gbSrc.iBytesPP;
-								iDestByte+=gbDest.iBytesPP;
+								iSrcByte+=gbSrc->iBytesPP;
+								iDestByte+=gbDest->iBytesPP;
 							}
 							//iDestByte+=iDestAdder;
-							iDestLineLocNow+=gbDest.iStride;
+							iDestLineLocNow+=gbDest->iStride;
 						}
 						if (!bGood) {
 							ShowError("Error copying graphics buffer data","OverlayNoClipToBigCopyAlpha(GBuffer,IPoint,GBuffer,Gradient,int)");
@@ -1134,6 +1566,18 @@ namespace ExpertMultimediaBase {
 						bGood=false;
 						ShowUnknownExn("OverlayNoClipToBigCopyAlpha gradient");
 					}
+				}
+				else {
+					bGood=false;
+					if (IsFirst_OverlayNoClipToBigCopyAlpha_gradient_version_Error) {
+						cout << "<OverlayNoClipToBigCopyAlpha(. . . Gradient) ERROR: "<<gbDest->iBytesPP<<"-BytesPP destination>"<< flush;
+						IsFirst_OverlayNoClipToBigCopyAlpha_gradient_version_Error=false;
+					}
+				}
+			}
+			else Console::Error.WriteLine("OverlayNoClipToBigCopyAlpha gradient Error: gbDest is nullptr");
+		}
+		else Console::Error.WriteLine("OverlayNoClipToBigCopyAlpha gradient Error: gbSrc is nullptr");
 		return bGood;
 	}  // end OverlayNoClipToBigCopyAlpha gradient
 
@@ -1146,19 +1590,19 @@ namespace ExpertMultimediaBase {
 	/// <param name="ipAt"></param>
 	/// <param name="gbSrc"></param>
 	/// <returns></returns>
-	bool OverlayNoClipToBigCopyAlpha(GBuffer &gbDest, IPoint &ipAt, GBuffer &gbSrc) {
+	bool OverlayNoClipToBigCopyAlpha(GBuffer* gbDest, IPoint &ipAt, GBuffer* gbSrc) {
 		int iSrcByte;
 		int iDestByte;
 		bool bGood=true;
 		try {
-			iDestByte=ipAt.Y*gbDest.iStride+ipAt.X*gbDest.iBytesPP;
+			iDestByte=ipAt.Y*gbDest->iStride+ipAt.X*gbDest->iBytesPP;
 			iSrcByte=0;
-			for (int ySrc=0; ySrc<gbSrc.iHeight; ySrc++) {
-				if (false==CopySafe(gbDest.arrbyData, gbSrc.arrbyData, iDestByte, iSrcByte, gbSrc.iStride)) {
+			for (int ySrc=0; ySrc<gbSrc->iHeight; ySrc++) {
+				if (false==CopySafe(gbDest->arrbyData, gbSrc->arrbyData, iDestByte, iSrcByte, gbSrc->iStride)) {
 					bGood=false;
 				}
-				iSrcByte+=gbSrc.iStride;
-				iDestByte+=gbDest.iStride;
+				iSrcByte+=gbSrc->iStride;
+				iDestByte+=gbDest->iStride;
 			}
 			if (bGood==false) {
 				ShowError("Error copying graphics buffer data","OverlayNoClipToBigCopyAlpha(...)");
@@ -1174,33 +1618,48 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}  // end OverlayNoClipToBigCopyAlpha
-	bool MaskFromChannel(GBuffer &gbDest, GBuffer &gbSrc, int iByteInPixel) {
+	//bool MaskFromChannelByRef(GBuffer* gbDest, GBuffer* gbSrc, int iByteInPixel) {
+	//	MaskFromChannel(&gbDest, &gbSrc, iByteInPixel);
+	//}
+	bool MaskFromChannel(GBuffer* gbDest, GBuffer* gbSrc, int iByteInPixel) {
 		int iDestByte=0;
-		if (iByteInPixel<0) iByteInPixel=gbSrc.iBytesPP-1;
-		else if (iByteInPixel>=gbSrc.iBytesPP) {
-			Console::Error.Write("Error in MaskFromChannel while copying channel {iChannelOffset:"+RString_ToString(iByteInPixel)+"; gbSrc-lastchannel:"+RString_ToString(gbSrc.iBytesPP-1)+"; gbSrc.iBytesPP:"+RString_ToString(gbSrc.iBytesPP)+"}: got bad channel so defaulting to last channel for value!");
+		if (iByteInPixel<0) iByteInPixel=gbSrc->iBytesPP-1;
+		else if (iByteInPixel>=gbSrc->iBytesPP) {
+			Console::Error.Write("Error in MaskFromChannel while copying channel {iChannelOffset:"+RString_ToString(iByteInPixel)+"; gbSrc-lastchannel:"+RString_ToString(gbSrc->iBytesPP-1)+"; gbSrc->iBytesPP:"+RString_ToString(gbSrc->iBytesPP)+"}: got bad channel so defaulting to last channel for value!");
 			Console::Error.Flush();
-			iByteInPixel=gbSrc.iBytesPP-1;
+			iByteInPixel=gbSrc->iBytesPP-1;
 		}
 		int iSrcByte=iByteInPixel;
 		int iBytesCopy;
 		int iBytesPPOffset;
 		bool bGood=true;
 		try {
-					if (gbDest.arrbyData==NULL) {
-						gbDest.Init((int)gbSrc.iWidth, (int)gbSrc.iHeight, 1);
+			if (gbDest!=nullptr) {
+				if (gbSrc!=nullptr) {
+					if (gbDest->arrbyData==nullptr) {
+						gbDest->Init((int)gbSrc->iWidth, (int)gbSrc->iHeight, 1);
 					}
-					else if ((gbDest.iWidth!=gbSrc.iWidth)||(gbDest.iHeight!=gbSrc.iHeight)||(gbDest.iBytesPP!=1)) {
-						gbDest.Dispose();
-						gbDest.Init((int)gbSrc.iWidth, (int)gbSrc.iHeight, 1);
+					else if ((gbDest->iWidth!=gbSrc->iWidth)||(gbDest->iHeight!=gbSrc->iHeight)||(gbDest->iBytesPP!=1)) {
+						gbDest->Dispose();
+						gbDest->Init((int)gbSrc->iWidth, (int)gbSrc->iHeight, 1);
 					}
-					iBytesCopy=gbDest.iBytesTotal;
-					iBytesPPOffset=gbSrc.iBytesPP;
+					iBytesCopy=gbDest->iBytesTotal;
+					iBytesPPOffset=gbSrc->iBytesPP;
 					for (iDestByte=0; iDestByte<iBytesCopy; iDestByte++) {
-						gbDest.arrbyData[iDestByte]=gbSrc.arrbyData[iSrcByte];
+						gbDest->arrbyData[iDestByte]=gbSrc->arrbyData[iSrcByte];
 						iDestByte++;
 						iSrcByte+=iBytesPPOffset;
 					}
+				}
+				else {
+					bGood=false;
+					Console::Error.WriteLine("MaskFromChannel Error: nullptr gbSrc");
+				}
+			}
+			else {
+				bGood=false;
+				Console::Error.WriteLine("MaskFromChannel Error: nullptr gbDest");
+			}
 		}
 		catch (exception& exn) {
 			string sMsg="{\n";
@@ -1229,42 +1688,60 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}  // end MaskFromChannel
+
 	///<summary>
 	///Uses average of 3 channels to get value
 	///</summary>
-	bool MaskFromValue(GBuffer &gbDest, GBuffer &gbSrc) {
+	//bool MaskFromValueByRef(GBuffer* gbDest, GBuffer* gbSrc) {
+	//	MaskFromValue(&gbDest, &gbSrc);
+	//}
+	bool MaskFromValue(GBuffer* gbDest, GBuffer* gbSrc) {
 		int iDestByte=0;
 		int iSrcByte=0;
 		int iPixels;
 		//int iBytesPPOffset;
 		bool bGood=true;
+		if (gbDest!=nullptr) gbDest->sFile="<MaskFromValue about to check size of >"+gbDest->sFile;
 		try {
-					if (gbDest.arrbyData==NULL) {
-						gbDest.Init((int)gbSrc.iWidth, (int)gbSrc.iHeight, 1);
+			if (gbDest!=nullptr) {
+				if (gbSrc!=nullptr) {
+					if (gbDest->arrbyData==nullptr) {
+						gbDest->Init((int)gbSrc->iWidth, (int)gbSrc->iHeight, 1);
 					}
-					else if ((gbDest.iWidth!=gbSrc.iWidth)||(gbDest.iHeight!=gbSrc.iHeight)||(gbDest.iBytesPP!=1)) {
-						gbDest.Dispose();
-						gbDest.Init((int)gbSrc.iWidth, (int)gbSrc.iHeight, 1);
+					else if ((gbDest->iWidth!=gbSrc->iWidth)||(gbDest->iHeight!=gbSrc->iHeight)||(gbDest->iBytesPP!=1)) {
+						gbDest->Dispose();
+						gbDest->Init((int)gbSrc->iWidth, (int)gbSrc->iHeight, 1);
 					}
-					iPixels=gbSrc.iWidth*gbSrc.iHeight;
-					// iBytesPPOffset=gbSrc.iBytesPP;
-					if (gbSrc.iBytesPP>=3) {
+					gbDest->sFile="Mask of "+gbSrc->sFile;
+					iPixels=gbSrc->iWidth*gbSrc->iHeight;
+					// iBytesPPOffset=gbSrc->iBytesPP;
+					if (gbSrc->iBytesPP>=3) {
 						for (iDestByte=0; iDestByte<iPixels; iDestByte++) {
-							gbDest.arrbyData[iDestByte]=(byte)(((float)gbSrc.arrbyData[iSrcByte]
-									+(float)gbSrc.arrbyData[iSrcByte+1]
-									+(float)gbSrc.arrbyData[iSrcByte+2])/3.0f);
-							iSrcByte+=gbSrc.iBytesPP;
+							gbDest->arrbyData[iDestByte]=(byte)(((float)gbSrc->arrbyData[iSrcByte]
+									+(float)gbSrc->arrbyData[iSrcByte+1]
+									+(float)gbSrc->arrbyData[iSrcByte+2])/3.0f);
+							iSrcByte+=gbSrc->iBytesPP;
 						}
 					}
-					else if (gbSrc.iBytesPP==1) {
+					else if (gbSrc->iBytesPP==1) {
 						for (iDestByte=0; iDestByte<iPixels; iDestByte++) {
-							gbDest.arrbyData[iDestByte]=gbSrc.arrbyData[iSrcByte];
-							iSrcByte+=gbSrc.iBytesPP;
+							gbDest->arrbyData[iDestByte]=gbSrc->arrbyData[iSrcByte];
+							iSrcByte+=gbSrc->iBytesPP;
 						}
 					}
 					else {
-						ShowErr("MaskFromValue(GBuffer,GBuffer) cannot process source buffer bit depth {gbSrc.iBytesPP:"+RString_ToString(gbSrc.iBytesPP)+"}");
+						ShowErr("MaskFromValue(GBuffer,GBuffer) cannot process source buffer bit depth {gbSrc->iBytesPP:"+RString_ToString(gbSrc->iBytesPP)+"}");
 					}
+				}
+				else {
+					bGood=false;
+					Console::Error.WriteLine("MaskFromValue Error: nullptr gbSrc");
+				}
+			}
+			else {
+				bGood=false;
+				Console::Error.WriteLine("MaskFromValue Error: nullptr gbDest");
+			}
 		}
 		catch (exception& exn) {
 			string sLastErr="make sure source bitmap is 24-bit or 32-bit {\n";
@@ -1294,7 +1771,7 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}  // end MaskFromValue
-	bool InterpolatePixel(GBuffer &gbDest, GBuffer &gbSrc, int iDest, DPoint &dpSrc) {
+	bool InterpolatePixel(GBuffer* gbDest, GBuffer* gbSrc, int iDest, DPoint &dpSrc) {
 		bool bGood=false;
 		bool bOnX;
 		bool bOnY;
@@ -1316,9 +1793,9 @@ namespace ExpertMultimediaBase {
 		int iarrLocOfQuad[4];
 		try {
 			// iarrLocOfQuad=(int*)malloc(4*sizeof(int));
-			dMaxX=(double)gbSrc.iWidth-1.0;
-			dMaxY=(double)gbSrc.iHeight-1.0;
-			// iDest=gbDest.iStride*ipDest.Y+gbDest.iBytesPP*ipDest.X;
+			dMaxX=(double)gbSrc->iWidth-1.0;
+			dMaxY=(double)gbSrc->iHeight-1.0;
+			// iDest=gbDest->iStride*ipDest.Y+gbDest->iBytesPP*ipDest.X;
 			dWeightNow=0;
 			dWeightTotal=0;
 			// dparrQuad=new DPoint[4];
@@ -1384,22 +1861,22 @@ namespace ExpertMultimediaBase {
 			else bOnY=false;
 
 			if (bOnY&&bOnX) {
-				CopySafe(gbDest.arrbyData, gbSrc.arrbyData, iDest, iSrcRoundY*gbSrc.iStride+iSrcRoundX*gbSrc.iBytesPP, gbDest.iBytesPP);
+				CopySafe(gbDest->arrbyData, gbSrc->arrbyData, iDest, iSrcRoundY*gbSrc->iStride+iSrcRoundX*gbSrc->iBytesPP, gbDest->iBytesPP);
 			}
 			else {
 				iDestNow=iDest;
 				for (iQuad=0; iQuad<4; iQuad++) {
-					iarrLocOfQuad[iQuad]=gbSrc.iStride*(int)dparrQuad[iQuad].Y + gbSrc.iBytesPP*(int)dparrQuad[iQuad].X;
+					iarrLocOfQuad[iQuad]=gbSrc->iStride*(int)dparrQuad[iQuad].Y + gbSrc->iBytesPP*(int)dparrQuad[iQuad].X;
 				}
-				for (iChan=0; iChan<gbSrc.iBytesPP; iChan++, iTotal++) {
+				for (iChan=0; iChan<gbSrc->iBytesPP; iChan++, iTotal++) {
 					dHeavyChannel=0;
 					dWeightTotal=0;
 					for (iQuad=0; iQuad<4; iQuad++) {
 						dWeightNow=dDiagonalUnit-RMath::Dist(dpSrc, dparrQuad[iQuad]);
 						dWeightTotal+=dWeightNow; //debug performance, this number is always the same theoretically
-						dHeavyChannel+=(double)gbSrc.arrbyData[iarrLocOfQuad[iQuad]+iChan]*dWeightNow;
+						dHeavyChannel+=(double)gbSrc->arrbyData[iarrLocOfQuad[iQuad]+iChan]*dWeightNow;
 					}
-					gbDest.arrbyData[iDestNow]=(byte)(dHeavyChannel/dWeightTotal);
+					gbDest->arrbyData[iDestNow]=(byte)(dHeavyChannel/dWeightTotal);
 					iDestNow++;
 				}
 			}
@@ -1419,7 +1896,7 @@ namespace ExpertMultimediaBase {
 	/// Fakes motion blur.
 	///   Using a byDecayTotal of 255 makes the blur trail fade to transparent.
 	/// </summary>
-	bool EffectMoBlurSimModWidth(GBuffer &gbDest, GBuffer &gbSrc, int xOffsetTotal, byte byDecayTotal) {
+	bool EffectMoBlurSimModWidth(GBuffer* gbDest, GBuffer* gbSrc, int xOffsetTotal, byte byDecayTotal) {
 		bool bGood=true;
 		int xDirection;
 		int xLength;
@@ -1433,19 +1910,19 @@ namespace ExpertMultimediaBase {
 			xLength=xOffsetTotal;
 		}
 		try {
-			gbDest.iWidth=gbSrc.iWidth+xLength;
-			gbDest.iBytesPP=gbSrc.iBytesPP;
-			gbDest.iStride=gbSrc.iStride;
-			gbDest.iHeight=gbSrc.iHeight;
-			gbDest.iBytesTotal=gbDest.iStride*gbDest.iHeight;
-			if (gbDest.arrbyData==NULL || (gbSrc.iBytesTotal!=gbDest.iBytesTotal))
-				gbDest.Init((int)gbSrc.iWidth,(int)gbSrc.iHeight,(int)gbSrc.iBytesPP);
-			//int iHeight2=gbDest.iHeight;
-			//int iWidth2=gbDest.iWidth;
-			int iHeight1=gbSrc.iHeight;
-			//int iWidth1=gbSrc.iWidth;
-			int iStride=gbSrc.iStride;
-			int iStride2=gbDest.iStride;
+			gbDest->iWidth=gbSrc->iWidth+xLength;
+			gbDest->iBytesPP=gbSrc->iBytesPP;
+			gbDest->iStride=gbSrc->iStride;
+			gbDest->iHeight=gbSrc->iHeight;
+			gbDest->iBytesTotal=gbDest->iStride*gbDest->iHeight;
+			if (gbDest->arrbyData==nullptr || (gbSrc->iBytesTotal!=gbDest->iBytesTotal))
+				gbDest->Init((int)gbSrc->iWidth,(int)gbSrc->iHeight,(int)gbSrc->iBytesPP);
+			//int iHeight2=gbDest->iHeight;
+			//int iWidth2=gbDest->iWidth;
+			int iHeight1=gbSrc->iHeight;
+			//int iWidth1=gbSrc->iWidth;
+			int iStride=gbSrc->iStride;
+			int iStride2=gbDest->iStride;
 			int iSrcByte=0;
 			iDestByteStart=0;
 			if (xDirection<0) {
@@ -1455,8 +1932,8 @@ namespace ExpertMultimediaBase {
 			bool bTest=true;
 			int yNow;
 			for (yNow=0; yNow<iHeight1; yNow++) {
-				bTest=CopySafe(gbDest.arrbyData,
-								gbSrc.arrbyData,
+				bTest=CopySafe(gbDest->arrbyData,
+								gbSrc->arrbyData,
 								iDestByte, iSrcByte, iStride);
 				if (bTest==false) {
 					ShowError("Error precopying blur data.","EffectMoBlurSimModWidth(...)");
@@ -1480,8 +1957,8 @@ namespace ExpertMultimediaBase {
 				iSrcByte=0;
 				iDestByte=iOffsetNow;
 				for (yNow=0; yNow<iHeight1; yNow++) {
-					bTest=EffectLightenOnly(gbDest.arrbyData,
-						gbSrc.arrbyData,iDestByte, iSrcByte, iStride, fMultiplier);
+					bTest=EffectLightenOnly(gbDest->arrbyData,
+						gbSrc->arrbyData,iDestByte, iSrcByte, iStride, fMultiplier);
 					if (bTest==false) {
 						ShowError("Error overlaying blur data.","EffectMoBlurSimModWidth(...)");
 						break;
@@ -1503,7 +1980,7 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}  // EffectMoBlurSimModWidth
-	bool EffectSkewModWidth(GBuffer &gbDest, GBuffer &gbSrc, int xOffsetBottom) {
+	bool EffectSkewModWidth(GBuffer* gbDest, GBuffer* gbSrc, int xOffsetBottom) {
 		bool bGood=true;
 		int iDestLine;
 		double xDirection;
@@ -1527,22 +2004,22 @@ namespace ExpertMultimediaBase {
 			xAdd=(double)xOffsetBottom;
 		}
 		try {
-			gbDest.iWidth=gbSrc.iWidth+((xOffsetBottom<0)?xOffsetBottom*-1:xOffsetBottom);
-			gbDest.iBytesPP=gbSrc.iBytesPP;
-			gbDest.iStride=gbSrc.iStride;
-			gbDest.iHeight=gbSrc.iHeight;
-			gbDest.iBytesTotal=gbDest.iStride*gbDest.iHeight;
-			if (gbDest.arrbyData==NULL || (gbSrc.iBytesTotal!=gbDest.iBytesTotal))
-				gbDest.Init((int)gbSrc.iWidth,(int)gbSrc.iHeight,(int)gbSrc.iBytesPP);
+			gbDest->iWidth=gbSrc->iWidth+((xOffsetBottom<0)?xOffsetBottom*-1:xOffsetBottom);
+			gbDest->iBytesPP=gbSrc->iBytesPP;
+			gbDest->iStride=gbSrc->iStride;
+			gbDest->iHeight=gbSrc->iHeight;
+			gbDest->iBytesTotal=gbDest->iStride*gbDest->iHeight;
+			if (gbDest->arrbyData==nullptr || (gbSrc->iBytesTotal!=gbDest->iBytesTotal))
+				gbDest->Init((int)gbSrc->iWidth,(int)gbSrc->iHeight,(int)gbSrc->iBytesPP);
 			iSrcByte=0;
 			iDestByte=0;//iDestByteStart;//TODO: Uncomment, and separate the blur code here and make alpha overlay version
 			bool bTest=true;
 			iDestLine=0;
 			//dpSrc=new DPoint();
 			dpSrc.Y=0;
-			dHeight=(double)gbDest.iHeight;
-			dWidthDest=(double)gbDest.iWidth;
-			//dWidthSrc=(double)gbSrc.iWidth;
+			dHeight=(double)gbDest->iHeight;
+			dWidthDest=(double)gbDest->iWidth;
+			//dWidthSrc=(double)gbSrc->iWidth;
 			dMaxY=dHeight-1.0;
 			iDestIndex=0;
 			for (yNow=0; yNow<dHeight; yNow+=1.0) {
@@ -1557,10 +2034,10 @@ namespace ExpertMultimediaBase {
 						bGood=false;
 						break;
 					}
-					iDestIndex+=gbSrc.iBytesPP;
+					iDestIndex+=gbSrc->iBytesPP;
 				}
 				if (bGood==false) break;
-				//iDestLine+=gbDest.iStride;
+				//iDestLine+=gbDest->iStride;
 				dpSrc.Y+=1.0;
 			}
 			if (bGood==false) {

@@ -6,6 +6,17 @@
 #include <sstream>
 #include <cfloat>  // <float.h>  // maximums i.e. LONG_MAX
 #include <climits>  // <limits.h>  // maximums i.e. INT_MAX
+#include <ctime>
+// #include <stddef.h>  // size_t etc (NOTE: stdlib.h includes stddef.h)
+// below includes are for the cpp file:
+#include <fstream>
+#include <cstdlib>  // malloc etc
+#include <iostream>
+#include <cmath>
+#include <cstddef>  // size_t etc
+// #include <string>
+// NOTE: do NOT include anything non-standard here--this should be completely portable
+
 using namespace std;
 
 namespace FileMode {
@@ -14,9 +25,6 @@ namespace FileMode {
 }
 
 namespace System {
-	#ifndef null
-	#define null NULL
-	#endif
 	#ifndef byte
 	typedef unsigned char byte;
 	#endif
@@ -203,7 +211,75 @@ namespace System {
 	#define string_Remove(s, start, len) ( ((s).substr(0,(start))+(s).substr((start)+(len),string::npos)) )
 	#endif
 
-}
+	class DateTime {
+	public:
+		DateTime();
+		DateTime(bool AlwaysReturnNow);
+		//static DateTime Now;
+		string ToString(string Format);
+		bool alwaysReturnNow=false;
+	private:
+		int monthNameWithUppercaseFirstCharacterToDigit(string);
+		///seconds since Epoch:
+		time_t rawtime;
+	};
+
+	extern DateTime DateTime_Now;
+	class Convert {
+	public:
+		static byte ToByte(int val);
+		static byte ToByte(long val);
+		#ifdef TYPE__int64
+		static byte ToByte(__int64 val);
+		#endif
+		static byte ToByte(size_t val);
+		static byte ToByte(float val);
+		static byte ToByte(double val);
+		static byte ToByte(char val);
+		static char ToChar8(float val); //only "__wchar_t ToChar()" and "unsigned char ToByte()" exist in actual framework (has no 8-bit ToChar method)
+		static char ToChar8(double val);
+
+		static int ToInt32(string val);
+
+		static decimal ToDecimal(byte val);
+		static decimal ToDecimal(int val);
+		static decimal ToDecimal(float val);
+		static decimal ToDecimal(double val);
+
+		static string ToString(const char* val);
+		static string ToString(bool val);
+		static string ToString(unsigned char val);
+		//static string ToString(__wchar_t val);
+		//static string ToString(DateTime val);
+		//static string ToString(Decimal val);
+		static string ToString(float val);
+		static string ToString(double val);
+		static string ToString(decimal val);
+		static string ToString(short val);
+		static string ToString(int val);
+		#ifdef TYPE__int64
+		static string ToString(__int64 val);
+		#endif
+		//static string ToString(Object* val);
+		static string ToString(char val);
+		//static string ToString(String* val);
+		static string ToString(unsigned short val);
+		static string ToString(unsigned int val);
+		static string ToString(size_t val);
+		#ifdef TYPE__int64
+		static string ToString(unsigned __int64 val);
+		#endif
+		//static string ToString(bool val, IFormatProvider* pifmtp); //and so on with IFormatProvider* for each type
+	};
+
+	class Math {
+	public:
+		static constexpr double PI=3.1415926535897932384626433832795d;
+	};
+
+	//end Math
+
+}//end System
 
 
 using namespace System;
@@ -237,7 +313,7 @@ namespace ExpertMultimediaBase {
 	double System_Math_Atan2(double,double);
 	decimal System_Math_Atan2(decimal,decimal);
 
-
+	string String_Replace(string haystack, string oldValue, string newValue);
 
 	class RectangleF {
 	public:
@@ -263,39 +339,6 @@ namespace ExpertMultimediaBase {
 		void Set(int x, int y, int width, int height);
 	};
 
-	class Convert {
-	public:
-		static byte ToByte(int val);
-		static byte ToByte(long val);
-		static byte ToByte(__int64 val);
-		static byte ToByte(size_t val);
-		static byte ToByte(float val);
-		static byte ToByte(double val);
-		static byte ToByte(char val);
-		static char ToChar8(float val); //only "__wchar_t ToChar()" and "unsigned char ToByte()" exist in actual framework (has no 8-bit ToChar method)
-		static char ToChar8(double val);
-
-		static string ToString(const char* val);
-		static string ToString(bool val);
-		static string ToString(unsigned char val);
-		//static string ToString(__wchar_t val);
-		//static string ToString(DateTime val);
-		//static string ToString(Decimal val);
-		static string ToString(float val);
-		static string ToString(double val);
-		static string ToString(decimal val);
-		static string ToString(short val);
-		static string ToString(int val);
-		static string ToString(__int64 val);
-		//static string ToString(Object* val);
-		static string ToString(char val);
-		//static string ToString(String* val);
-		static string ToString(unsigned short val);
-		static string ToString(unsigned int val);
-		static string ToString(unsigned __int64 val);
-
-		//static string ToString(bool val, IFormatProvider* pifmtp); //and so on with IFormatProvider* for each type
-	};
 
 
 	//extern string FileMode_OpenRead;

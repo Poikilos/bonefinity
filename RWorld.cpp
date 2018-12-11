@@ -9,10 +9,10 @@ using namespace std;
 namespace ExpertMultimediaBase {
 	//private methods:
 	void World::InitNull() {
-		arranim=null;
+		arranim=nullptr;
 	}
-	void World::SafeFree() {
-		ExpertMultimediaBase::SafeFree(arranim);
+	void World::SafeFree(string DebugNote) {
+		ExpertMultimediaBase::SafeFree(arranim, "World's animation Array for "+DebugNote);
 	}
 	//public methods:
 	World::World() {
@@ -20,7 +20,7 @@ namespace ExpertMultimediaBase {
 		//Init();
 	}
 	World::~World() {
-		SafeFree();
+		this->SafeFree("World deconstructor ran.");
 	}
 	//bool World::Init() {
 	//	return Load("world","data");

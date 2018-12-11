@@ -2,17 +2,7 @@
 #define BASE_CPP
 // #pragma once
 
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <memory>
-#include <string>
 #include <base.h>
-#include <frameworkdummy.h>
-#include <float.h>
-#include <limits.h>
-#include <RMath.h>
 
 using namespace std;
 
@@ -47,8 +37,10 @@ namespace ExpertMultimediaBase {
 	byte by3dAlphaLookup[256][256][256];
 	bool bDebug=false;//CHANGED during init to the value of the debugmode script variable
 	bool bMegaDebug=false; //true for debug only!
+	bool VisualDebugEnable=false;
+	string global_msg="global scope";
+	float epsilon_tweaked_float=2.0f*std::numeric_limits<float>::epsilon();
 	//IPoint ipZero;
-
 	///#endregion globals defined in base.h
 
 	///#region methods
@@ -71,13 +63,12 @@ namespace ExpertMultimediaBase {
 		r=byPixel[2]; //(u32Pixel>>1)&&0x000000ff;
 		a=byPixel[3]; //(u32Pixel)&&0x000000ff;
 	}
-	//void Pixel::Set(Uint32* u32Pixel) {
-	//	byte* byPixel=(byte*)u32Pixel;
-	//	b=byPixel[0]; //u32Pixel>>3;
-	//	g=byPixel[1]; //(u32Pixel>>2)&&0x000000ff;
-	//	r=byPixel[2]; //(u32Pixel>>1)&&0x000000ff;
-	//	a=byPixel[3]; //(u32Pixel)&&0x000000ff;
-	//}
+	string Pixel::ToString() {
+		//return "("+RString_ToString(r)+","+RString_ToString(g)+","+RString_ToString(b)+","+RString_ToString(a)+")";
+		stringstream ss;
+		ss << "("<<(int)r<<","<<(int)g<<","<<(int)b<<","<<(int)a<<")";
+		return ss.str();
+	}
 
 
 	bool Variable::IsActive() {
@@ -324,7 +315,7 @@ namespace ExpertMultimediaBase {
 					iNowPrev=iNow;
 					iNow++;
 					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	-done get first part: "+sName);
-					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString(val.length()-iNow));
+					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString((int)val.length()-iNow));
 					sVal=val.substr(iNow,val.length()-iNow);
 					if (sVal=="") ShowError("	  -\"\" VALUE part is blank !",sFuncNow);
 					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	  -done getting next part");
@@ -477,13 +468,13 @@ namespace ExpertMultimediaBase {
 	}
 	Variable* Variables::PointerOf(string sName) {
 		int iIndex=IndexOf(sName);
-		Variable* pvReturn=null;
+		Variable* pvReturn=nullptr;
 		try {
 			if (iIndex>=0) pvReturn=&varr[iIndex];
-			else pvReturn=null;
+			else pvReturn=nullptr;
 		}
 		catch (...) {
-			pvReturn=null;
+			pvReturn=nullptr;
 			ShowUnknownExn( "variables.PointerOf", "accessing varr index "+RString_ToString(iIndex) );
 		}
 		return pvReturn;
@@ -770,12 +761,201 @@ namespace ExpertMultimediaBase {
 	}
 	//end class Variables
 
+
+	///#region 3d movement
+
+	///<summary>
+	///If true,true or false,false: you MAY want to manually flip pitch before calling this method, so that positive yRot (for x forward)  or xRot (for z forward) will become upward angle; however the result will be inconsistent with OpenGL
+	///</summary>
+	bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel, bool make_orientation_Z_UP, bool make_orientation_X_FORWARD) {
+		bool bGood=false;
+		float xRel,yRel,zRel;
+		///NOTE: roll does not matter since only using (pitch and yaw) rotation values for travel vector
+		try {
+			if (make_orientation_Z_UP) {
+				if (make_orientation_X_FORWARD) {
+					yRel=0.0f;
+					xRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);//fPitch may need to be flipped before calling this method, so that positive will become an upward angle
+					zRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);//fPitch may need to be flipped before calling this method, so that positive will become an upward angle
+					if (xRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(xRel,yRel,fYaw);
+					}
+				}
+				else {//make_orientation_Y_FORWARD
+					xRel=0.0f;
+					yRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);
+					zRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);
+					if (yRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(xRel,yRel,fYaw);
+					}
+				}
+			}
+			else {//make_orientation_Y_UP
+				if (make_orientation_X_FORWARD) {
+					zRel=0.0f;
+					xRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);
+					yRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);
+					if (xRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(zRel,xRel,fYaw);
+					}
+				}
+				else {//make_orientation_Z_FORWARD
+					xRel=0.0f;
+					zRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);//fPitch may need to be flipped before calling this method, so that positive will become an upward angle
+					yRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);//fPitch may need to be flipped before calling this method, so that positive will become an upward angle
+					if (zRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(zRel,yRel,fYaw);
+					}
+				}
+			}
+			//else do nothing since xRel and yRel are zero
+			xToMove+=xRel;
+			yToMove+=yRel;
+			zToMove+=zRel;
+			bGood=true;
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		return bGood;
+	}//end Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)
+
+	bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel, bool make_orientation_Z_UP, bool make_orientation_X_FORWARD) {
+		register float xRel,yRel,zRel;
+		bool bGood=false;
+		try {
+			bGood=Travel3d(pointToSlide.X,pointToSlide.Y,pointToSlide.Z,fPitch,fYaw,fDistanceTravel,make_orientation_Z_UP,make_orientation_X_FORWARD);
+			/*
+			//notes:
+			//--Roll, though not used here, would be done first (X rotation)
+			//--setting pitch first DOES matter (?)
+			//--Y-rotation (fPitch==Altitude) is on the X-Z plane (SINCE zrot of zero makes it point toward +X!!!!)
+			//  --(an azimuth of zero touches this plane)
+			//--Z-rotation (fYaw==Azimuth) is on the X-Y plane; (an altitude of zero touches this plane)
+			yRel=0;
+			xRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);
+			zRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);
+			if (xRel!=0.0f) { //if rotation would modify location from this view
+				RMath::Rotate(xRel,yRel,fYaw);
+			}
+			//else do nothing since xRel and yRel are zero
+			pointToSlide.X+=xRel;
+			pointToSlide.Y+=yRel;
+			pointToSlide.Z+=zRel;
+			bGood=true;
+			*/
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn, "Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		return bGood;
+	}//end Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)
+	///<summary>
+	///formerly Travel3dAbs(Mass3d&,Mass3d&,float)
+	///</summary>
+	bool Travel3dTowardDest_UsingDistance(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel) {
+		return Travel3dTowardDest_UsingRatio(pointToSlide,pointDest,fDistanceTravel/DIST3D(pointToSlide,pointDest));
+	}
+	///<summary>
+	///formerly Travel3d(Mass3d&,Mass3d&,float)
+	///</summary>
+	bool Travel3dTowardDest_UsingRatio(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio) {
+		bool bGood=false;
+		try {
+			pointToSlide.X=APPROACH(pointToSlide.X,pointDest.X,fDistanceTravelRatio);
+			pointToSlide.Y=APPROACH(pointToSlide.Y,pointDest.Y,fDistanceTravelRatio);
+			pointToSlide.Z=APPROACH(pointToSlide.Z,pointDest.Z,fDistanceTravelRatio);
+			bGood=true;
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn, "Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)");
+		}
+		return bGood;
+	}//end Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)
+	/*
+	bool Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel) {
+		bool bGood=false;
+		double xRel,yRel,zRel;
+		///NOTE: roll does not matter
+		try {
+			if (make_orientation_Z_UP) {
+				if (make_orientation_X_FORWARD) {
+					yRel=0.0f;
+					xRel=RMath::XOfRTheta_Deg(fDistanceTravel,-fPitch);
+					zRel=RMath::YOfRTheta_Deg(fDistanceTravel,-fPitch);
+					if (xRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(xRel,yRel,fYaw);
+					}
+				}
+				else {//make_orientation_Y_FORWARD
+					xRel=0.0f;
+					yRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);
+					zRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);
+					if (yRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(xRel,yRel,fYaw);
+					}
+				}
+			}
+			else {//make_orientation_Y_UP
+				if (make_orientation_X_FORWARD) {
+					zRel=0.0f;
+					xRel=RMath::XOfRTheta_Deg(fDistanceTravel,fPitch);
+					yRel=RMath::YOfRTheta_Deg(fDistanceTravel,fPitch);
+					if (xRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(zRel,xRel,fYaw);
+					}
+				}
+				else {//make_orientation_Z_FORWARD
+					xRel=0.0f;
+					zRel=RMath::XOfRTheta_Deg(fDistanceTravel,-fPitch);
+					yRel=RMath::YOfRTheta_Deg(fDistanceTravel,-fPitch);
+					if (zRel!=0.0f) { //if yaw would modify location (if not facing straight up)
+						RMath::Rotate(zRel,yRel,fYaw);
+					}
+				}
+			}
+			//else do nothing since xRel and yRel are zero
+			xToMove+=xRel;
+			yToMove+=yRel;
+			zToMove+=zRel;
+			bGood=true;
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)");
+		}
+		return bGood;
+	}//end Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)
+	*/
+
+	///#endregion 3d movement
+
 	////////////////////////////////// MASS3D //////////////////////////////////////
 
 	//float Mass3d::BottomOffsetRatio() {
 		//return (zSize*.912);
 	//}
 	Mass3d::Mass3d() {
+		name="";
 		X=0;Y=0;Z=0;
 		xMin=-8;yMin=-8;zMin=0;
 		xMax=8;yMax=8;zMax=16;
@@ -823,32 +1003,74 @@ namespace ExpertMultimediaBase {
 		SafeAngle360ByRef(yRotDest);
 		SafeAngle360ByRef(zRotDest);
 	}
-	void Mass3d::RotateTowardDestByDegreesByRef(float& degToChange, float degDest, float degOperand) {
-		if (degOperand<0.0f) {
-			ShowErr("Error in RotateTowardDestByDegreesByRef: degOperand should not be negative (absolute value will be used instead)! {degOperand:"+RString_ToString(degOperand)+"}");
-			degOperand*=-1.0f;
+	void Mass3d::RotateTowardDestByDegreesByRef(float& degToChange, float degDest, float degOperand, bool IsToTakeMostEfficientRoute) {
+		if (IsToTakeMostEfficientRoute) {
+			float this_epsilon = 0.00001;
+			//see also getRotatedTowardDestAngleByDeltaRadians in https://github.com/expertmm/PolarBacteria
+			float positiveDesiredDelta = std::abs(degOperand);
+			float actualDelta = FANGLEDIFF(degToChange, degDest);//actualDelta=degToChange-degDest;
+			//degToChange-=actualDelta; //rotates instantly (tested)
+			float newDelta = actualDelta;
+			if (actualDelta < 0.0) {
+				degOperand = positiveDesiredDelta * -1.0;
+				if (std::abs(actualDelta) > std::abs(degOperand)) newDelta = degOperand;
+				else newDelta = actualDelta;
+			}
+			else {
+				degOperand = positiveDesiredDelta;
+				if (std::abs(actualDelta) > std::abs(degOperand)) newDelta = degOperand;
+				else newDelta = actualDelta;
+			}
+			if (std::abs(newDelta) >= this_epsilon) degToChange -= newDelta;
 		}
-		if (degDest<degToChange) {
-			degToChange-=degOperand;
-			if (degToChange<degDest) degToChange=degDest;
-		}
-		else if (degDest>degToChange) {
-			degToChange+=degOperand;
-			if (degToChange>degDest) degToChange=degDest;
+		else {
+			if (degOperand<0.0f) {
+				ShowErr("Error in RotateTowardDestByDegreesByRef: degOperand should not be negative (absolute value will be used instead)! {degOperand:"+RString_ToString(degOperand)+"}");
+				degOperand*=-1.0f;
+			}
+			if (degDest<degToChange) {
+				degToChange-=degOperand;
+				if (degToChange<degDest) degToChange=degDest;
+			}
+			else if (degDest>degToChange) {
+				degToChange+=degOperand;
+				if (degToChange>degDest) degToChange=degDest;
+			}
 		}
 	}//end RotateTowardDestByDegreesByRef float overload
-	void Mass3d::RotateTowardDestByDegreesByRef(double& degToChange, double degDest, double degOperand) {
-		if (degOperand<0.0) {
-			ShowErr("Error in RotateTowardDestByDegreesByRef: degOperand should not be negative (absolute value will be used instead)! {degOperand:"+RString_ToString(degOperand)+"}");
-			degOperand*=-1.0;
+	void Mass3d::RotateTowardDestByDegreesByRef(double& degToChange, double degDest, double degOperand, bool IsToTakeMostEfficientRoute) {
+		if (IsToTakeMostEfficientRoute) {
+			double this_epsilon = 0.00001;
+			//see also getRotatedTowardDestAngleByDeltaRadians in https://github.com/expertmm/PolarBacteria
+			double positiveDesiredDelta = std::abs(degOperand);
+			double actualDelta = FANGLEDIFF(degToChange, degDest);//actualDelta=degToChange-degDest;
+			//degToChange-=actualDelta; //rotates instantly (tested)
+			double newDelta = actualDelta;
+			if (actualDelta < 0.0) {
+				degOperand = positiveDesiredDelta * -1.0;
+				if (std::abs(actualDelta) > std::abs(degOperand)) newDelta = degOperand;
+				else newDelta = actualDelta;
+			}
+			else {
+				degOperand = positiveDesiredDelta;
+				if (std::abs(actualDelta) > std::abs(degOperand)) newDelta = degOperand;
+				else newDelta = actualDelta;
+			}
+			if (std::abs(newDelta) >= this_epsilon) degToChange -= newDelta;
 		}
-		if (degDest<degToChange) {
-			degToChange-=degOperand;
-			if (degToChange<degDest) degToChange=degDest;
-		}
-		else if (degDest>degToChange) {
-			degToChange+=degOperand;
-			if (degToChange>degDest) degToChange=degDest;
+		else {
+			if (degOperand<0.0) {
+				ShowErr("Error in RotateTowardDestByDegreesByRef: degOperand should not be negative (absolute value will be used instead)! {degOperand:"+RString_ToString(degOperand)+"}");
+				degOperand*=-1.0;
+			}
+			if (degDest<degToChange) {
+				degToChange-=degOperand;
+				if (degToChange<degDest) degToChange=degDest;
+			}
+			else if (degDest>degToChange) {
+				degToChange+=degOperand;
+				if (degToChange>degDest) degToChange=degDest;
+			}
 		}
 	}//end RotateTowardDestByDegreesByRef double overload
 	void Mass3d::RotateTowardDest(int iMillisecondsSinceLastCall) {
@@ -858,9 +1080,13 @@ namespace ExpertMultimediaBase {
 		float xDegMove=(float)( (double)xRotVelDegreesPerSec * ((double)iMillisecondsSinceLastCall / 1000.0) );
 		float yDegMove=(float)( (double)yRotVelDegreesPerSec * ((double)iMillisecondsSinceLastCall / 1000.0) );
 		float zDegMove=(float)( (double)zRotVelDegreesPerSec * ((double)iMillisecondsSinceLastCall / 1000.0) );
-		RotateTowardDestByDegreesByRef(xRot, xRotDest, xDegMove);
-		RotateTowardDestByDegreesByRef(yRot, yRotDest, yDegMove);
-		RotateTowardDestByDegreesByRef(zRot, zRotDest, zDegMove);
+		static bool IsToTakeMostEfficientRoute=true;
+		if (false) xRot=xRotDest; //debug only adsf
+		else RotateTowardDestByDegreesByRef(xRot, xRotDest, xDegMove, IsToTakeMostEfficientRoute);
+		if (false) yRot=yRotDest; //debug only adsf
+		else RotateTowardDestByDegreesByRef(yRot, yRotDest, yDegMove, IsToTakeMostEfficientRoute);
+		if (false) zRot=zRotDest; //debug only adsf
+		else RotateTowardDestByDegreesByRef(zRot, zRotDest, zDegMove, IsToTakeMostEfficientRoute);
 		//if (xDegMove>=ANGLEDIFFPOSITIVE(xRot,xRotDest)) xRot=xRotDest;
 		//else xRot=APPROACH(xRot,xRotDest,xDegMove/(xRotDest-xRot));
 		//if (yDegMove>=ANGLEDIFFPOSITIVE(yRot,yRotDest)) yRot=yRotDest;
@@ -940,19 +1166,146 @@ namespace ExpertMultimediaBase {
 		m3dTo.Z=Z;
 	}
 	void Mass3d::CopyTo(Mass3d& m3dTo) {
-		m3dTo.X=X;
-		m3dTo.Y=Y;
-		m3dTo.Z=Z;
-		m3dTo.xMin=xMin;m3dTo.yMin=yMin;m3dTo.zMin=zMin;
-		m3dTo.xMax=xMax;m3dTo.yMax=yMax;m3dTo.zMax=zMax;
-		m3dTo.xVel=xVel;m3dTo.yVel=yVel;m3dTo.zVel=zVel;
-		m3dTo.xRot=xRot;m3dTo.yRot=yRot;m3dTo.zRot=zRot;
-		m3dTo.xRotMin=xRotMin;m3dTo.yRotMin=yRotMin;m3dTo.zRotMin=zRotMin;
-		m3dTo.xRotMax=xRotMax;m3dTo.yRotMax=yRotMax;m3dTo.zRotMax=zRotMax;
-		m3dTo.xRotVelDegreesPerSec=xRotVelDegreesPerSec;m3dTo.yRotVelDegreesPerSec=yRotVelDegreesPerSec;m3dTo.zRotVelDegreesPerSec=zRotVelDegreesPerSec;
-		m3dTo.xRotDest=xRotDest;m3dTo.yRotDest=yRotDest;m3dTo.zRotDest=zRotDest;
-		m3dTo.zSize=xSize;m3dTo.zSize=ySize;m3dTo.zSize=zSize;
+		if (bMegaDebug) {
+			global_msg="starting mass3d.CopyTo";
+			global_msg="using "+m3dTo.name;
+		}
+		if (&m3dTo!=nullptr) {
+			m3dTo.X=X;
+			m3dTo.Y=Y;
+			m3dTo.Z=Z;
+			m3dTo.xMin=xMin;m3dTo.yMin=yMin;m3dTo.zMin=zMin;
+			m3dTo.xMax=xMax;m3dTo.yMax=yMax;m3dTo.zMax=zMax;
+			m3dTo.xVel=xVel;m3dTo.yVel=yVel;m3dTo.zVel=zVel;
+			m3dTo.xRot=xRot;m3dTo.yRot=yRot;m3dTo.zRot=zRot;
+			m3dTo.xRotMin=xRotMin;m3dTo.yRotMin=yRotMin;m3dTo.zRotMin=zRotMin;
+			m3dTo.xRotMax=xRotMax;m3dTo.yRotMax=yRotMax;m3dTo.zRotMax=zRotMax;
+			m3dTo.xRotVelDegreesPerSec=xRotVelDegreesPerSec;m3dTo.yRotVelDegreesPerSec=yRotVelDegreesPerSec;m3dTo.zRotVelDegreesPerSec=zRotVelDegreesPerSec;
+			m3dTo.xRotDest=xRotDest;m3dTo.yRotDest=yRotDest;m3dTo.zRotDest=zRotDest;
+			m3dTo.zSize=xSize;m3dTo.zSize=ySize;m3dTo.zSize=zSize;
+		}
+		else {
+			global_msg=RString_ToString(__FILE__)+": Null reference in Mass3D "+RString_ToString(__func__)+" by mass named '"+name+"'";
+			Console::Error.WriteLine(global_msg);
+		}
 	}
+	//#define OINDEX_AT_X = 0
+	//#define OINDEX_AT_Y = 1
+	//#define OINDEX_AT_Z = 2
+
+	//#define OINDEX_UP_X = 3
+	//#define OINDEX_UP_Y = 4
+	//#define OINDEX_UP_Z = 5
+	///<summary>
+	///This method does not fully account for yaw or relative coordinates--use Transform matrix instead
+	///</summary>
+	void Mass3d::CopyTo(float returnOrientation[], float returnPosition[], float returnVelocity[], bool make_orientation_Z_UP, bool make_orientation_X_FORWARD) {
+		///NORTH IS -z in minecraft (yRot:-180)
+		returnOrientation[0]=0;
+		returnOrientation[1]=0;
+		returnOrientation[2]=0;
+		returnOrientation[3]=0;
+		returnOrientation[4]=0;
+		returnOrientation[5]=0;
+		returnPosition[0]=0;
+		returnPosition[1]=0;
+		returnPosition[2]=0;
+		returnVelocity[0]=0;
+		returnVelocity[1]=0;
+		returnVelocity[2]=0;
+		if (make_orientation_Z_UP) {
+			//at, up:
+			if (make_orientation_X_FORWARD) {
+				//returnOrientation[0]=1;//NOTE: positive x, because DXMan camera zRot is 90 (making final result be positive y) & ground is x,y
+				//returnOrientation[1]=0;
+				//returnOrientation[2]=0;
+				//RMath::Rotate(returnOrientation[0],returnOrientation[1],this->zRot);
+				//RMath::Rotate(returnOrientation[0],returnOrientation[2],this->yRot);
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2],this->yRot,this->zRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);
+				Travel3d(returnOrientation[3],returnOrientation[4],returnOrientation[5],this->yRot-90.0f,this->zRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);// -90 because 3,4,5 is "UP"
+			}
+			else {//make_orientation_Y_FORWARD
+				//returnOrientation[0]=0;
+				//returnOrientation[1]=1;
+				//returnOrientation[2]=0;
+				//RMath::Rotate(returnOrientation[0],returnOrientation[1],this->zRot);
+				//RMath::Rotate(returnOrientation[1],returnOrientation[2],this->xRot);
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2],this->xRot,this->zRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);
+				Travel3d(returnOrientation[3],returnOrientation[4],returnOrientation[5],this->xRot+90.0f,this->zRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);// +90 because 3,4,5 is "UP"
+			}
+			//UP:
+			//returnOrientation[3]=0;
+			//returnOrientation[4]=0;
+			//returnOrientation[5]=1;
+			//RMath::Rotate(returnOrientation[4],returnOrientation[5],this->xRot);
+			//if (returnOrientation[5]!=0.0) RMath::Rotate(returnOrientation[5],returnOrientation[3]);
+
+		}//end if make_orientation_Z_UP
+		else {//make_orientation_Y_UP
+			//at, up (most common is 0,0,-1, 0,1,0):
+			//returnOrientation[3]=0;
+			//returnOrientation[4]=1;
+			//returnOrientation[5]=0;
+			if (make_orientation_X_FORWARD) {
+				//returnOrientation[0]=1;
+				//returnOrientation[1]=0;
+				//returnOrientation[2]=0;
+				//RMath::Rotate(returnOrientation[0],returnOrientation[2],this->yRot);
+				//RMath::Rotate(returnOrientation[0],returnOrientation[1],this->zRot);
+				//UP:
+				//RMath::Rotate(returnOrientation[3],returnOrientation[4],this->zRot);
+				//if (returnOrientation[3]!=0.0) RMath::Rotate(returnOrientation[5],returnOrientation[3]);
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2],this->zRot,this->yRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);
+				Travel3d(returnOrientation[3],returnOrientation[4],returnOrientation[5],this->zRot+90.0f,this->yRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);// +90 because 3,4,5 is "UP"
+			}
+			else {//make_orientation_Z_FORWARD
+				//returnOrientation[0]=0;
+				//returnOrientation[1]=0;
+				//returnOrientation[2]=-1;//typically forward is -z
+				//RMath::Rotate(returnOrientation[0],returnOrientation[2],this->yRot);
+				//RMath::Rotate(returnOrientation[0],returnOrientation[1],this->zRot);
+				//UP:
+				//RMath::Rotate(returnOrientation[4],returnOrientation[5],this->xRot);
+				//if (returnOrientation[5]!=0.0) RMath::Rotate(returnOrientation[5],returnOrientation[3]);
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2],this->xRot,this->yRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);
+				Travel3d(returnOrientation[3],returnOrientation[4],returnOrientation[5],this->xRot-90.0f,this->yRot,1.0f,make_orientation_Z_UP,make_orientation_X_FORWARD);// -90 because 3,4,5 is "UP"
+			}
+		}//end else make_orientation_Y_UP
+
+		/*
+		returnOrientation[0]=0.0;
+		returnOrientation[1]=0.0;
+		returnOrientation[2]=0.0;
+
+		//Travel3d(x,y,z,pitch,yaw,distance);
+		///returnOrientation is (AtX, AtY, AtZ, UpX, UpY, UpZ)
+		if (make_orientation_Z_UP) {
+			if (make_orientation_X_FORWARD) {
+				///DXMan entities are x forward (y is pitch, z is yaw[, x is roll])
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2], this->yRot, this->zRot, 1.0f);
+			}
+			else {
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2], this->yRot, this->zRot, 1.0f);
+			}
+		}
+		else {//make_orientation_Y_UP
+			if (make_orientation_X_FORWARD) {
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2], , , 1.0f);
+			}
+			else {//make_orientation_Z_FORWARD
+				Travel3d(returnOrientation[0],returnOrientation[1],returnOrientation[2], this->xRot, this->yRot, 1.0f); //at
+			}
+			Travel3d(returnOrientation[4],returnOrientation[5],returnOrientation[6], this->xRot, this->yRot, 1.0f); //up
+		}
+		*/
+		returnPosition[0]=this->X;
+		returnPosition[1]=this->Y;
+		returnPosition[2]=this->Z;
+		///Velocity is actually velocity (for doppler)
+		returnVelocity[0]=0.0;
+		returnVelocity[1]=0.0;
+		returnVelocity[2]=0.0;
+	}//end Mass3d::CopyTo(float [], float [], float [], bool)
 
 	void Mass3d::OffsetSomethingByMyLocation(Mass3d& m3dSomethingToMove) {
 		m3dSomethingToMove.X+=X;
@@ -981,6 +1334,8 @@ namespace ExpertMultimediaBase {
 			if (bWholeNumbers) {
 				sReturn=RString_ToString("{At(")+RString_ToString((int)X)+RString_ToString(",")+RString_ToString((int)Y)+RString_ToString(",")+RString_ToString((int)Z)+RString_ToString(")")
 				+RString_ToString(" ~ Velocity")+RString_ToString("(")+RString_ToString((int)xVel)+RString_ToString(",")+RString_ToString((int)yVel)+RString_ToString(",")+RString_ToString((int)zVel)+RString_ToString(")")
+				+RString_ToString("\n name")+name
+				+RString_ToString("\n Size")+RString_ToString("(")+RString_ToString((int)xSize)+RString_ToString(",")+RString_ToString((int)ySize)+RString_ToString(",")+RString_ToString((int)zSize)+RString_ToString(")")
 				+RString_ToString("\n Rot")+RString_ToString("(")+RString_ToString((int)xRot)+RString_ToString(",")+RString_ToString((int)yRot)+RString_ToString(",")+RString_ToString((int)zRot)+RString_ToString(")")
 				+RString_ToString(" ~ RotDest")+RString_ToString("(")+RString_ToString((int)xRotDest)+RString_ToString(",")+RString_ToString((int)yRotDest)+RString_ToString(",")+RString_ToString((int)zRotDest)+RString_ToString(")")
 				+"}";
@@ -988,13 +1343,14 @@ namespace ExpertMultimediaBase {
 			else {
 				sReturn=RString_ToString("{At(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(Z)+RString_ToString(")")
 				+RString_ToString(" ~ Velocity")+RString_ToString("(")+RString_ToString(xVel)+RString_ToString(",")+RString_ToString(yVel)+RString_ToString(",")+RString_ToString(zVel)+RString_ToString(")")
+				+RString_ToString("\n Size")+RString_ToString("(")+RString_ToString(xSize)+RString_ToString(",")+RString_ToString(ySize)+RString_ToString(",")+RString_ToString(zSize)+RString_ToString(")")
 				+RString_ToString("\n Rot")+RString_ToString("(")+RString_ToString(xRot)+RString_ToString(",")+RString_ToString(yRot)+RString_ToString(",")+RString_ToString(zRot)+RString_ToString(")")
 				+RString_ToString(" ~ RotDest")+RString_ToString("(")+RString_ToString(xRotDest)+RString_ToString(",")+RString_ToString(yRotDest)+RString_ToString(",")+RString_ToString(zRotDest)+RString_ToString(")")
 				+"}";
 			}
 		}
 		else {
-			sReturn=RString_ToString("(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(Z)+RString_ToString(")");
+			sReturn=RString_ToString("(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(Z)+RString_ToString(",")+RString_ToString(xSize)+RString_ToString(",")+RString_ToString(ySize)+RString_ToString(",")+RString_ToString(zSize)+RString_ToString(")");
 		}
 		RString_iDecimalPlacesForToString=iDecimalPlacesPrev;
 		if (Mass3d_ToString_bFirstRun) {
@@ -1081,6 +1437,13 @@ namespace ExpertMultimediaBase {
 		Init(0,0,100.0f);
 		fScale=1.0f;
 	}
+	float Mass2d::get_width_scaled_f() {
+		return ((float)rectOriginal.right-(float)rectOriginal.left)*fScale;
+	}
+	float Mass2d::get_height_scaled_f() {
+		return ((float)rectOriginal.bottom-(float)rectOriginal.top)*fScale;
+	}
+
 	//bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, byte bySrcValue) {
 	//	return Shade(arrbyDest, u32DestLoc, (Uint32)bySrcValue);
 	//}
@@ -1103,7 +1466,7 @@ namespace ExpertMultimediaBase {
 	//}
 	//bool Gradient::InitNull() {
 	//	u32Levels=0;
-	//	lpbyShade=NULL;
+	//	lpbyShade=nullptr;
 	//}
 	//bool Gradient::Init(Uint32 u32SetLevels) {
 	//	try {
@@ -1122,34 +1485,65 @@ namespace ExpertMultimediaBase {
 	///#endregion methods
 
 	///#region memory
-	/*inline*/ void SafeFree(byte* &refToFreeAndSetToNull) {
-		try {
-			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
-			refToFreeAndSetToNull=NULL;
+	bool SafeFreeBytePtr_FirstRun=true;
+	void SafeFree(byte* &refToFreeAndSetToNull, string DebugNote) {
+		if (bMegaDebug || SafeFreeBytePtr_FirstRun) {
+			Console::Error.Write("SafeFree (byte* "+DebugNote+")...");
+			Console::Error.Flush();
 		}
-		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		bool ok=true;
+		try {
+			if (refToFreeAndSetToNull!=nullptr) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=nullptr;
+		}
+		catch (exception& exn) {
+			ok=false;
 			ShowExn(exn, "SafeFree(byte*)");
 		}
 		catch (...) {
+			ok=false;
 			ShowUnknownExn("SafeFree(byte*)");
 		}
-	}
-	/*inline*/ void SafeFree(char* &refToFreeAndSetToNull) {
-		try {
-			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
-			refToFreeAndSetToNull=NULL;
+		if (SafeFreeBytePtr_FirstRun) {
+			Console::Error.WriteLine(ok?"OK (SafeFree)":"FAIL (SafeFree)");
+			SafeFreeBytePtr_FirstRun=false;
 		}
-		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	}
+	bool SafeFreeCharPtr_FirstRun=true;
+	void SafeFree(char* &refToFreeAndSetToNull, string DebugNote) {
+		Console::Error.WriteLine("WARNING--This function should never be called: SafeFree(char* &refToFreeAndSetToNull, string DebugNote)");
+		if (SafeFreeCharPtr_FirstRun) {
+			Console::Error.Write("SafeFree ("+DebugNote+")...");
+			Console::Error.Flush();
+		}
+		bool ok=true;
+		try {
+			if (refToFreeAndSetToNull!=nullptr) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=nullptr;
+		}
+		catch (exception& exn) {
+			ok=false;
 			ShowExn(exn, "SafeFree(char*)");
 		}
 		catch (...) {
+			ok=false;
 			ShowUnknownExn("SafeFree(char*)");
 		}
+		if (SafeFreeCharPtr_FirstRun) {
+				Console::Error.WriteLine(ok?"OK (SafeFree)":"FAIL (SafeFree)");
+				SafeFreeCharPtr_FirstRun=false;
+		}
 	}
-	/*inline*/ void SafeFree(int* &refToFreeAndSetToNull) {
+	bool SafeFreeIntPtr_FirstRun=true;
+	void SafeFree(int* &refToFreeAndSetToNull, string DebugNote) {
+		if (SafeFreeIntPtr_FirstRun) {
+			Console::Error.Write("SafeFree ("+DebugNote+")...");
+			Console::Error.Flush();
+		}
+		bool ok=true;
 		try {
-			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
-			refToFreeAndSetToNull=NULL;
+			if (refToFreeAndSetToNull!=nullptr) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=nullptr;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			ShowExn(exn, "SafeFree(int*)");
@@ -1157,17 +1551,21 @@ namespace ExpertMultimediaBase {
 		catch (...) {
 			ShowUnknownExn("SafeFree(int*)");
 		}
+		if (SafeFreeIntPtr_FirstRun) {
+				Console::Error.WriteLine(ok?"OK (SafeFree)":"FAIL (SafeFree)");
+				SafeFreeIntPtr_FirstRun=false;
+		}
 	}
-	/*inline*/ void SafeFree(int** &refToFreeAndSetToNull, int iIndeces) {
+	void SafeFree(int** &refToFreeAndSetToNull, int iIndeces, string DebugNote) {
 		try {
 			for (int index=0; index<iIndeces; index++) {
-				if (refToFreeAndSetToNull[index]!=NULL) {
+				if (refToFreeAndSetToNull[index]!=nullptr) {
 					free(refToFreeAndSetToNull[index]);
-					refToFreeAndSetToNull[index]=NULL;
+					refToFreeAndSetToNull[index]=nullptr;
 				}
 			}
-			if (refToFreeAndSetToNull!=NULL) free(refToFreeAndSetToNull);
-			refToFreeAndSetToNull=NULL;
+			if (refToFreeAndSetToNull!=nullptr) free(refToFreeAndSetToNull);
+			refToFreeAndSetToNull=nullptr;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			ShowExn(exn, "SafeFree(int**,"+RString_ToString(iIndeces)+")");
@@ -1176,7 +1574,7 @@ namespace ExpertMultimediaBase {
 			ShowUnknownExn("SafeFree(int**,"+RString_ToString(iIndeces)+")");
 		}
 	}
-   bool CopySafe(byte* arrbyDest, byte* arrbySrc, int iDestStart, int iSrcStart, int iBytes) {
+	bool CopySafe(byte* arrbyDest, byte* arrbySrc, int iDestStart, int iSrcStart, int iBytes) {
 		bool bGood=true;
 		try {
 			memcpy(&arrbyDest[iDestStart],&arrbySrc[iSrcStart],iBytes);
@@ -1222,6 +1620,7 @@ namespace ExpertMultimediaBase {
 		return cReturn;
 	}//LowercaseElseZeroIfNotUppercase
 	string ToUpper(string val) {
+		/*
 		const char* szNow=val.c_str();
 		char* szTemp=(char*)malloc(sizeof(char)*val.length());
 		for (size_t iNow=0; iNow<val.length(); iNow++) {
@@ -1231,8 +1630,13 @@ namespace ExpertMultimediaBase {
 			else szTemp[iNow]=szNow[iNow];
 		}
 		val.assign(szTemp);
-		SafeFree(szTemp);
+		SafeFree(szTemp, "ToUpper");
 		return val;
+		*/
+		std::string out;
+		std::transform(val.begin(), val.end(), std::back_inserter(out), ::toupper);//std::transform(val.begin(), val.end(), val.begin(), ::toupper);
+		//NOTE: using ::toupper instead of std::toupper can avoid prototype ambiguity compilation error in some versions of GCC
+		return out;
 	}//ToUpper
 	bool StartsWith(string val, string sPart) {
 		return (val.length()>=sPart.length() && sPart.length()>0 && val.substr(0,sPart.length())==sPart);
@@ -1427,7 +1831,7 @@ namespace ExpertMultimediaBase {
 			int iStartNow=0;
 			int iLenNow=0;
 			string sCharNow;
-			Console::Error.Write("Parsing "+RString_ToString(val.length())+RString_ToString(" chars..."));
+			Console::Error.Write("Parsing "+RString_ToString((int)val.length())+RString_ToString(" chars..."));
 			for (size_t iNow=0; iNow<val.length(); iNow++) {
 				sCharNow=val.substr(iNow,1);
 				Console::Error.Write(" '"+sCharNow+RString_ToString("'"));
@@ -1472,7 +1876,7 @@ namespace ExpertMultimediaBase {
 		return iCols;
 	}//end GetCSVRow
 	int CountCArrayNotationFields(string val) { //return 0 for non-array
-		string* sarrIgnored=null;
+		string* sarrIgnored=nullptr;
 		int iReturn=0;
 		if ( StartsWith(val,"{") && EndsWith(val,"}") ) {
 			if (val.length()>2) iReturn=GetCSVRow(sarrIgnored,SafeSubstring(val,1,val.length()-2),true);
@@ -1919,14 +2323,15 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}//substrcpy
+
 	bool Crop(char* &sVal, int iStart) {
 		bool bGood=false;
 		try {
 			char* sTemp=(char*)malloc(sizeof(char)*strlen(sVal));
 			strcpy(sTemp,(char*)(sVal+iStart));
-			SafeFree(sVal);
+			SafeFree(sVal, "Crop(char*, iStart)");
 			sVal=sTemp;
-			sTemp=NULL;
+			sTemp=nullptr;
 			bGood=true;
 		}
 		catch (...){
@@ -2045,7 +2450,7 @@ namespace ExpertMultimediaBase {
 		return bMatch;
 	}
 
-	/*inline*/ int IndexOf(char* sHaystack, char* sNeedle) {
+	int IndexOf(char* sHaystack, char* sNeedle) {
 		int iMaxLoops=1000000;
 		int iNow=0;
 		int iFound=-1;
@@ -2116,7 +2521,7 @@ namespace ExpertMultimediaBase {
 	}
 	bool ShowError(string sMsg, string sCurrentFunction) {
 		bool bGood=true;
-		if (ShowError()) Console::Error.WriteLine(sCurrentFunction+": "+sMsg);
+		if (ShowError()) Console::Error.WriteLine("ERROR--"+sCurrentFunction+": "+sMsg);
 		return bGood;
 	}
 	bool ShowError(int iSivErrNo, string sMsg, string sCurrentFunction) {
@@ -2186,9 +2591,9 @@ namespace ExpertMultimediaBase {
 	//void strcatfromsiverrno(char*, int);
 	//void strcpyfromsiverrno(char*, int);
 	void strcpyfromsiverrno(char* s, int i) {
-		if (s==NULL) {// sErr=(char*)malloc(255*sizeof(char));
-			//ShowError(NULL,"s==NULL!","strcatfromsiverrno",0);
-			//ShowError("s==NULL!","strcatfromsiverrno",0);
+		if (s==nullptr) {// sErr=(char*)malloc(255*sizeof(char));
+			//ShowError(nullptr,"s==nullptr!","strcatfromsiverrno",0);
+			//ShowError("s==nullptr!","strcatfromsiverrno",0);
 		}
 		else {
 			s[0]='\0';
@@ -2203,9 +2608,9 @@ namespace ExpertMultimediaBase {
 		//300's - File
 		//400's - Data (also used when checking data at file load time)
 		//500's - DirectX, 550-599 are fatal
-		if (sErr==NULL) {// sErr=(char*)malloc(255*sizeof(char));
-			//errlog.Add(NULL,"sErr==NULL!","strcatfromsiverrno",0);
-			//errlog.Add("sErr==NULL!","strcatfromsiverrno",0);
+		if (sErr==nullptr) {// sErr=(char*)malloc(255*sizeof(char));
+			//errlog.Add(nullptr,"sErr==nullptr!","strcatfromsiverrno",0);
+			//errlog.Add("sErr==nullptr!","strcatfromsiverrno",0);
 			return;//debug
 		}
 		if (iNum) {
@@ -2224,7 +2629,7 @@ namespace ExpertMultimediaBase {
 		else if (iNum==8) strcat(sErr,"_LOADED flag is not present.");
 		else if (iNum==9) strcat(sErr,"Null targa pointer.");
 		else if (iNum==10) strcat(sErr,"Function not implemented.");
-		else if (iNum==11) strcat(sErr,"Compression header structure is NULL!");
+		else if (iNum==11) strcat(sErr,"Compression header structure is nullptr!");
 		else if (iNum==12) strcat(sErr,"Wrong function chosen for this compression type");
 		else if (iNum==13) strcat(sErr,"Null compression caps pointer");
 
@@ -2254,7 +2659,7 @@ namespace ExpertMultimediaBase {
 		else if (iNum==111) strcat(sErr,"Intermediate targa bitdepth error");
 		//memory read errors:
 		else if (iNum==150) strcat(sErr,"General typesafe error (bad data)");
-		else if (iNum==151) strcat(sErr,"Uncompress buffer is NULL");
+		else if (iNum==151) strcat(sErr,"Uncompress buffer is nullptr");
 		//Siv DirectX pattern surface - see 500's for regular directX surface
 		else if (iNum==200) strcat(sErr,"General error in Compressor surface pattern buffer");
 		//File
@@ -2272,12 +2677,12 @@ namespace ExpertMultimediaBase {
 		else if (iNum==311) strcat(sErr,"File not found");
 		else if (iNum==312) strcat(sErr,"Not all data from compressed file was used, check header and integer data");
 		else if (iNum==313) strcat(sErr,"Couldn't open the source targa file");
-		else if (iNum==314) strcat(sErr,"Couldn't load source targa into non-NULL buffer");
+		else if (iNum==314) strcat(sErr,"Couldn't load source targa into non-nullptr buffer");
 		else if (iNum==315) strcat(sErr,"Couldn't load source targa because it couldn't allocate buffer memory");
-		else if (iNum==316) strcat(sErr,"Couldn't load source targa into NULL pointer");
+		else if (iNum==316) strcat(sErr,"Couldn't load source targa into nullptr pointer");
 		else if (iNum==317) strcat(sErr,"Compresed file has unknown bit depth or compression type");
 		else if (iNum==318) strcat(sErr,"Compressed file is too big and probably unusable!");
-		else if (iNum==319) strcat(sErr,"Loading source targa file to NULL pointer is impossible");
+		else if (iNum==319) strcat(sErr,"Loading source targa file to nullptr pointer is impossible");
 		else if (iNum==320) strcat(sErr,"Failed to find the expected data in this file.");
 		//Data
 			//General
@@ -2333,9 +2738,9 @@ namespace ExpertMultimediaBase {
 			strcat(sErr,"No Description");
 		return;
 	}//end strcatfromsiverrno
-	/*inline*/ bool stringerrors(char *sz, Uint32 u32MaxBuff) {
-		if (sz==NULL) {
-			//error_txt+"STRING ERROR: "+"sz is NULL!!!");
+	bool stringerrors(char *sz, Uint32 u32MaxBuff) {
+		if (sz==nullptr) {
+			//error_txt+"STRING ERROR: "+"sz is nullptr!!!");
 			return(true);
 		}
 		if (strlen(sz)<1 || strlen(sz)>=u32MaxBuff) {
@@ -2348,7 +2753,7 @@ namespace ExpertMultimediaBase {
 
 	///#region math
 	///NEXT TWO METHODS SHOULD BE THE ONLY CALLS TO SDL_GetTicks in the WHOLE PROGRAM
-	/*inline*/ int Base_GetTicks_Absolute() {
+	int Base_GetTicks_Absolute() {
 		return SDL_GetTicks();
 	}
 	/*inline*/Uint32 Base_GetTicks_Relative() {
@@ -2378,19 +2783,20 @@ namespace ExpertMultimediaBase {
 		else fAngle=360.0f-(fAngle-180.0f);
 		return fAngle;
 	}
-	float AngleToward(float xDest, float yDest, float xSrc, float ySrc) {
-		register float xRel=xDest-xSrc, yRel=yDest-xSrc;
-		float fReturn=FTHETAOFXY_DEG(xRel,yRel);
+	float AngleTowardDestFromSrc_Deg(float xDest, float yDest, float xSrc, float ySrc, bool InvertY) {
+		float xRel=xDest-xSrc, yRel=yDest-ySrc;
+		if (InvertY) yRel=0-yRel;
+		float fReturn=RMath::ThetaOfXY_Deg(xRel,yRel);
 		if (fReturn<0.0f) fReturn+=360.0f;
 		return fReturn;
 	}
-	///*inline*/ void Rotate(float &xToMove, float &yToMove, float fRotate) {
+	//void Rotate(float &xToMove, float &yToMove, float fRotate) {
 	//	float rTemp=ROFXY(xToMove,yToMove), thetaTemp=FTHETAOFXY_DEG(xToMove,yToMove);
 	//	thetaTemp+=fRotate;
 	//	xToMove=DXOFRTHETA_DEG(rTemp,thetaTemp);
 	//	yToMove=DYOFRTHETA_DEG(rTemp,thetaTemp);
 	//}
-	///*inline*/ void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate) {
+	//void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate) {
 	//	xToMove-=xCenter;
 	//	yToMove-=yCenter;
 	//	float rTemp=ROFXY(xToMove,yToMove), thetaTemp=FTHETAOFXY_DEG(xToMove,yToMove);
@@ -2400,19 +2806,19 @@ namespace ExpertMultimediaBase {
 	//	xToMove+=xCenter;
 	//	yToMove+=yCenter;
 	//}
-	/*inline*/ void Crop(float &fToModify, float fMin, float fMax) {
+	void Crop(float &fToModify, float fMin, float fMax) {
 		if (fToModify>fMax) fToModify=fMax;
 		else if (fToModify<fMin) fToModify=fMin;
 	}
-	///*inline*/ float SafeAngle360(float fToLimitBetweenZeroAnd360) {
+	//float SafeAngle360(float fToLimitBetweenZeroAnd360) {
 	//	SafeAngle360ByRef(fToLimitBetweenZeroAnd360);
 	//	return fToLimitBetweenZeroAnd360;
 	//}
-	///*inline*/ double SafeAngle360(double fToLimitBetweenZeroAnd360) {
+	//double SafeAngle360(double fToLimitBetweenZeroAnd360) {
 	//	SafeAngle360ByRef(fToLimitBetweenZeroAnd360);
 	//	return fToLimitBetweenZeroAnd360;
 	//}
-	/*inline*/ void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360) {
+	void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360) {
 		//float fAngleTest=fToLimitBetweenZeroAnd360;//debug only
 		fToLimitBetweenZeroAnd360-=( FFLOOR(fToLimitBetweenZeroAnd360/360.0f) * 360.0f );
 		if (fToLimitBetweenZeroAnd360<0.0f) fToLimitBetweenZeroAnd360+=360.0f;
@@ -2423,7 +2829,7 @@ namespace ExpertMultimediaBase {
 		//}
 		//iTest++;
 	}
-	/*inline*/ void SafeAngle360ByRef(double &fToLimitBetweenZeroAnd360) {
+	void SafeAngle360ByRef(double &fToLimitBetweenZeroAnd360) {
 		//double fAngleTest=fToLimitBetweenZeroAnd360;//debug only
 		fToLimitBetweenZeroAnd360-=( DFLOOR(fToLimitBetweenZeroAnd360/360.0) * 360.0 );
 		if (fToLimitBetweenZeroAnd360<0.0) fToLimitBetweenZeroAnd360+=360.0;
@@ -2434,38 +2840,38 @@ namespace ExpertMultimediaBase {
 		//}
 		//iTest++;
 	}
-	/*inline*/ LPIPOINT IPOINTFROM(float xNow, float yNow) {
-		LPIPOINT lpiPoint=NULL;
+	LPIPOINT IPOINTFROM(float xNow, float yNow) {
+		LPIPOINT lpiPoint=nullptr;
 		try {
 			lpiPoint=(LPIPOINT)malloc(sizeof(IPOINT));
 			lpiPoint->X=(int)xNow;
 			lpiPoint->Y=(int)yNow;
 		}
 		catch (exception& exn) {
-			lpiPoint=NULL;
+			lpiPoint=nullptr;
 			ShowExn(exn,"ExpertMultimediaBase::IPOINTFROM");
 		}
 		catch (...) {
-			lpiPoint=NULL;
+			lpiPoint=nullptr;
 			ShowUnknownExn("ExpertMultimediaBase::IPOINTFROM");
 		}
 		return lpiPoint;
 	}
-	/*inline*/ void RConvert_RectToPolar(int &r,int &theta, int X, int Y) {
+	void RConvert_RectToPolar(int &r,int &theta, int X, int Y) {
 		r=(int)(sqrt((double)(X*X+Y*Y))+.5); //+.5 to round // ROFXY is ( sqrt( (X) * (X) + (Y) * (Y) ) )
 		float x1=X, y1=Y;
-		theta=(int)(DTHETAOFXY_DEG((double)x1,(double)y1)+.5); //+.5 to round
+		theta=(int)(RMath::ThetaOfXY_Deg((double)x1,(double)y1)+.5); //+.5 to round
 	}
-	/*inline*/ void RConvert_RectToPolar(float &r,float &theta, float X, float Y) {
+	void RConvert_RectToPolar(float &r,float &theta, float X, float Y) {
 		r=(float)ROFXY(X,Y);
 		float x1=X, y1=Y;
-		theta=FTHETAOFXY_DEG(x1,y1);
+		theta=RMath::ThetaOfXY_Deg(x1,y1);
 	}
 
-	/*inline*/ void RConvert_RectToPolar(double &r,double &theta, double X, double Y) {
+	void RConvert_RectToPolar(double &r,double &theta, double X, double Y) {
 		r=ROFXY(X,Y);
 		double x1=X, y1=Y;
-		theta=DTHETAOFXY_DEG(x1,y1);
+		theta=RMath::ThetaOfXY_Deg(x1,y1);
 	}
 	float RConvert_ToFloat(float val) {
 		return val;
@@ -2479,22 +2885,22 @@ namespace ExpertMultimediaBase {
 		catch (exception& exn) { return (val<M_0)?float_MinValue:float_MaxValue; }
 	}
 	float RConvert_THETAOFXY_RAD(float x, float y) {
-		return THETAOFXY_RAD(x,y);
+		return RMath::ThetaOfXY_Rad(x,y);
 	}
 	double RConvert_THETAOFXY_RAD(double x, double y) {
-		return THETAOFXY_RAD(x,y);
+		return RMath::ThetaOfXY_Rad(x,y);
 	}
 	decimal RConvert_THETAOFXY_RAD(decimal x, decimal y) {
-		return THETAOFXY_RAD(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
+		return RMath::ThetaOfXY_Rad(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
 	}
 	float RConvert_THETAOFXY_DEG(float x, float y) {
-		return FTHETAOFXY_DEG(x,y);
+		return RMath::ThetaOfXY_Deg(x,y);
 	}
 	double RConvert_THETAOFXY_DEG(double x, double y) {
-		return DTHETAOFXY_DEG(x,y);
+		return RMath::ThetaOfXY_Deg(x,y);
 	}
 	decimal RConvert_THETAOFXY_DEG(decimal x, decimal y) {
-		return LDTHETAOFXY_DEG(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
+		return RMath::ThetaOfXY_Deg(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
 	}
 	float RConvert_ROFXY(float x, float y) {
 		return ROFXY(x,y);
@@ -2506,7 +2912,8 @@ namespace ExpertMultimediaBase {
 		return ROFXY(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
 	}
 
-	/*inline*/ float ANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
+	float ANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
+		/*
 		SafeAngle360ByRef(f1);
 		SafeAngle360ByRef(f2);
 		if (f1<f2) {
@@ -2517,8 +2924,12 @@ namespace ExpertMultimediaBase {
 		register float fDiff=fabs(f1-f2);
 		if (fDiff>180.0f) fDiff=(360.0f-fDiff);
 		return(fDiff);
+		*/
+		float fDiff = std::abs(DANGLEDIFF(f2,f1));
+		return(fDiff);
 	}
-	/*inline*/ double ANGLEDIFFPOSITIVE(double f1, double f2) { //returns 0 to 180
+	double ANGLEDIFFPOSITIVE(double f1, double f2) { //returns 0 to 180
+		/*
 		SafeAngle360ByRef(f1);
 		SafeAngle360ByRef(f2);
 		if (f1<f2) {
@@ -2526,46 +2937,65 @@ namespace ExpertMultimediaBase {
 			f1=f2;
 			f2=fTemp;
 		}
-		register double fDiff=fabs(f1-f2);
+		register double fDiff=std::abs(f1-f2);
 		if (fDiff>180.0) fDiff=(360.0-fDiff);
+		*/
+		double fDiff = std::abs(DANGLEDIFF(f2,f1));
 		return(fDiff);
 	}
-	/*inline*/ float FANGLEDIFF(float end, float start) { //returns 0 to 180
-		SafeAngle360ByRef(end);//end-=FFLOOR(end/360.0f)*360.0f;
-		SafeAngle360ByRef(start);//start-=FFLOOR(start/360.0f)*360.0f;
-		//if (end<start) {
-		//	float fTemp=end;
-		//	end=start;
-		//	start=fTemp;
+	float FANGLEDIFF(float endAngle, float startAngle) { //returns 0 to 180
+		SafeAngle360ByRef(endAngle);//endAngle-=FFLOOR(endAngle/360.0f)*360.0f;
+		SafeAngle360ByRef(startAngle);//startAngle-=FFLOOR(startAngle/360.0f)*360.0f;
+		//if (endAngle<startAngle) {
+		//	float fTemp=endAngle;
+		//	endAngle=startAngle;
+		//	startAngle=fTemp;
 		//}
-		//i.e. if end==0 and start==180, then end-start=-180
-		register float fDiff=end-start; //fabs(end-start);
+		//i.e. if endAngle==0 and startAngle==180, then endAngle-startAngle=-180
+
+		/*old way:
+		register float fDiff=endAngle-startAngle; //std::abs(endAngle-startAngle);
 		if (fDiff>180.0f) fDiff=(360.0f-fDiff);
 		else if (fDiff<-180.0f) fDiff=(360.0f+fDiff);
 		return(fDiff);
+		*/
+		//see also angleDiff_Radians in https://github.com/expertmm/PolarBacteria
+		float delta = endAngle-startAngle;
+		if (delta < -180.0f) delta = 360.0f+delta;
+		else if (delta > 180.0f) delta = delta-360.0f;
+		return delta;
+	}
+	double DANGLEDIFF(double endAngle, double startAngle) { //returns 0 to 180
+		SafeAngle360ByRef(endAngle);//endAngle-=FFLOOR(endAngle/360.0f)*360.0f;
+		SafeAngle360ByRef(startAngle);//startAngle-=FFLOOR(startAngle/360.0f)*360.0f;
+		//see also angleDiff_Radians in https://github.com/expertmm/PolarBacteria
+		float delta = endAngle-startAngle;
+		if (delta < -180.0) delta = 360.0+delta;
+		else if (delta > 180.0) delta = delta-360.0;
+		return delta;
 	}
 
-	/*inline*/ float FPDIST(float x1, float y1, float x2,  float y2) {
+	float FPDIST(float x1, float y1, float x2,  float y2) {
 		register float xSquaring=(x1-x2);
 		register float ySquaring=(y1-y2);
 		register float fSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((fSumOfSquares>0)?sqrt(fSumOfSquares):0);
 	}
-	/*inline*/ double DPDIST(double x1, double y1, double x2, double y2) {
+	double DPDIST(double x1, double y1, double x2, double y2) {
 		register double xSquaring=(x1-x2);
 		register double ySquaring=(y1-y2);
 		register double dSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((dSumOfSquares>0)?sqrt(dSumOfSquares):0);
 	}
 
-	/*inline*/ long double LDANGLE360(long double d1) {
+	long double LDANGLE360(long double d1) {
 		while (d1>360.0L) d1-=360.0L;
 		while (d1<-360.0L) d1+=360.0L;
 		if (d1<0) d1=360.0L+d1;
 		return(d1);
 	}
 
-	/*inline*/ long double LDANGLEDIFF(long double d1, long double d2) { //returns 0 to 180
+	long double LDANGLEDIFF(long double d1, long double d2) { //returns 0 to 180
 		while (d1>360.0L) d1-=360.0L;
 		while (d1<-360.0L) d1+=360.0L;
 		while (d2>360.0L) d2-=360.0L;
@@ -2575,153 +3005,60 @@ namespace ExpertMultimediaBase {
 		return(dDiff);
 	}
 
-	/*inline*/ float DIST3D(Mass3d &pointA, Mass3d &pointB) {
+	float DIST3D(Mass3d &pointA, Mass3d &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	/*inline*/ float DIST3D(FPOINT3D &pointA, FPOINT3D &pointB) {
+	float DIST3D(FPOINT3D &pointA, FPOINT3D &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	/*inline*/ float DIST3D(FPOINT3D &pointA, Mass3d &pointB) {
+	float DIST3D(FPOINT3D &pointA, Mass3d &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	/*inline*/ float DIST3D(Mass3d &pointA, FPOINT3D &pointB) {
+	float DIST3D(Mass3d &pointA, FPOINT3D &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	/*inline*/ float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB) {
+	float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB) {
 		register float fSquare;
 		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
-	/*inline*/ float DIST3D(float x1, float y1, float z1, float x2, float y2, float z2) {
+	float DIST3D(float x1, float y1, float z1, float x2, float y2, float z2) {
 		register float fSquare;
 		fSquare=DSQUARED(x2-x1) + DSQUARED(y2-y1) + DSQUARED(z2-z1);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
+
+	void Travel2d_Polar_Deg(float &changeThisX, float &changeThisY, float r, float theta, bool InvertY) {
+		changeThisX += RMath::XOfRTheta_Deg(r, theta);
+		if (InvertY) changeThisY -= RMath::YOfRTheta_Deg(r, theta);
+		else changeThisY += RMath::YOfRTheta_Deg(r, theta);
+	}
+	void Travel2d_Polar_Rad(float &changeThisX, float &changeThisY, float r, float theta, bool InvertY) {
+		changeThisX += RMath::XOfRTheta_Rad(r, theta);
+		if (InvertY) changeThisY -= RMath::YOfRTheta_Rad(r, theta);
+		else changeThisY += RMath::YOfRTheta_Rad(r, theta);
+	}
+
 	//bool Point3dFromPolar(Mass3d &pointToSet, float fAltitude, float fAzimuth, float fDistance) {
 	//	//TODO: copy from Travel3dAbs but set instead of move
 	//}
-	/*inline*/ bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel) {
-		register float xRel,yRel,zRel;
-		bool bGood=false;
-		try {
-			//notes:
-			//--Roll, though not used here, would be done first (X rotation)
-			//--setting pitch first DOES matter (?)
-			//--Y-rotation (fPitch==Altitude) is on the X-Z plane (SINCE zrot of zero makes it point toward +X!!!!)
-			//  --(an azimuth of zero touches this plane)
-			//--Z-rotation (fYaw==Azimuth) is on the X-Y plane; (an altitude of zero touches this plane)
-			yRel=0;
-			xRel=FXOFRTHETA_DEG(fDistanceTravel,fPitch);
-			zRel=FYOFRTHETA_DEG(fDistanceTravel,fPitch);
-			if (xRel!=0.0f) { //if rotation would modify location from this view
-				RMath::Rotate(xRel,yRel,fYaw);
-			}
-			//else do nothing since xRel and yRel are zero
-			pointToSlide.X+=xRel;
-			pointToSlide.Y+=yRel;
-			pointToSlide.Z+=zRel;
-			bGood=true;
-		}
-		catch (exception& exn) {
-			bGood=false;
-			ShowExn(exn, "Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)");
-		}
-		catch (...) {
-			bGood=false;
-			ShowUnknownExn("Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)");
-		}
-		return bGood;
 
-	}//end Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)
-	/*inline*/ bool Travel3dAbs(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel) {
-		return Travel3d(pointToSlide,pointDest,fDistanceTravel/DIST3D(pointToSlide,pointDest));
-	}
-	/*inline*/ bool Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio) {
-		bool bGood=false;
-		try {
-			pointToSlide.X=APPROACH(pointToSlide.X,pointDest.X,fDistanceTravelRatio);
-			pointToSlide.Y=APPROACH(pointToSlide.Y,pointDest.Y,fDistanceTravelRatio);
-			pointToSlide.Z=APPROACH(pointToSlide.Z,pointDest.Z,fDistanceTravelRatio);
-			bGood=true;
-		}
-		catch (exception& exn) {
-			bGood=false;
-			ShowExn(exn, "Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)");
-		}
-		catch (...) {
-			bGood=false;
-			ShowUnknownExn("Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)");
-		}
-		return bGood;
-	}//end Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)
-	/*inline*/ bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel) {
-		bool bGood=false;
-		register float xRel,yRel,zRel;
-		try {
-			yRel=0.0f;
-			xRel=FXOFRTHETA_DEG(fDistanceTravel,fPitch);
-			zRel=FYOFRTHETA_DEG(fDistanceTravel,fPitch);
-			if (xRel!=0.0f) { //if rotation would modify location from this view
-				RMath::Rotate(xRel,yRel,fYaw);
-			}
-			//else do nothing since xRel and yRel are zero
-			xToMove+=xRel;
-			yToMove+=yRel;
-			zToMove+=zRel;
-			bGood=true;
-		}
-		catch (exception& exn) {
-			bGood=false;
-			ShowExn(exn,"Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)");
-		}
-		catch (...) {
-			bGood=false;
-			ShowUnknownExn("Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)");
-		}
-		return bGood;
-	}//end Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)
-	/*inline*/ bool Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel) {
-		bool bGood=false;
-		register double xRel,yRel,zRel;
-		try {
-			yRel=0.0d;
-			xRel=DXOFRTHETA_DEG(fDistanceTravel,fPitch);
-			zRel=DYOFRTHETA_DEG(fDistanceTravel,fPitch);
-			if (xRel!=0.0d) { //if rotation would modify location from this view
-				RMath::Rotate(xRel,yRel,fYaw);
-			}
-			//else do nothing since xRel and yRel are zero
-			xToMove+=xRel;
-			yToMove+=yRel;
-			zToMove+=zRel;
-			bGood=true;
-		}
-		catch (exception& exn) {
-			bGood=false;
-			ShowExn(exn,"Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)");
-		}
-		catch (...) {
-			bGood=false;
-			ShowUnknownExn("Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)");
-		}
-		return bGood;
-	}//end Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)
-	/*inline*/ float FSQUARED(float val) {
+	float FSQUARED(float val) {
 		return val*val;
 	}
-	/*inline*/ float DSQUARED(double val) {
+	float DSQUARED(double val) {
 		return val*val;
 	}
 
-	///*inline*/ int SafePow(int basenum, int exp) {
+	//int SafePow(int basenum, int exp) {
 	//	int result;
 	//	bool bNeg;
 	//	if (exp<0) {
@@ -2743,7 +3080,7 @@ namespace ExpertMultimediaBase {
 	//	}
 	//	return result;
 	//}
-	///*inline*/ long SafePow(long basenum, int exp) {
+	//long SafePow(long basenum, int exp) {
 	//	long result;
 	//	bool bNeg;
 	//	if (exp<0) {
@@ -2765,7 +3102,7 @@ namespace ExpertMultimediaBase {
 	//	}
 	//	return result;
 	//}
-	///*inline*/ float SafePow(float basenum, int exp) {
+	//float SafePow(float basenum, int exp) {
 	//	float result;
 	//	bool bNeg;
 	//	if (exp<0) {
@@ -2787,7 +3124,7 @@ namespace ExpertMultimediaBase {
 	//	}
 	//	return result;
 	//}
-	///*inline*/ double SafePow(double basenum, int exp) {
+	//double SafePow(double basenum, int exp) {
 	//	double result;
 	//	bool bNeg;
 	//	if (exp<0) {
@@ -2809,29 +3146,29 @@ namespace ExpertMultimediaBase {
 	//	}
 	//	return result;
 	//}
-	///*inline*/ int SafeE10I(int exp) {
+	//int SafeE10I(int exp) {
 	//	return SafePow(i10, exp);
 	//}
-	///*inline*/ long SafeE10L(int exp) {
+	//long SafeE10L(int exp) {
 	//	return SafePow(l10, exp);
 	//}
-	///*inline*/ float SafeE10F(int exp) {
+	//float SafeE10F(int exp) {
 	//	return SafePow(f10, exp);
 	//}
-	///*inline*/ double SafeE10D(int exp) {
+	//double SafeE10D(int exp) {
 	//	return SafePow(d10, exp);
 	//}
-	/*inline*/ byte SafeByRoundF(float val) {
+	byte SafeByRoundF(float val) {
 		val+=.5f;
 		if (val<0.0f) return 0;
 		else if (val>255.0f) return 255;
 		else return (byte)val;
 	}
-	/*inline*/ byte SafeByte(float val) {
+	byte SafeByte(float val) {
 		return (val>255.0f)?255:((val<0.0f)?0:(byte)val);
 	}
 	const int INT_MAX_TIMES_NEG1=INT_MAX*-1;
-	/*inline*/ int SafeAddWrappedPositiveOnly(int val1, int val2) { //formerly SafeAddWrapped
+	int SafeAddWrappedPositiveOnly(int val1, int val2) { //formerly SafeAddWrapped
 		///REMEMBER: the absolute value of MIN_INT (0x80000000==-2147483648) is 1 GREATER THAN MAX_INT (0x7fffffff (2147483647))
 		if (val1<0) {
 			ShowErr("WARNING: Caller attempted SafeAddWrappedPositiveOnly using a negative operand 1 (will be changed to absolute value)");
@@ -2878,6 +3215,19 @@ namespace ExpertMultimediaBase {
 	double DegreesToMoveThisManyS(double fDegreesPerSecondX, double rSeconds) {
 		return fDegreesPerSecondX*rSeconds;
 	}
+	float get_scale_by_percentage_of_smallest_screen_axis(int original_w, int original_h, float smallest_axis_size_hint, int screen_w, int screen_h) {
+		float result=0.0f;
+		float desired_pixel_count = (screen_h<screen_w)
+			? ((float)screen_h*smallest_axis_size_hint)
+			: ((float)screen_w*smallest_axis_size_hint);
+		if (original_w>0&&original_h>0) {
+			result = (screen_h<screen_w)
+				? (desired_pixel_count/(float)original_h)
+				: (desired_pixel_count/(float)original_w);
+		}
+		//else leave as 0.0f
+		return result;
+	}
 	///#endregion math
 
 	///#region file operations
@@ -2920,7 +3270,8 @@ namespace ExpertMultimediaBase {
 		try {
 			sOpNoun="close...";
 			if (bFirstRun) Console::Error.Write(sOpNoun);
-			if (ifData!=NULL) ifData.close();
+			if (ifData.is_open())
+				ifData.close();
 		}
 		catch (exception& exn) {
 			ShowExn(exn,"ExpertMultimediaBase::FileSize");

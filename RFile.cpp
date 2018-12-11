@@ -1,24 +1,20 @@
 #ifndef BYTER_CPP
 #define BYTER_CPP
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <RFile.h>
-#include <base.h>
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
 	bool bByterFirstRun=true;
 	Byter::Byter() {
-		arrbyData=NULL;
+		arrbyData=nullptr;
 		iPlace=0;
-		iLength=0;
+		usedByteCount=0;
 		iMaxLength=1024;
 	}
 	Byter::~Byter() {
-		SafeFree(arrbyData);
+		SafeFree(arrbyData, "~Byter");
 	}
 	bool Byter::OpenRead(string sFileNow) {
 		bool bGood=true;
@@ -31,14 +27,14 @@ namespace ExpertMultimediaBase {
 			bGood=OpenRead(szFile);
 			sMsg="exiting";
 		}
-		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Byter::OpenRead");
 		}
 		catch (...) {
 			bGood=false;
 			ShowUnknownExn("Failed to convert char string into OpenRead.",sMsg);
 		}
 		return bGood;
-	}
+	}//end Byter::OpenRead(string sFileNow)
 	bool Byter::OpenWrite(string sFileNow) {
 		return OpenWrite(sFileNow, iMaxLength);
 	}
@@ -50,12 +46,17 @@ namespace ExpertMultimediaBase {
 		try {
 			sMsg="setting virtual length";
 			bGood=SetLength(0);
+			iPlace=0;
 			if (bGood) {
 				sMsg="setting max";
-				SetMax(iSizeTo);
+				bGood=SetMax(iSizeTo);
+			}
+			else {
+				Console::Error.Write("Byter::OpenWrite error: failed to reset length");
+				Console::Error.Flush();
 			}
 		}
-		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load"); bExn=true;
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Byter::OpenWrite"); bExn=true;
 		}
 		catch (...) {
 			bGood=false;
@@ -66,7 +67,7 @@ namespace ExpertMultimediaBase {
 			ShowError(sMsg,"OpenWrite");
 		}
 		return bGood;
-	}
+	}//end Byter::OpenWrite(string sFileNow, int iSizeTo)
 	bool Byter::OpenRead(const char* szFile) {
 
 		string sMsg="starting openread";
@@ -83,14 +84,14 @@ namespace ExpertMultimediaBase {
 			sMsg+=RString_ToString(iFileSize);
 			sMsg+="].  Loading all data...";
 			if (bByterFirstRun) Console::Error.Write(sMsg);
-			iLength=iFileSize;
-			iMaxLength=iLength;
+			usedByteCount=iFileSize;
+			iMaxLength=usedByteCount;
 			if (iFileSize>0) {
 			//ifstream ifData(szFile, ios::out | ios::in | ios::binary);//OFSTRUCT file_data; //the file data information
 				sMsg="create file structure";
 				std::ifstream ifData(szFile, std::ios::in | std::ios::binary);
 				sMsg="checking if file is open";
-				if (ifData.is_open()) {// ((file_handle=OpenFile("by3dAlphaLookup.raw",&file_data,OF_READ))==-1) //open the file if it exists
+				if (ifData.is_open()) {// ((file_handle=OpenFile("file.raw",&file_data,OF_READ))==-1) //open the file if it exists
 					//std::istringstream issData;
 
 					//issData + ifData.rdbuf();
@@ -100,9 +101,9 @@ namespace ExpertMultimediaBase {
 					sMsg="creating data array";
 					arrbyData=(byte*)malloc(iFileSize);
 					sMsg="creating file structure";
-					ifstream ifData(szFile, ios::out | ios::in | ios::binary);//OFSTRUCT file_data; //the file data information
+					//ifstream ifData(szFile, ios::out | ios::in | ios::binary);//OFSTRUCT file_data; //the file data information
 					sMsg="reading to file structure";
-					ifData.read((char*)arrbyData, iFileSize); //_lread(file_handle, by3dAlphaLookup,256*256*256);
+					ifData.read((char*)arrbyData, iFileSize); //_lread(file_handle, array3d,256*256*256);
 					sMsg="closing file structure";
 					ifData.close();//_lclose(file_handle);
 
@@ -111,9 +112,9 @@ namespace ExpertMultimediaBase {
 					//for (int iNow; iNow<iFileSize; iNow++) {
 					//	arrbyData[iNow]=arrbySrc[iNow];
 					//}
-					//ifData.read((char*)by3dAlphaLookup, 256*256*256); //_lread(file_handle, by3dAlphaLookup,256*256*256);
+					//ifData.read((char*)array3d, 256*256*256); //_lread(file_handle, array3d,256*256*256);
 					//ifData.close();//_lclose(file_handle);
-					//arrbySrc=NULL;
+					//arrbySrc=nullptr;
 					//free(szData);
 					sMsg="done...";
 					if (bByterFirstRun) Console::Error.Write(sMsg);
@@ -128,7 +129,7 @@ namespace ExpertMultimediaBase {
 				bGood=false;
 			}
 		}
-		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Byter::OpenRead");
 		}
 		catch (...) {
 			bGood=false;
@@ -136,11 +137,11 @@ namespace ExpertMultimediaBase {
 		}
 		if (!bGood) {
 			if (ShowError()) {
-				if (szFile!=NULL) {
+				if (szFile!=nullptr) {
 					Console::Error.WriteLine("Exception error in Byter::OpenRead(\""+RString_ToString(szFile)+"\"): "+sMsg);
 				}
 				else {
-					Console::Error.WriteLine("Exception error in Byter::OpenRead(NULL char*) (failed to read the exception): "+sMsg);
+					Console::Error.WriteLine("Exception error in Byter::OpenRead(nullptr char*) (failed to read the exception): "+sMsg);
 				}
 			}
 		}
@@ -151,14 +152,14 @@ namespace ExpertMultimediaBase {
 		return iPlace;
 	}
 	int Byter::Length() {
-		return iLength;
+		return usedByteCount;
 	}
 	bool Byter::EndOfFile() {
-		return iPlace>=iLength;
+		return iPlace>=usedByteCount;
 	}
 	void Byter::Read(void* Dest, Uint32 u32BytesToRead) {
 		UInt32 u32Test;
-		Read(NULL,Dest,u32BytesToRead,u32Test,NULL);
+		Read(nullptr,Dest,u32BytesToRead,u32Test,nullptr);
 	}
 	bool Byter::Read(void* hDummyA, void* Dest, Uint32 u32BytesToRead, Uint32 &u32NumBytesRead, void* hDummyB) {
 		string sMsg="init";
@@ -170,7 +171,7 @@ namespace ExpertMultimediaBase {
 			byte* bySrc=(byte*)&arrbyData[iPlace];
 			sMsg="reading data";
 			for (Uint32 iNow=0; iNow<u32BytesToRead; iNow++) {
-				if (iPlace<iLength) {
+				if (iPlace<usedByteCount) {
 					*byDest=*bySrc;
 					u32NumBytesRead++;
 					iPlace++;
@@ -183,14 +184,14 @@ namespace ExpertMultimediaBase {
 					sMsg="tried to read at ";
 					sMsg+=RString_ToString(iPlace);
 					sMsg+=" from ";
-					sMsg+=RString_ToString(iLength);
+					sMsg+=RString_ToString(usedByteCount);
 					sMsg+=" byte file.";
 					bGood=false;
 					break;
 				}
 			}
 		}
-		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Byter::Read");
 		}
 		catch (...) {
 			ShowUnknownExn("Byter::Read byte array");
@@ -204,37 +205,37 @@ namespace ExpertMultimediaBase {
 	}//end Read to void*
 	void Byter::Read(byte& val) {
 		val=0;
-		if (iPlace>=0 && iPlace<iLength) {
+		if (iPlace>=0 && iPlace<usedByteCount) {
 			try {
 				val=arrbyData[iPlace];
 				iPlace+=1;
 			}
-			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
+			catch (exception& exn) { ShowExn(exn,"Byter::Read");
 			}
 			catch (...) {
 				ShowUnknownExn("Byter::Read byte");
 			}
 		}
-		if (iPlace>iLength) iPlace=iLength;
+		if (iPlace>usedByteCount) usedByteCount=iPlace;
 	}//end Byter::Read byte
 	void Byter::Read(ushort& val) { //does force little endian storage
 		val=0;
-		if (iPlace>=0 && iPlace<iLength) {
+		if (iPlace>=0 && iPlace<usedByteCount) {
 			try {
 				val=arrbyData[iPlace];
 				iPlace+=1;
-				if (iPlace<iLength) {
+				if (iPlace<usedByteCount) {
 					val+=((ushort)arrbyData[iPlace])*256;
 					iPlace+=1;
 				}
 			}
-			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
+			catch (exception& exn) { ShowExn(exn,"Byter::Read");
 			}
 			catch (...) {
 				ShowUnknownExn("Byter::Read ushort");
 			}
 		}
-		if (iPlace>iLength) iPlace=iLength;
+		if (iPlace>usedByteCount) usedByteCount=iPlace;
 	}//end Byter::Read ushort
 	bool Byter::ReadAscii(string &sReturn, Uint32 u32BytesToRead, Uint32 &u32NumBytesRead) {
 		string sMsg="init";
@@ -251,7 +252,7 @@ namespace ExpertMultimediaBase {
 			szNow[1]='\0';
 			string sNow="";
 			for (Uint32 iNow=0; iNow<u32BytesToRead; iNow++) {
-				if (iPlace<iLength) {
+				if (iPlace<usedByteCount) {
 					szNow[0]=arrbyData[iSrc];
 					sNow.assign(szNow);
 					sReturn+=sNow;//*byDest=*bySrc;
@@ -266,7 +267,7 @@ namespace ExpertMultimediaBase {
 					sMsg="tried to read at ";
 					sMsg+=RString_ToString(iPlace);
 					sMsg+=" from ";
-					sMsg+=RString_ToString(iLength);
+					sMsg+=RString_ToString(usedByteCount);
 					sMsg+=" byte file.";
 					bGood=false;
 					break;
@@ -319,10 +320,10 @@ namespace ExpertMultimediaBase {
 					}
 				}
 				if (iPlace<iMaxLength) {
-					if (iPlace>=iLength) iLength++;
 					arrbyData[iPlace]=lpbySrc[iNow];
 					u32BytesWritten++;
 					iPlace++;
+					if (iPlace>usedByteCount) usedByteCount=iPlace;
 				}
 				else {
 					bGood=false;
@@ -331,59 +332,79 @@ namespace ExpertMultimediaBase {
 				}
 			}
 		}
-		catch (char* sExn) {
-			try {
-				bGood=false;
-				sMsg.assign(sExn);
-				free(sExn);
-			}
-			catch(...) {
-				bGood=false;
-				sMsg="Exception";
-			}
+		catch (exception& exn) { ShowExn(exn,"Byter::Write byte");
+			bGood=false;
+			sMsg=exn.what();
+		}
+		catch (...) {
+			bGood=false;
+			sMsg="unknown exception";
 		}
 		if (!bGood) {
-			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Write: "+sMsg);
+			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Write from byte pointer: "+sMsg);
 		}
 		return bGood;
 	}//end write byte array
 	bool Byter::Write(byte& val) {
 		bool bGood=false;
-		if (iPlace>=0 && iPlace<iLength) {
-			try {
-				arrbyData[iPlace]=val;
-				bGood=true;
-				iPlace+=1;
-				if (iPlace>iLength) {
-					iPlace=iLength;
+		if (iPlace>=0) {
+			if (iPlace<iMaxLength) {
+				try {
+					arrbyData[iPlace]=val;
+					bGood=true;
+					iPlace+=1;
+					if (iPlace>iMaxLength) {
+						iPlace=iMaxLength;
+					}
+					else bGood=true;
 				}
-				else bGood=true;
+				catch (exception& exn) { ShowExn(exn,"Byter::Write byte");
+				}
+				catch (...) {
+					ShowUnknownExn("Byter::Write byte");
+				}
 			}
-			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
-			}
-			catch (...) {
-				ShowUnknownExn("Byter::Write byte");
+			else {
+				if (iMaxLength==0) Console::Error.Write("1^0");
+				else Console::Error.Write("2^#");//Console::Error.Write("Byter::Write byte error: place was "+RString_ToString(iPlace)+" of "+RString_ToString(usedByteCount));
+				Console::Error.Flush();
 			}
 		}
+		else {
+			Console::Error.Write("Byter::Write byte error: place was "+RString_ToString(iPlace));
+			Console::Error.Flush();
+		}
+		if (iPlace>usedByteCount) usedByteCount=iPlace;
 		return bGood;
 	}//end Byter::Write byte
 	void Byter::Write(ushort& val) { //does force little endian storage
-		if (iPlace>=0 && iPlace<iLength) {
-			try {
-				arrbyData[iPlace]=val;
-				iPlace+=1;
-				if (iPlace<iLength) {
-					arrbyData[iPlace]=(byte)(val/256); //(>>8)
+		if (iPlace>=0) {
+			if (iPlace<iMaxLength) {
+				try {
+					arrbyData[iPlace]=(byte)val;
 					iPlace+=1;
+					if (iPlace<iMaxLength) {
+						arrbyData[iPlace]=(byte)(val/256); //(>>8)
+						iPlace+=1;
+					}
+				}
+				catch (exception& exn) { ShowExn(exn,"Byter::Write ushort");
+				}
+				catch (...) {
+					ShowUnknownExn("Byter::Write ushort");
 				}
 			}
-			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
-			}
-			catch (...) {
-				ShowUnknownExn("Byter::Write ushort");
+			else {
+				if (iMaxLength==0) Console::Error.Write("2^0");
+				else Console::Error.Write("1^#");//Console::Error.Write("Byter::Write byte error: place was "+RString_ToString(iPlace)+" of "+RString_ToString(usedByteCount));
+				Console::Error.Flush();
 			}
 		}
-		if (iPlace>iLength) iPlace=iLength;
+		else {
+			Console::Error.Write("Byter::Write byte error: place was "+RString_ToString(iPlace));
+			Console::Error.Flush();
+		}
+		if (iPlace>usedByteCount) usedByteCount=iPlace;
 	}//end Byter::Write ushort
 	bool Byter::WriteAscii(string val, Uint32 &u32BytesWritten) {
 		string sMsg="Initialization";
@@ -392,7 +413,7 @@ namespace ExpertMultimediaBase {
 			Uint32 u32BytesToWrite=val.length();
 			u32BytesWritten=0;
 
-			char* szSrc=NULL;
+			char* szSrc=nullptr;
 			if (val.length()>0) {
 				szSrc=(char*)malloc(val.length()*sizeof(char));
 				for (Uint32 iNow=0; iNow<u32BytesToWrite; iNow++) {
@@ -404,10 +425,10 @@ namespace ExpertMultimediaBase {
 						}
 					}
 					if (iPlace<iMaxLength) {
-						if (iPlace>=iLength) iLength++;
 						arrbyData[iPlace]=(byte)szSrc[iNow];
 						u32BytesWritten++;
 						iPlace++;
+						if (iPlace>=usedByteCount) usedByteCount++;
 					}
 					else {
 						bGood=false;
@@ -415,19 +436,18 @@ namespace ExpertMultimediaBase {
 						break;
 					}
 				}//end for character iNow
-				SafeFree(szSrc);
+				SafeFree(szSrc, "WriteAscii");
 			}//end if length()>0
 		}
-		catch (char* sExn) {
-			try {
-				bGood=false;
-				sMsg.assign(sExn);
-				free(sExn);
-			}
-			catch(...) {
-				bGood=false;
-				sMsg="Exception";
-			}
+		catch (exception& exn) {
+			bGood=false;
+			sMsg=exn.what();
+			ShowExn(exn,"Byter::WriteAscii");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Byter::WriteAscii");
+			sMsg="Unknown Exception";
 		}
 		if (!bGood) {
 			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Write: "+sMsg);
@@ -436,26 +456,29 @@ namespace ExpertMultimediaBase {
 	}//end WriteAscii
 
 	bool Byter::Save() {
-		bool bGood=true;
+		bool bGood=false;
 		string sMsg="initialization";
 		try {
-			//TODO: finish this
-			sMsg="Not yet implemented";bGood=false;
-			//string sFileNow="";
-			//sFileNow.assign();
-			//const char* szFile=sFileNow.c_str();
-			//bGood=OpenRead(szFile);
+			const char* szFile=sFile.c_str();
+			std::ofstream ofData(szFile, std::ios::binary);//std::ofstream ofData(szFile, std::ios::out | std::ios::binary);
+			sMsg="checking if file is open";
+			if (ofData.is_open()) {
+				sMsg="writing byte array";
+				ofData.write((char*)arrbyData,usedByteCount);
+				sMsg="closing file";
+				ofData.close();
+				bGood=true;
+			}
 		}
-		catch (char* sExn) {
-			try {
-				bGood=false;
-				sMsg.assign(sExn);
-				free(sExn);
-			}
-			catch(...) {
-				bGood=false;
-				sMsg="Exception";
-			}
+		catch (exception& exn) {
+			bGood=false;
+			sMsg=exn.what();
+			ShowExn(exn,"Byter::Save()");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Byter::Save()");
+			sMsg="Unknown Exception";
 		}
 		if (!bGood) {
 			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Save() \""+sFile+"\": "+sMsg);
@@ -471,10 +494,10 @@ namespace ExpertMultimediaBase {
 		if (iSizeTo>iMaxLength) {
 			bGood=SetMax(iSizeTo);
 			if (bGood) {
-				iLength=iSizeTo;
+				usedByteCount=iSizeTo;
 			}
 		}
-		else iLength=iSizeTo;
+		else usedByteCount=iSizeTo;
 		return bGood;
 	}//
 	bool Byter::SetMax(int iSizeTo) {
@@ -483,11 +506,12 @@ namespace ExpertMultimediaBase {
 		try {
 			if (iSizeTo>iMaxLength) {
 				byte* arrbyDataNew=(byte*)malloc(iSizeTo);
-				for (int iNow=0; iNow<iLength; iNow++) {
+				for (int iNow=0; iNow<usedByteCount; iNow++) {
 					arrbyDataNew[iNow]=arrbyData[iNow];
 				}
 				byte* arrbyDataOld=arrbyData;
 				arrbyData=arrbyDataNew;
+				iMaxLength=iSizeTo;
 				free(arrbyDataOld);//done last to prevent crashes from affecting result.
 			}
 			//string sFileNow="";

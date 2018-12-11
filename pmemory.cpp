@@ -1,23 +1,21 @@
 #ifndef PMEMORY_CPP
 #define PMEMORY_CPP
 
-#include "pmemory.h"
-#include <cstdlib> //malloc, free
-//#include <cstring>
+#include <pmemory.h>
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
-	void PMemory::SafeFree(byte* &reftopointer_WillBeSetToNull) {
+	void PMemory::SafeFree(byte* &reftopointer_WillBeSetToNull, string DebugNote) {
 		try {
-			if (reftopointer_WillBeSetToNull!=NULL) free(reftopointer_WillBeSetToNull);
-			reftopointer_WillBeSetToNull=NULL;
+			if (reftopointer_WillBeSetToNull!=nullptr) free(reftopointer_WillBeSetToNull);
+			reftopointer_WillBeSetToNull=nullptr;
 		}
 		catch (exception& exn) {//!!!!!!!!!!TODO: finish this: copy this to ALL catch statements EVERYWHERE!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			PReporting::ShowExn(exn, "SafeFree(byte*)");
+			PReporting::ShowExn(exn, "SafeFree(byte*) ("+DebugNote+")");
 		}
 		catch (...) {
-			PReporting::ShowUnknownExn("","SafeFree(byte*)");
+			PReporting::ShowUnknownExn("","SafeFree(byte*) ("+DebugNote+")");
 		}
 	}
 	void PMemory::Push(byte* &dest, unsigned int& dest_Length, unsigned int& dest_BytesUsed, byte val) {
@@ -32,7 +30,7 @@ namespace ExpertMultimediaBase {
 	}//end PMemory::Push
 	void PMemory::Redim(byte* &dest, unsigned int dest_OldLength, unsigned int dest_NewLength) {
 		if (dest_OldLength!=dest_NewLength) {
-			if ((dest!=NULL)&&dest_OldLength>0) {
+			if ((dest!=nullptr)&&dest_OldLength>0) {
 				byte* arrayNew=(byte*)malloc(dest_NewLength);
 				for (unsigned int iNow=0; iNow<dest_NewLength; iNow++) {
 					if (iNow<dest_OldLength) arrayNew[iNow]=dest[iNow];
@@ -40,7 +38,7 @@ namespace ExpertMultimediaBase {
 				}
 				free(dest);
 				dest=arrayNew;
-				arrayNew=NULL;
+				arrayNew=nullptr;
 			}
 			else dest=(byte*)malloc(dest_NewLength);
 		}

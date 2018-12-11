@@ -2,12 +2,11 @@
 #define GRADIENT_H
 
 #include <base.h>
+// for cpp:
+#include <cstring>  // memcpy etc
 
-
-using namespace std;
 
 namespace ExpertMultimediaBase {
-	class GBuffer;
 
 	class Gradient {
 	private:
@@ -19,8 +18,10 @@ namespace ExpertMultimediaBase {
 		bool InitNull();
 	public:
 		Gradient();
-		void ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, byte bySrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, byte bySrcValue);
-		void ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, Uint32 u32SrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, Uint32 u32SrcValue);
+		Uint32 get_u32BytesPP();
+		Uint32 get_u32BytesTotal();
+		byte* get_lpbyShade();
+		void SetColors(byte r1, byte g1, byte b1, byte a1, byte r2, byte g2, byte b2, byte a2);
 	};
 }//end namespace
 #endif

@@ -1,7 +1,9 @@
 #ifndef PREPORTING_CPP
 #define PREPORTING_CPP
 
-#include "preporting.h"
+#include <preporting.h>
+
+using namespace std;
 
 namespace ExpertMultimediaBase {
 	string PReporting::sParticiple="(unknown)";

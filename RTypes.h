@@ -4,20 +4,9 @@
 #include <base.h>
 #include <frameworkdummy.h>
 #include <string>
+// for cpp:
+#include <preporting.h>
 
-#ifndef ref_FPoint
-#define ref_FPoint FPoint&
-#endif
-#ifndef ref_DPoint
-#define ref_DPoint DPoint&
-#endif
-#ifndef ref_MPoint
-#define ref_MPoint MPoint&
-#endif
-
-
-using namespace std;
-//using namespace ProtoArmor;
 
 namespace ExpertMultimediaBase {
 
@@ -64,7 +53,6 @@ namespace ExpertMultimediaBase {
 		FPoint();
 		string ToString();
 	};
-	/*inline*/ float FDist(FPoint &point1, FPoint &point2);
 
 	class DPoint {
 	public:
@@ -73,7 +61,6 @@ namespace ExpertMultimediaBase {
 		DPoint();
 		string ToString();
 	};
-	double Dist(DPoint &point1, DPoint &point2);//see also pmath.h
 
 	class MPoint {
 	public:

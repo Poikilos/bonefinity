@@ -4,14 +4,15 @@
 #include <cstdlib>
 #include <base.h>
 #include <frameworkdummy.h>
-
-using namespace std;
+// for cpp:
+#include <iostream>
+#include <fstream>
 
 namespace ExpertMultimediaBase {
 	class Byter {
 	private:
 		int iPlace;
-		int iLength;
+		int usedByteCount;
 		int iMaxLength;
 	public:
 		byte* arrbyData;
