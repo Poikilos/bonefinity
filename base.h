@@ -91,7 +91,7 @@ using namespace std;
 //BYTEOF360 intentionally divides by 256 to allow storage of 256 degree variations since 360 would be redundant if both 0 and 255 where 360!!!
 #define BYTEOF360LD(a) (byte(( (long double)(a) * 256.0L/360.0L	)+.5L)) //#define LDBYTEOF360(a) (byte(( (long double)(a) * LD256_DIV_360 )+.5L))
 #define BYTEOF360F(fA) (byte((	(fA) * F256_DIV_360	)+.5f) ) //.5f is to change truncation to rounding
-#define ROFXY(x,y) ( sqrt( (x) * (x) + (y) * (y) ) )
+#define ROFXY(X,Y) ( sqrt( (X) * (X) + (Y) * (Y) ) )
 
 #define FMOD(f1,f2) (((f1)>(f2)) ? ( (f1) - float(int((f1)/(f2)))*(f2)) : 0 )
 #define DMOD(f1,f2) (((f1)>(f2)) ? ( (f1) - double(int((f1)/(f2)))*(f2)) : 0 )
@@ -99,9 +99,9 @@ using namespace std;
 #define LD180_DIV_PI						57.2957795130823208767981548141052L
 #define D180_DIV_PI						 57.2957795130823208767981548141052
 #define F180_DIV_PI				57.2957795130823208767981548141052f // 180/PI
-#define THETAOFXY(x,y) ( ((y)!=0 || (x)!=0) ? (atan2((y),(x))*F180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
-#define DTHETAOFXY(x,y) ( ((y)!=0 || (x)!=0) ? (atan2((y),(x))*D180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
-#define LDTHETAOFXY(x,y) ( ((y)!=0 || (x)!=0) ? (atan2((y),(x))*LD180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
+#define THETAOFXY(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*F180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
+#define DTHETAOFXY(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*D180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
+#define LDTHETAOFXY(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*LD180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
 #define XOFRTHETA(r,theta) ((r)*cos((theta)/D180_DIV_PI)) //divide since cos takes radians
 #define YOFRTHETA(r,theta) ((r)*sin((theta)/D180_DIV_PI)) //divide since cos takes radians
 #define FXOFRTHETA(r,theta) ((r)*cos((theta)/F180_DIV_PI)) //divide since cos takes radians
@@ -130,28 +130,28 @@ namespace ExpertMultimediaBase {
 	} FRECT, *LPFRECT;
 
 	typedef struct IPOINT_STRUCT {
-		int x;
-		int y;
+		int X;
+		int Y;
 	} IPOINT, *LPIPOINT;
 	typedef struct FPOINT_STRUCT {
-		float x;
-		float y;
+		float X;
+		float Y;
 	}FPOINT, *LPFPOINT;
 
 	typedef struct DPOINT_STRUCT {
-		double x;
-		double y;
+		double X;
+		double Y;
 	}DPOINT, *LPDPOINT;
 
 	typedef struct FPOINT3D_STRUCT {
-		float x;
-		float y;
+		float X;
+		float Y;
 		float z;
 	}FPOINT3D, *LPFPOINT3D;
 
 	typedef struct DPOINT3D_STRUCT {
-		double x;
-		double y;
+		double X;
+		double Y;
 		double z;
 	}DPOINT3D, *LPDPOINT3D;
 
@@ -183,24 +183,24 @@ namespace ExpertMultimediaBase {
 
 	class IPoint {
 	public:
-		int x;
-		int y;
+		int X;
+		int Y;
 		IPoint();
 		string ToString();
 	};
 
 	class FPoint {
 	public:
-		float x;
-		float y;
+		float X;
+		float Y;
 		FPoint();
 		string ToString();
 	};
 
 	class DPoint {
 	public:
-		double x;
-		double y;
+		double X;
+		double Y;
 		DPoint();
 		string ToString();
 	};
@@ -319,7 +319,7 @@ namespace ExpertMultimediaBase {
 	};
 	class Mass3d {
 	public:
-		float x,y,z;
+		float X,Y,z;
 		float xMin,yMin,zMin;
 		float xMax,yMax,zMax;
 		float xVel,yVel,zVel;
@@ -407,7 +407,7 @@ namespace ExpertMultimediaBase {
 	float AngleToward(float xDest, float yDest, float xSrc, float ySrc);
 	int FileSize(string sFile);
 	int FileSize(const char* sFile);
-	double DDist(DPoint &point1, DPoint &point2);
+	//double DDist(DPoint &point1, DPoint &point2);
 	void strcatfromsiverrno(char *sErr, int iNum);
 	void strcpyfromsiverrno(char *s, int i);
 	void Rotate(float &xToMove, float &yToMove, float fRotate);
@@ -420,8 +420,8 @@ namespace ExpertMultimediaBase {
 	bool ShowError(string sMsg, string sCurrentFunction);
 	bool ShowError(int iSivErrNo, string sCurrentFunction);
 	bool ShowError(int iSivErrNo, string sMsg, string sCurrentFunction);
-	void ShowAndDeleteException(char* &sExn, string sFuncNow, string sVerbNow);
-	void ShowAndDeleteException(char* &sExn, string sFuncNow);
+	//void ShowAndDeleteException(char* &sExn, string sFuncNow, string sVerbNow);
+	//void ShowAndDeleteException(char* &sExn, string sFuncNow);
 	void ShowExn(exception& exn, string sFuncNow, string sVerbNow);
 	void ShowExn(exception& exn, string sFuncNow);
 	void ShowUnknownExn(string sFuncNow, string sVerbNow);
@@ -435,6 +435,8 @@ namespace ExpertMultimediaBase {
 	string RString_ToString(long double val);
 	string RString_ToString(string val);
 	string RString_ToString(char* val);
+	string RString_ToString(const char* val);
+	//string RString_ToString(char val[]); //same as const char*
 	string RString_ToString(char val);
 	string RString_ToString(bool val);
 	////////////////////////////////////// SIMPLE FUNCTIONS USING INTRINSIC TYPES ///
@@ -485,8 +487,8 @@ namespace ExpertMultimediaBase {
 	/*inline*/ LPIPOINT IPOINTFROM(float xNow, float yNow);
 	/*inline*/ float SafeAngle360(float fToLimitBetweenZeroAnd360);
 	/*inline*/ void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360);
-	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float x, float y);
-	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double x, double y);
+	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float X, float Y);
+	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double X, double Y);
 	/*inline*/ float FANGLEDIFF(float f1, float f2); //returns -180 to 180
 	/*inline*/ float FANGLEDIFFPOSITIVE(float f1, float f2); //returns 0 to 180
 	/*inline*/ float FDist(FPoint &point1, FPoint &point2);
@@ -531,6 +533,7 @@ namespace ExpertMultimediaBase {
 	extern byte by3dAlphaLookup[256][256][256];
 	extern bool bDebug;//CHANGED during init to the value of the debugmode script variable
 	extern bool bMegaDebug; //true for debug only!
+	extern IPoint ipZero;
 	///#endregion globals defined in base.h
 } //end namespace
 #endif

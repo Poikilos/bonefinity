@@ -41,34 +41,45 @@ namespace ExpertMultimediaBase {
 	byte by3dAlphaLookup[256][256][256];
 	bool bDebug=false;//CHANGED during init to the value of the debugmode script variable
 	bool bMegaDebug=true; //true for debug only!
+	IPoint ipZero;
+
 	///#endregion globals defined in base.h
 
 	///#region methods
-
+	/*
 	IPoint::IPoint() {
-		x=0;
-		y=0;
+		X=0;
+		Y=0;
 	}
-
+	IRect::IRect() {
+		top=0;
+		left=0;
+		bottom=0;
+		right=0;
+	}
+	*/
+	IPoint::IPoint() {
+		X=0;
+		Y=0;
+	}
 	string IPoint::ToString() {
-		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
+		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
 	}
 
 	FPoint::FPoint() {
-		x=0;
-		y=0;
+		X=0;
+		Y=0;
 	}
 	string FPoint::ToString() {
-		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
+		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
 	}
-
 
 	DPoint::DPoint() {
-		x=0;
-		y=0;
+		X=0;
+		Y=0;
 	}
 	string DPoint::ToString() {
-		return "("+RString_ToString(x)+","+RString_ToString(y)+")";
+		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
 	}
 
 	IRect::IRect() {
@@ -166,7 +177,7 @@ namespace ExpertMultimediaBase {
 	}
 	void Variable::Set(int val) {
 		try { SetActive();
-				sVal=RString_ToString(val);
+			sVal=RString_ToString(val);
 		}
 		catch (exception& exn) { ShowExn(exn,"Variable::Set(int)");
 		}
@@ -471,7 +482,7 @@ namespace ExpertMultimediaBase {
 			ofstream ofNow(sFile.c_str());
 			int iMaxLine=varr[0].MaxChars()+varr[0].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
 			string sLine="";
-	  		for (int iNow=0; iNow<iVars; iNow++) {
+			for (int iNow=0; iNow<iVars; iNow++) {
 				sLine=varr[iNow].ToIniLine();
 				ofNow<<sLine<<endl;
 			}
@@ -798,7 +809,7 @@ namespace ExpertMultimediaBase {
 		//return (zSize*.912);
 	//}
 	Mass3d::Mass3d() {
-		x=0;y=0;z=0;
+		X=0;Y=0;z=0;
 		xMin=-8;yMin=-8;zMin=0;
 		xMax=8;yMax=8;zMax=16;
 		xVel=0;yVel=0;zVel=0;
@@ -819,11 +830,11 @@ namespace ExpertMultimediaBase {
 		else if (zRot>zRotMax) zRot=zRotMax;
 	}
 	void Mass3d::LocationToLimits() {
-		if 		(x<xMin) x=xMin;
-		else if (x>xMax) x=xMax;
-		if 		(y<yMin) y=yMin;
-		else if (y>yMax) y=yMax;
-		if 		(z<zMin) z=zMin;
+		if		(X<xMin) X=xMin;
+		else if (X>xMax) X=xMax;
+		if		(Y<yMin) Y=yMin;
+		else if (Y>yMax) Y=yMax;
+		if		(z<zMin) z=zMin;
 		else if (z>zMax) z=zMax;
 	}
 	void Mass3d::AngleDestToLimits() {
@@ -921,8 +932,8 @@ namespace ExpertMultimediaBase {
 		zRotDest=zRotTo;zRot=zRotTo;
 	}
 	void Mass3d::HardLocation(float xTo, float yTo, float zTo) {
-		x=xTo;//xDest=xTo;
-		y=yTo;//yDest=yTo;
+		X=xTo;//xDest=xTo;
+		Y=yTo;//yDest=yTo;
 		z=zTo;//zDest=zTo;
 	}
 	void Mass3d::SetRotMaxSpeed(float xSpeed, float ySpeed, float zSpeed) {
@@ -942,13 +953,13 @@ namespace ExpertMultimediaBase {
 			Console.Error.Flush();
 		}
 		if (bShowAll) {
-			sReturn=RString_ToString("At(")+RString_ToString(x)+RString_ToString(",")+RString_ToString(y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")")
+			sReturn=RString_ToString("At(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")")
 			+RString_ToString(":AtVelocity")+RString_ToString("(")+RString_ToString(xVel)+RString_ToString(",")+RString_ToString(yVel)+RString_ToString(",")+RString_ToString(zVel)+RString_ToString(")")
 			+RString_ToString("\n  Rot")+RString_ToString("(")+RString_ToString(xRot)+RString_ToString(",")+RString_ToString(yRot)+RString_ToString(",")+RString_ToString(zRot)+RString_ToString(")")
 			+RString_ToString(":RotDest")+RString_ToString("(")+RString_ToString(xRotDest)+RString_ToString(",")+RString_ToString(yRotDest)+RString_ToString(",")+RString_ToString(zRotDest)+RString_ToString(")");
 		}
 		else {
-			sReturn=RString_ToString("(")+RString_ToString(x)+RString_ToString(",")+RString_ToString(y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")");
+			sReturn=RString_ToString("(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")");
 		}
 		RString_iDecimalPlacesForToString=iDecimalPlacesPrev;
 		if (Mass3d_ToString_bFirstRun) {
@@ -1396,7 +1407,7 @@ namespace ExpertMultimediaBase {
 						}
 					}
 					else {
-				   		Console.Error.Write("("+RString_ToString(iStartNow)+RString_ToString(",")+RString_ToString(iLenNow)+RString_ToString(")"));
+						Console.Error.Write("("+RString_ToString(iStartNow)+RString_ToString(",")+RString_ToString(iLenNow)+RString_ToString(")"));
 					}
 					iLenNow=0;
 					iStartNow=iNow+1;
@@ -2301,8 +2312,8 @@ namespace ExpertMultimediaBase {
 		return fReturn;
 	}
 	double DDist(DPoint &point1, DPoint &point2) {
-		register double xSquaring=(point1.x-point2.x);
-		register double ySquaring=(point1.y-point2.y);
+		register double xSquaring=(point1.X-point2.X);
+		register double ySquaring=(point1.Y-point2.Y);
 		register double dSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((dSumOfSquares>0)?sqrt(dSumOfSquares):0);
 	}
@@ -2344,8 +2355,8 @@ namespace ExpertMultimediaBase {
 		LPIPOINT lpiPoint=NULL;
 		try {
 			lpiPoint=(LPIPOINT)malloc(sizeof(IPOINT));
-			lpiPoint->x=(int)xNow;
-			lpiPoint->y=(int)yNow;
+			lpiPoint->X=(int)xNow;
+			lpiPoint->Y=(int)yNow;
 		}
 		catch (exception& exn) {
 			lpiPoint=NULL;
@@ -2357,16 +2368,16 @@ namespace ExpertMultimediaBase {
 		}
 		return lpiPoint;
 	}
-	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float x, float y) {
+	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float X, float Y) {
 		//uses double since trig functions are double
-		r=(float)ROFXY(x,y);
-		float x1=x, y1=y;
+		r=(float)ROFXY(X,Y);
+		float x1=X, y1=Y;
 		theta=DTHETAOFXY(x1,y1);
 	}
 
-	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double x, double y) {
-		r=ROFXY(x,y);
-		double x1=x, y1=y;
+	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double X, double Y) {
+		r=ROFXY(X,Y);
+		double x1=X, y1=Y;
 		theta=DTHETAOFXY(x1,y1);
 	}
 	/*inline*/ float FANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
@@ -2397,8 +2408,8 @@ namespace ExpertMultimediaBase {
 	}
 
 	/*inline*/ float FDist(FPoint &point1, FPoint &point2) {
-		register float xSquaring=(point1.x-point2.x);
-		register float ySquaring=(point1.y-point2.y);
+		register float xSquaring=(point1.X-point2.X);
+		register float ySquaring=(point1.Y-point2.Y);
 		register float fSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
 		return ((fSumOfSquares>0)?sqrt(fSumOfSquares):0);
 	}
@@ -2427,34 +2438,34 @@ namespace ExpertMultimediaBase {
 		while (d1<-360.0L) d1+=360.0L;
 		while (d2>360.0L) d2-=360.0L;
 		while (d2<-360.0L) d2+=360.0L;
-	 	register long double dDiff=abs(d1-d2);
+		register long double dDiff=abs(d1-d2);
 		if (dDiff>180.0L)dDiff=(360.0L-dDiff);
 		return(dDiff);
 	}
 
 	/*inline*/ float DIST3D(Mass3d &pointA, Mass3d &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(FPOINT3D &pointA, FPOINT3D &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(FPOINT3D &pointA, Mass3d &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(Mass3d &pointA, FPOINT3D &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.x-pointA.x) + DSQUARED(pointB.y-pointA.y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(float x1, float y1, float z1, float x2, float y2, float z2) {
@@ -2468,11 +2479,11 @@ namespace ExpertMultimediaBase {
 	/*inline*/ bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel) {
 		register float xRel,yRel,zRel;
 		//notes:
-		//--Roll, though not used here, would be done first (x rotation)
+		//--Roll, though not used here, would be done first (X rotation)
 		//--setting pitch first DOES matter (?)
-		//--y-rotation (fPitch==Altitude) is on the x-z plane (SINCE zrot of zero makes it point toward +x!!!!)
+		//--Y-rotation (fPitch==Altitude) is on the X-z plane (SINCE zrot of zero makes it point toward +X!!!!)
 		//  --(an azimuth of zero touches this plane)
-		//--z-rotation (fYaw==Azimuth) is on the x-y plane; (an altitude of zero touches this plane)
+		//--z-rotation (fYaw==Azimuth) is on the X-Y plane; (an altitude of zero touches this plane)
 		yRel=0;
 		xRel=FXOFRTHETA(fDistanceTravel,fPitch);
 		zRel=FYOFRTHETA(fDistanceTravel,fPitch);
@@ -2480,16 +2491,16 @@ namespace ExpertMultimediaBase {
 			Rotate(xRel,yRel,fYaw);
 		}
 		//else do nothing since xRel and yRel are zero
-		pointToSlide.x+=xRel;
-		pointToSlide.y+=yRel;
+		pointToSlide.X+=xRel;
+		pointToSlide.Y+=yRel;
 		pointToSlide.z+=zRel;
 	}
 	/*inline*/ bool Travel3dAbs(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel) {
 		return Travel3d(pointToSlide,pointDest,fDistanceTravel/DIST3D(pointToSlide,pointDest));
 	}
 	/*inline*/ bool Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio) {
-		pointToSlide.x=APPROACH(pointToSlide.x,pointDest.x,fDistanceTravelRatio);
-		pointToSlide.y=APPROACH(pointToSlide.y,pointDest.y,fDistanceTravelRatio);
+		pointToSlide.X=APPROACH(pointToSlide.X,pointDest.X,fDistanceTravelRatio);
+		pointToSlide.Y=APPROACH(pointToSlide.Y,pointDest.Y,fDistanceTravelRatio);
 		pointToSlide.z=APPROACH(pointToSlide.z,pointDest.z,fDistanceTravelRatio);
 	}
 	/*inline*/ bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel) {
@@ -2671,7 +2682,7 @@ namespace ExpertMultimediaBase {
 			ShowUnknownExn("ExpertMultimediaBase::FileSize",sOpNoun);
 		}
 		try {
-	  		sOpNoun="close...";
+			sOpNoun="close...";
 			if (bFirstRun) Console.Error.Write(sOpNoun);
 			if (ifData!=NULL) ifData.close();
 		}
@@ -2681,9 +2692,9 @@ namespace ExpertMultimediaBase {
 		catch (...) {
 			ShowUnknownExn("ExpertMultimediaBase::FileSize",sOpNoun);
 		}
-	 	sOpNoun="done ("+RString_ToString(iBytes)+" bytes)...";
+		sOpNoun="done ("+RString_ToString(iBytes)+" bytes)...";
 		if (bFirstRun) Console.Error.Write(sOpNoun);
-	 	bFirstRun=false;
+		bFirstRun=false;
 		return iBytes;
 	}//end FileSize(char* szFile)
 	int FileSize(string sFile) {
