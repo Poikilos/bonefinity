@@ -41,7 +41,6 @@ namespace ExpertMultimediaBase {
 	byte by3dAlphaLookup[256][256][256];
 	bool bDebug=false;//CHANGED during init to the value of the debugmode script variable
 	bool bMegaDebug=true; //true for debug only!
-	IPoint ipZero;
 
 	///#endregion globals defined in base.h
 
@@ -58,29 +57,6 @@ namespace ExpertMultimediaBase {
 		right=0;
 	}
 	*/
-	IPoint::IPoint() {
-		X=0;
-		Y=0;
-	}
-	string IPoint::ToString() {
-		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
-	}
-
-	FPoint::FPoint() {
-		X=0;
-		Y=0;
-	}
-	string FPoint::ToString() {
-		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
-	}
-
-	DPoint::DPoint() {
-		X=0;
-		Y=0;
-	}
-	string DPoint::ToString() {
-		return "("+RString_ToString(X)+","+RString_ToString(Y)+")";
-	}
 
 	IRect::IRect() {
 		top=0;

@@ -181,29 +181,6 @@ namespace ExpertMultimediaBase {
 	}PIXEL24BGR, *LPPIXEL24BGR;
 	using namespace std;
 
-	class IPoint {
-	public:
-		int X;
-		int Y;
-		IPoint();
-		string ToString();
-	};
-
-	class FPoint {
-	public:
-		float X;
-		float Y;
-		FPoint();
-		string ToString();
-	};
-
-	class DPoint {
-	public:
-		double X;
-		double Y;
-		DPoint();
-		string ToString();
-	};
 
 	class IRect {
 	public:
@@ -533,7 +510,6 @@ namespace ExpertMultimediaBase {
 	extern byte by3dAlphaLookup[256][256][256];
 	extern bool bDebug;//CHANGED during init to the value of the debugmode script variable
 	extern bool bMegaDebug; //true for debug only!
-	extern IPoint ipZero;
 	///#endregion globals defined in base.h
 } //end namespace
 #endif
