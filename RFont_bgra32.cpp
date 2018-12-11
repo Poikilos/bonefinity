@@ -18,6 +18,7 @@ namespace ExpertMultimediaBase {
 	const int GFont_GlyphTypeItalic=1;
 	const int GFont_GlyphTypeBold=2;
 	const int GFont_GlyphTypeBoldItalic=3;
+	SizeF GFont_sizeTemp;
 	bool GFont_bFirstRun; //#include <../../dxman-crossplatform/dxman.h> //GFont_bFirstRun etc
 
 
@@ -46,12 +47,19 @@ namespace ExpertMultimediaBase {
 		return bGood;
 	}
 	bool GFont::TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText) {
-		return TypeFast(gbDest, ipDest, sText, 0, DrawModeCopyAlpha);
+		return TypeFast(GFont_sizeTemp, gbDest, ipDest, sText, GFont_GlyphTypePlain, DrawModeCopyAlpha, false);
 	}
 	bool GFont::TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode) {
+		return TypeFast(GFont_sizeTemp, gbDest, ipDest, sText, iGlyphType, iDrawMode, false);
+	}
+	bool GFont::TypeFast(SizeF& sizeReturn, GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode, bool bTestOnlyNoDraw) {
 		bool bGood=true;
 		static bool bFirstRun=true;
 		IPoint ipDestNow;
+		sizeReturn.Width=0;//TODO: not compatible with nested text areas???
+		sizeReturn.Height=0;//TODO: not compatible with nested text areas???
+		sizeReturn.Width+=ipDest.X;//re-adjusted after the try block
+		sizeReturn.Height+=ipDest.Y;//re-adjusted after the try block
 		try {
 			if (bFirstRun) { //(GFont_bFirstRun) {
 				Console::Error.Write("GFont::TypeFast ");
@@ -76,7 +84,15 @@ namespace ExpertMultimediaBase {
 			bool character_bFirstRun=true;
 			char cPrev='\0';
 			bool bSpacingChar;
-			for (int i=0; i<sText.length(); i++) {
+			if (ExpertMultimediaBase::bMegaDebug) {
+				Console::Error.Write("Drawing string:\"");
+				Console::Error.Flush();
+			}
+			for (size_t i=0; i<sText.length(); i++) {
+				if (ExpertMultimediaBase::bMegaDebug) {
+					Console::Error.Write(sText.substr(i,1));
+					Console::Error.Flush();
+				}
 				if (GFont_bFirstRun&&character_bFirstRun) {
 					Console::Error.Write("{szText["+RString_ToString(i)+"]:"+RString_ToString(szText[i])+"} GotoFrame...");
 					Console::Error.Flush();
@@ -92,31 +108,41 @@ namespace ExpertMultimediaBase {
 					  ||  ( (szText[i]=='\n') && (cPrev!='\r') )  ) {
 					  	ipDestNow.X=ipDest.X;
 					  	ipDestNow.Y+=arranimGlyphType[iGlyphType].gbFrame.iHeight;
+						//if (ipDestNow.Y+arranimGlyphType[iGlyphType].gbFrame.iHeight>sizeReturn.Height) sizeReturn.Height=ipDestNow.Y+arranimGlyphType[iGlyphType].gbFrame.iHeight;//+width to go to other side of it
 					}
 					bSpacingChar=true;
 				}
 				else if (szText[i]=='\t') {
 					bSpacingChar=true;
 					ipDestNow.X+=arranimGlyphType[iGlyphType].gbFrame.iWidth*3; //TODO: remove *3 if proportional font with wide tab character
+					if (ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth>sizeReturn.Width) sizeReturn.Width=ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth;//+width to go to other side of it
+				}
+				else if (szText[i]==' ') {
+					bSpacingChar=true;
+					ipDestNow.X+=arranimGlyphType[iGlyphType].gbFrame.iWidth;
+					if (ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth>sizeReturn.Width) sizeReturn.Width=ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth;//+width to go to other side of it
 				}
 				else {
 					bSpacingChar=false;
 				}
 				if (!bSpacingChar) {
-					if (arranimGlyphType[iGlyphType].gbFrame.iBytesPP==1) {
-						if (!OverlayNoClipToBigCopyAlpha(gbDest, ipDestNow, arranimGlyphType[iGlyphType].gbFrame, gradNow, -1)) {
-							//OverlayNoClipToBigCopyAlpha(gbDest, ipAt,      gbSrc, 											gradNow, iSrcChannel);
-							bGood=false;
-							ShowErr("failed to overlay text character#"+RString_ToString((long)szText[i]),"TypeFast");
+					if (!bTestOnlyNoDraw) {
+						if (arranimGlyphType[iGlyphType].gbFrame.iBytesPP==1) {
+							if (!OverlayNoClipToBigCopyAlpha(gbDest, ipDestNow, arranimGlyphType[iGlyphType].gbFrame, gradNow, -1)) {
+								//OverlayNoClipToBigCopyAlpha(gbDest, ipAt,      gbSrc, 											gradNow, iSrcChannel);
+								bGood=false;
+								//ShowErr("failed to OverlayNoClipToBigCopyAlpha text character#"+RString_ToString((long)szText[i]),"TypeFast");
+							}
 						}
-					}
-					else {
-						if (!arranimGlyphType[iGlyphType].gbFrame.DrawToLargerWithoutCropElseCancel(gbDest,ipDestNow.X, ipDestNow.Y,iDrawMode)) {//if (!ExpertMultimediaBase::OverlayNoClipToBig(gbDest, ipDestNow, arranimGlyphType[iGlyphType].gbFrame, gradNow, -1)) {
-							bGood=false;
-							ShowErr("failed to overlay text character#"+RString_ToString((long)szText[i]),"TypeFast");
+						else {
+							if (!arranimGlyphType[iGlyphType].gbFrame.DrawToLargerWithoutCropElseCancel(gbDest,ipDestNow.X, ipDestNow.Y,iDrawMode)) {//if (!ExpertMultimediaBase::OverlayNoClipToBig(gbDest, ipDestNow, arranimGlyphType[iGlyphType].gbFrame, gradNow, -1)) {
+								bGood=false;
+								//ShowErr("failed to DrawToLargerWithoutCropElseCancel text character#"+RString_ToString((long)szText[i]),"TypeFast");
+							}
 						}
 					}
 					ipDestNow.X+=arranimGlyphType[iGlyphType].gbFrame.iWidth;
+					if (ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth>sizeReturn.Width) sizeReturn.Width=ipDestNow.X+arranimGlyphType[iGlyphType].gbFrame.iWidth;//+width to go to other side of it
 				}
 				if (GFont_bFirstRun&&character_bFirstRun) {
 					Console::Error.Write("move to next character...");
@@ -132,21 +158,47 @@ namespace ExpertMultimediaBase {
 				}
 				character_bFirstRun=false;
 				cPrev=szText[i];
+				if (ipDestNow.Y+arranimGlyphType[iGlyphType].gbFrame.iHeight>sizeReturn.Height) sizeReturn.Height=ipDestNow.Y+arranimGlyphType[iGlyphType].gbFrame.iHeight;//+width to go to other side of it
 			}//end for character i
+			if (ExpertMultimediaBase::bMegaDebug) {
+				Console::Error.WriteLine("\"...OK");
+			}
 		}
 		catch (exception& exn) {
-			ShowExn(exn,"TypeFast("+sText+RString_ToString(")"));
 			bGood=false;
+			ShowExn(exn,"TypeFast("+sText+RString_ToString(")"));
+			if (ExpertMultimediaBase::bMegaDebug) {
+				Console::Error.WriteLine("\"...");
+			}
 		}
 		catch (...) {
 			bGood=false;
+			if (ExpertMultimediaBase::bMegaDebug) {
+				Console::Error.WriteLine("\"...");
+			}
 			ShowUnknownExn("GFont TypeFast("+sText+RString_ToString(")"));
 		}
+		sizeReturn.Width-=ipDest.X;
+		sizeReturn.Height-=ipDest.Y;
 		return bGood;
 	}//end TypeFast
+	///<summary>
+	///Measures text resulting width & height (may be zero or unpredictable if fails (where return is false)
+	///</summary>
+	bool GFont::MeasureTextByRef_UsingTypeFast(SizeF& sizeReturn, GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType) {
+		bool bGood=true;
+		try {
+			TypeFast(sizeReturn, gbDest, ipDest, sText, iGlyphType, DrawModeBlendAlpha, true);
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"GFont::MeasureTextByRef");
+		}
+		return bGood;
+	}//end MeasureTextByRef
 	bool GFont::TypeHTML(GBuffer& gbDest, IPoint& ipAt, IRect& irectReturn, string sText,  bool bVisible) {
-		int iNextTag;
-		int iLength;
+		//int iNextTag;
+		//int iLength;
 		bool bGood=true;
 		try {
 			//TODO: finish TypeHTML

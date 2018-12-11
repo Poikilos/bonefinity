@@ -11,12 +11,13 @@
 #include <exception>
 #include <frameworkdummy.h>
 #include <SDL/SDL.h>
-
+#include "RTypes.h"
 using namespace std;
+//using namespace ProtoArmor;
 
-#ifndef byte
-#define byte unsigned char //#define byte unsigned __int8
-#endif
+//#ifndef byte
+//typedef unsigned char byte; //#define byte unsigned __int8
+//#endif
 #ifndef HANDLE
 #define HANDLE void*
 #endif
@@ -67,23 +68,23 @@ using namespace std;
 
 
 
-#define LOWNIBBLE(by) ((by)&LOWNIBBLEBITS)
-#define HIGHNIBBLE(by) ((by)>>4) //or (by/16)
-#define SETLOWNIBBLE(by,by1) (((by)&HIGHNIBBLEBITS) | (by1)) //assumes by1<16
-#define SETHIGHNIBBLE(by,by1) (((by)&LOWNIBBLEBITS) | ((by1)<<4)) //assumes by1<16
+//#define LOWNIBBLE(by) ((by)&LOWNIBBLEBITS)
+//#define HIGHNIBBLE(by) ((by)>>4) //or (by/16)
+//#define SETLOWNIBBLE(by,by1) (((by)&HIGHNIBBLEBITS) | (by1)) //assumes by1<16
+//#define SETHIGHNIBBLE(by,by1) (((by)&LOWNIBBLEBITS) | ((by1)<<4)) //assumes by1<16
 
 #define APPROACH(start,toward,factor) (  (start)  -  ((start)-(toward)) * (factor)  )
 #define BYROUNDF(f1) ((byte)((f1)+.5f))
 #define BYROUNDLD(ld) ((byte)((ld) + .5L))
 #define IROUNDF(f1) (int((f1)+.5f))
 #define FFLOOR(f1) ( (float)((int)(f1)) )
+#define DFLOOR(f1) ( (double)((int)(f1)) )
 #define IFLOOR(f1) ( (int)(f1) )
 #define ICEILING(f1) (  ( (int)(FMOD((f1),1.0f)>0.0f) ) ? ((int)(f1))+1 : (int)(f1) )
 #define IROUNDD(d) (int((d)+.5))
 #define IROUNDLD(ld) (int((ld)+.5L))
 #define BYTEOFHUE(fH360) ( ((fH360)<360.0f)? BYROUNDF(float((fH360)*256.0f/360.0f)) : BYROUNDF(float((fH360-360.0f)*256.0f/360.0f)) ) //assumes fH360<720 //division using 256 allows 256 levels -- 255<360 is okay since 0=0
 #define BYTEOFSL(fSatOrLum) ( byte( float((fSatOrLum)*255.0f)+.5f ) )
-
 
 #define F360_TIMES_256 (92160.0f)
 #define F256_DIV_360 (0.711111111111111111111111111111111f)
@@ -96,16 +97,24 @@ using namespace std;
 #define FMOD(f1,f2) (((f1)>(f2)) ? ( (f1) - float(int((f1)/(f2)))*(f2)) : 0 )
 #define DMOD(f1,f2) (((f1)>(f2)) ? ( (f1) - double(int((f1)/(f2)))*(f2)) : 0 )
 
+//formerly all caps (see 1.DXManSDL and comparison to dxman-kdevelop.txt for what they used to be called):
 #define LD180_DIV_PI						57.2957795130823208767981548141052L
 #define D180_DIV_PI						 57.2957795130823208767981548141052
 #define F180_DIV_PI				57.2957795130823208767981548141052f // 180/PI
-#define THETAOFXY(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*F180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
-#define DTHETAOFXY(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*D180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
-#define LDTHETAOFXY(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*LD180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
-#define XOFRTHETA(r,theta) ((r)*cos((theta)/D180_DIV_PI)) //divide since cos takes radians
-#define YOFRTHETA(r,theta) ((r)*sin((theta)/D180_DIV_PI)) //divide since cos takes radians
-#define FXOFRTHETA(r,theta) ((r)*cos((theta)/F180_DIV_PI)) //divide since cos takes radians
-#define FYOFRTHETA(r,theta) ((r)*sin((theta)/F180_DIV_PI)) //divide since cos takes radians
+#define FTHETAOFXY_DEG(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*F180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
+#define DTHETAOFXY_DEG(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*D180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
+#define LDTHETAOFXY_DEG(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))*LD180_DIV_PI) : 0 ) //*F180_DIV_PI converts radians to degrees
+#define THETAOFXY_RAD(X,Y) ( ((Y)!=0 || (X)!=0) ? (atan2((Y),(X))) : 0 )
+#define FXOFRTHETA_DEG(r,theta) ((r)*cos((theta)/F180_DIV_PI)) //divide since cos takes radians
+#define FYOFRTHETA_DEG(r,theta) ((r)*sin((theta)/F180_DIV_PI)) //divide since cos takes radians
+#define DXOFRTHETA_DEG(r,theta) ((r)*cos((theta)/D180_DIV_PI)) //divide since cos takes radians
+#define DYOFRTHETA_DEG(r,theta) ((r)*sin((theta)/D180_DIV_PI)) //divide since cos takes radians
+#define LDXOFRTHETA_DEG(r,theta) ((r)*cos((theta)/LD180_DIV_PI)) //divide since cos takes radians
+#define LDYOFRTHETA_DEG(r,theta) ((r)*sin((theta)/LD180_DIV_PI)) //divide since cos takes radians
+#define XOFRTHETA_RAD(r,theta) ((r)*cos((theta))) //cos takes radians
+#define YOFRTHETA_RAD(r,theta) ((r)*sin((theta))) //cos takes radians
+//#define FXOFRTHETA_RAD(r,theta) ((r)*cos((theta))) //cos takes radians
+//#define FYOFRTHETA_RAD(r,theta) ((r)*sin((theta))) //cos takes radians
 #define HASATTRIB(word,bit) ( ((word)&(bit))!=0 )
 #define REMOVEATTRIB(word,bit) ( (word)&=((bit)^0xFFFFFFFF) )
 /////////////////////////  STRUCTS & CLASSES  //////////////////////////////////
@@ -114,6 +123,10 @@ using namespace std;
 namespace ExpertMultimediaBase {
 
 	typedef double REAL;
+	extern const REAL Base_r0;//=(REAL)0.0;
+	extern const REAL Base_r1;//=(REAL)1.0;
+	extern const REAL Base_r1000;//=(REAL)1000.0;
+	extern Uint32 dwTicksAcquiredOutsideOfGameState_Run;
 
 	typedef struct IRECT_STRUCT {
 		int top;
@@ -133,26 +146,28 @@ namespace ExpertMultimediaBase {
 		int X;
 		int Y;
 	} IPOINT, *LPIPOINT;
+	/*
 	typedef struct FPOINT_STRUCT {
 		float X;
 		float Y;
 	}FPOINT, *LPFPOINT;
-
+*/
+/*
 	typedef struct DPOINT_STRUCT {
 		double X;
 		double Y;
 	}DPOINT, *LPDPOINT;
-
+*/
 	typedef struct FPOINT3D_STRUCT {
 		float X;
 		float Y;
-		float z;
+		float Z;
 	}FPOINT3D, *LPFPOINT3D;
 
 	typedef struct DPOINT3D_STRUCT {
 		double X;
 		double Y;
-		double z;
+		double Z;
 	}DPOINT3D, *LPDPOINT3D;
 
 	typedef struct PIXEL_STRUCT {
@@ -181,16 +196,6 @@ namespace ExpertMultimediaBase {
 	}PIXEL24BGR, *LPPIXEL24BGR;
 	using namespace std;
 
-
-	class IRect {
-	public:
-		int top;
-		int left;
-		int bottom;
-		int right;
-		IRect();
-		string ToString();
-	};
 
 	class Pixel {
 	public:
@@ -222,7 +227,7 @@ namespace ExpertMultimediaBase {
 	public:
 		//int MAX_VARSTRLEN;
 		//int MAX_VARNAMELEN;
-		bool bDebug;
+		//bool bDebug;
 		bool IsActive();
 		void SetActive();
 		void SetInactive();
@@ -263,7 +268,7 @@ namespace ExpertMultimediaBase {
 		string sFileName;
 	public:
 		bool bSaveEveryChange;
-		bool bDebug;
+		//bool bDebug;
 		int iBlankReturnStringLen;
 		Variables();
 		~Variables();
@@ -296,17 +301,19 @@ namespace ExpertMultimediaBase {
 	};
 	class Mass3d {
 	public:
-		float X,Y,z;
+		float X,Y,Z;
 		float xMin,yMin,zMin;
 		float xMax,yMax,zMax;
 		float xVel,yVel,zVel;
 		float xRot,yRot,zRot;
 		float xRotMin,yRotMin,zRotMin;
 		float xRotMax,yRotMax,zRotMax;
-		float xRotVel,yRotVel,zRotVel;
+		float xRotVelDegreesPerSec,yRotVelDegreesPerSec,zRotVelDegreesPerSec;
 		float xRotDest,yRotDest,zRotDest;
 		float xSize,ySize,zSize;
 		Mass3d();
+		void RotateTowardDestByDegreesByRef(float& degToChange, float degDest, float degOperand);
+		void RotateTowardDestByDegreesByRef(double& degToChange, double degDest, double degOperand);
 		void RotateTowardDest(int iMillisecondsSinceLastCall);
 		void RotateTowardDest(float rSecondsSinceLastCall);
 		void RotateTowardDest(double rSecondsSinceLastCall);
@@ -317,7 +324,11 @@ namespace ExpertMultimediaBase {
 		void LocationToLimits();
 		void HardRotation(float xRotTo, float yRotTo, float zRotTo);
 		void HardLocation(float xTo, float yTo, float zTo);
-		void SetRotMaxSpeed(float xSpeed, float ySpeed, float zSpeed);
+		void CopyLocationOnlyTo(Mass3d& m3dTo);
+		void CopyTo(Mass3d& m3dTo);
+		void OffsetSomethingByMyLocation(Mass3d& m3dSomethingToMove);
+
+		//void SetRotMaxSpeed(float xSpeed, float ySpeed, float zSpeed);
 		string ToString();
 		string ToString(bool bShowAll);
 	};
@@ -384,10 +395,10 @@ namespace ExpertMultimediaBase {
 	float AngleToward(float xDest, float yDest, float xSrc, float ySrc);
 	int FileSize(string sFile);
 	int FileSize(const char* sFile);
-	//double DDist(DPoint &point1, DPoint &point2);
 	void strcatfromsiverrno(char *sErr, int iNum);
 	void strcpyfromsiverrno(char *s, int i);
 	void Rotate(float &xToMove, float &yToMove, float fRotate);
+	void Rotate(double &xToMove, double &yToMove, double fRotate);
 	void FakeException(string sExn);
 	bool ShowErr();
 	bool ShowError();
@@ -463,12 +474,27 @@ namespace ExpertMultimediaBase {
 	/*inline*/ void Crop(float &fToModify, float fMin, float fMax);
 	/*inline*/ LPIPOINT IPOINTFROM(float xNow, float yNow);
 	/*inline*/ float SafeAngle360(float fToLimitBetweenZeroAnd360);
+	/*inline*/ double SafeAngle360(double fToLimitBetweenZeroAnd360);
 	/*inline*/ void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360);
-	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float X, float Y);
-	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double X, double Y);
+	/*inline*/ void SafeAngle360ByRef(double &fToLimitBetweenZeroAnd360);
+	/*inline*/ void RConvert_RectToPolar(int &r,int &theta, int X, int Y);
+	/*inline*/ void RConvert_RectToPolar(float &r,float &theta, float X, float Y);
+	/*inline*/ void RConvert_RectToPolar(double &r,double &theta, double X, double Y);
+	float RConvert_ToFloat(float val);
+	float RConvert_ToFloat(double val);
+	float RConvert_ToFloat(decimal val);
+	float RConvert_THETAOFXY_RAD(float x, float y);
+	double RConvert_THETAOFXY_RAD(double x, double y);
+	decimal RConvert_THETAOFXY_RAD(decimal x, decimal y);
+	float RConvert_THETAOFXY_DEG(float x, float y);
+	double RConvert_THETAOFXY_DEG(double x, double y);
+	decimal RConvert_THETAOFXY_DEG(decimal x, decimal y);
+	float RConvert_ROFXY(float x, float y);
+	double RConvert_ROFXY(double x, double y);
+	decimal RConvert_ROFXY(decimal x, decimal y);
 	/*inline*/ float FANGLEDIFF(float f1, float f2); //returns -180 to 180
-	/*inline*/ float FANGLEDIFFPOSITIVE(float f1, float f2); //returns 0 to 180
-	/*inline*/ float FDist(FPoint &point1, FPoint &point2);
+	/*inline*/ float ANGLEDIFFPOSITIVE(float f1, float f2); //returns 0 to 180
+	/*inline*/ double ANGLEDIFFPOSITIVE(double f1, double f2); //returns 0 to 180
 	/*inline*/ float FPDIST(float x1, float y1, float x2,  float y2);
 	/*inline*/ double DPDIST(double x1, double y1, double x2, double y2);
 	/*inline*/ long double LDANGLE360(long double d1);
@@ -480,6 +506,7 @@ namespace ExpertMultimediaBase {
 	/*inline*/ float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB);
 	/*inline*/ bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel);
 	/*inline*/ bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel);
+	/*inline*/ bool Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel);
 	/*inline*/ bool Travel3dAbs(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel);
 	/*inline*/ bool Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio);
 	/*inline*/ void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate);
@@ -491,18 +518,33 @@ namespace ExpertMultimediaBase {
 	/*inline*/ float FSQUARED(float val);
 	/*inline*/ float DSQUARED(double val);
 	/*inline*/ int IndexOf(char* sHaystack, char* sNeedle);
-	/*inline*/ int SafePow(int basenum, int exp);
-	/*inline*/ long SafePow(long basenum, int exp);
-	/*inline*/ float SafePow(float basenum, int exp);
-	/*inline*/ double SafePow(double basenum, int exp);
-	/*inline*/ int SafeE10I(int exp);
-	/*inline*/ long SafeE10L(int exp);
-	/*inline*/ float SafeE10F(int exp);
-	/*inline*/ double SafeE10D(int exp);
+	///*inline*/ int SafePow(int basenum, int exp);
+	///*inline*/ long SafePow(long basenum, int exp);
+	///*inline*/ float SafePow(float basenum, int exp);
+	///*inline*/ double SafePow(double basenum, int exp);
+	///*inline*/ int SafeE10I(int exp);
+	///*inline*/ long SafeE10L(int exp);
+	///*inline*/ float SafeE10F(int exp);
+	///*inline*/ double SafeE10D(int exp);
 	/*inline*/ byte SafeByRoundF(float val);
 	/*inline*/ byte SafeByte(float val);
 	/*inline*/ int SafeAddWrappedPositiveOnly(int val1, int val2);
 	///#endregion (these functions were de-inlined to avoid the gcc 3.4 "undefined reference" bug)
+	int Base_GetTicks_Absolute();
+	UInt32 Base_GetTicks_Relative();
+	UInt32 Base_TicksSince_Relative(int iTickCount);
+	REAL Base_GetSeconds_Absolute();
+	REAL Base_SecondsSince_Absolute(REAL rSecondCount);
+	REAL Base_GetSeconds_Relative();
+	REAL Base_SecondsSince_Relative(REAL rSecondCount);
+	float MetersToMoveThisManyMS(float fMetersPerSecondX, int iForThisManyMilliseconds);
+	double MetersToMoveThisManyMS(double fMetersPerSecondX, int iForThisManyMilliseconds);
+	float DegreesToMoveThisManyMS(float fDegreesPerSecondX, int iForThisManyMilliseconds);
+	double DegreesToMoveThisManyMS(double fDegreesPerSecondX, int iForThisManyMilliseconds);
+	float MetersToMoveThisManyS(float fMetersPerSecondX, float rSeconds);
+	double MetersToMoveThisManyS(double fMetersPerSecondX, double rSeconds);
+	float DegreesToMoveThisManyS(float fDegreesPerSecondX, float rSeconds);
+	double DegreesToMoveThisManyS(double fDegreesPerSecondX, double rSeconds);
 
 	///#region globals defined in base.h
 	extern int iErrors;

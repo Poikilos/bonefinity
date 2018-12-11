@@ -36,11 +36,13 @@ namespace ExpertMultimediaBase {
 		bool SaveSeq(string sFileBaseName, string sFileExt, int iGlyphType);
 		bool TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText);
 		bool TypeFast(GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode);
+		bool TypeFast(SizeF& sizeReturn, GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType, int iDrawMode, bool bTestOnlyNoDraw);
 		bool TypeHTML(GBuffer& gbDest, IPoint& ipAt, IRect& irectReturn, string sText,  bool bVisible);
 		bool TypeHTML(GBuffer& gbDest, IPoint& ipAt, IRect& irectReturn, string sText);
 		bool ResetGlyphTypeArray();
 		bool FromImageAsPredefinedColorFont(string sFile, int iCharWidth, int iCharHeight, int iRows, int iColumns);
 		bool FromImageValue(string sFile, int iCharWidth, int iCharHeight, int iRows, int iColumns);
+		bool MeasureTextByRef_UsingTypeFast(SizeF& sizeReturn, GBuffer& gbDest, IPoint& ipDest, string sText, int iGlyphType);
 	private:
 		Gradient gradNow;
 		bool Init();

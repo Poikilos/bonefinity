@@ -44,8 +44,11 @@ namespace ExpertMultimediaBase {
 		byte* arrbyReturn=null;
 		try {
 			if (!bCountOnlyAndReturnNull) {
-				byte* test=RLECompress(iTotal,arrbySrc,iSrcStart,iBytesToParse,iBytesPerChunk,true);
-				if (iTotal>0) arrbyReturn=(byte*)malloc(iTotal);
+				byte* arrbyNull=RLECompress(iTotal,arrbySrc,iSrcStart,iBytesToParse,iBytesPerChunk,true);//OK since counts & doesn't recurse from there!
+				if (iTotal>0) {
+					arrbyReturn=(byte*)malloc(iTotal);//this is set using the bGood case below
+					//NOTE: do NOT use arrbyNull, since was just used for counting
+				}
 				else {
 					bGood=false;
 					ShowErr("Compressed total of "+RString_ToString(iTotal)+RString_ToString(" wasn't calculated correctly"),"RLECompress");
@@ -67,7 +70,7 @@ namespace ExpertMultimediaBase {
 					iReturnLength++; //advance past RLE packet header byte (set it later)
 					while (bPartOfThisTypeOfRun) {
 						//Advance through chunk and copy it:
-						for (int iNow=0; iNow<iBytesPerChunk; iNow++) {
+						for (iNow=0; iNow<iBytesPerChunk; iNow++) {
 							if (!bRunIsCompressed || iRun==1) {
 								if (!bCountOnlyAndReturnNull)
 									arrbyReturn[iReturnLength]=arrbySrc[iSrcAbs];
@@ -112,7 +115,7 @@ namespace ExpertMultimediaBase {
 		bool bGood=true;
 		int iDestAbs=iDestStart;
 		int iDestRel=0;
-		int iTotal=0;
+		//int iTotal=0;
 		try {
 			if (bGood) {
 				int iSrcAbs=iSrcStart;
@@ -359,21 +362,21 @@ namespace ExpertMultimediaBase {
 			ushort lpwSrc=(ushort*)arrbyData;
 			ushort lpwDest=(ushort*)arrbyDest;
 			*/
-			int xDest;
+			//int xDest;
 			int yDest=yAtDest;
 			int iDestByteLineStart=xAtDest*iDestBytesPP;
 			int iDestByteNow;
 			int iSrcByteLineStart=0;
-			int iSrcByteNow;
+			//int iSrcByteNow;
 			int iSrcStart=0;//NYI (not really used correctly) in compressed mode; only different if cropping self
-			int iLineEnder=iStride;//NYI in compressed mode; only different if cropping self
+			//int iLineEnder=iStride;//NYI in compressed mode; only different if cropping self
 			int iStrideLimited=iStride;//NYI in compressed mode; only different if cropping self, only used if doing a direct byte buffer copy for the whole line
 			if (iDestBytesPP==iBytesPP) {
 	   			if (IsCompressed()) {
 					bool bGood=true;
 					int iDestAbs=iDestByteLineStart;
 					int iDestRel=0;
-					int iTotal=0;
+					//int iTotal=0;
 					try {
 						if (bGood) {
 							int iSrcAbs=iSrcStart;
@@ -595,7 +598,7 @@ namespace ExpertMultimediaBase {
 			ushort wNow=0;
 			byte byNow=0;
 			int iPlacePrev=0;
-			uint u32Test=0;
+			//uint u32Test=0;
 			//(byte)(length of id)
 			iPlacePrev=byterNow.Place();
 			if (/*sID!=null && */sID.length()>255) sID=sID.substr(0,255);

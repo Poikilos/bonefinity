@@ -27,10 +27,10 @@ namespace ExpertMultimediaBase {
 		barrAutoAnimate=false;
 		bDieIfAdvanceAfterLastFrame=false;
 		//runtime-only vars:
-		bActive;
+		bActive=true;
 		arr2iDelay=null; //(1 to 1 match with arr2iSeq) millisecond delays for each frame, calculated from "RLE" arr2iFrameRates
 		//runtime-only vars:
-		iAnim; //references an anim in arranim
+		iAnim=-1; //references an anim in arranim
 		//runtime vars (to save):
 		sAnim=""; //references an anim in arranim
 		sName="";
@@ -43,6 +43,7 @@ namespace ExpertMultimediaBase {
 	}
 	//public methods:
 	bool Sprite::Load(string sFileNow) {
+		bool bGood=false;
 		//TODO: finish this (rewrite adding array count functions etc (see *.sprite)
 		Variables vsTemp;
 		vsTemp.Load(sFileNow);
@@ -68,32 +69,54 @@ namespace ExpertMultimediaBase {
 			iSeqs=1;
 			barrAutoAnimate=false;
 			bDieIfAdvanceAfterLastFrame=false;
-			bActive;
+			bActive=true;
 			arr2iDelay=null;
-			iAnim;
+			iAnim=-1;//references an Anim in animarr
 			sAnim="";
 			sName="";
 			bLoop=false;
+			bGood=true;
 		}
 		catch (exception& exn) { ShowExn(exn,"Sprite::Load");
 		}
 		catch (...) { ShowUnknownExn("Sprite::Load");
 		}
+		return bGood;
 	}//end Sprite::Load
 	bool Sprite::Save(string sFileNow) {
 		Variables vsTemp;
-		vsTemp.Save(sFileNow);
+		return vsTemp.Save(sFileNow);
 	}
 	bool Sprite::SetNextFrame() {
+		bool bGood=false;
+		//TODO: finish this--SetNextFrame()
+		Console::Error.WriteLine("NOT YET IMPLEMENTED: Sprite::SetNextFrame()");
+		return bGood;
 	}
 	bool Sprite::SetFrame(long iSetFrame) {
+		bool bGood=false;
+		//TODO: finish this--SetFrame(long iSetFrame)
+		Console::Error.WriteLine("NOT YET IMPLEMENTED: Sprite::SetFrame(long iSetFrame)");
+		return bGood;
 	}
 	bool Sprite::Advance(float fMilliseconds) {
+		bool bGood=false;
+		//TODO: finish this--Advance(float fMilliseconds)
 		 //TODO: return false if fail OR if this sequence doesn't auto-animate
+		Console::Error.WriteLine("NOT YET IMPLEMENTED: Sprite::Advance(float fMilliseconds)");
+		return bGood;
 	}
 	bool Sprite::SetSeq(int iSetSeq) {
+		bool bGood=false;
+		//TODO: finish this--SetSeq(int iSetSeq)
+		Console::Error.WriteLine("NOT YET IMPLEMENTED: Sprite::SetSeq(int iSetSeq)");
+		return bGood;
 	}
 	bool Sprite::SetSeq(string sSetSeq) {
+		bool bGood=false;
+		//TODO: finish this--SetSeq(string sSetSeq)
+		Console::Error.WriteLine("NOT YET IMPLEMENTED: Sprite::SetSeq(string sSetSeq)");
+		return bGood;
 	}
 	int Sprite::Seq() {
 		return iSeq;
@@ -101,6 +124,5 @@ namespace ExpertMultimediaBase {
 	int Sprite::Frame() {
 		return iFrame;
 	}
-
 }//end namespace
 #endif

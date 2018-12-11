@@ -32,9 +32,7 @@ namespace ExpertMultimediaBase {
 			bGood=OpenRead(szFile);
 			sMsg="exiting";
 		}
-		catch (char* szExn) {
-			bGood=false;
-			ShowAndDeleteException(szExn,"Failed to convert char string into OpenRead.",sMsg);
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load");
 		}
 		catch (...) {
 			bGood=false;
@@ -58,10 +56,7 @@ namespace ExpertMultimediaBase {
 				SetMax(iSizeTo);
 			}
 		}
-		catch (char* szExn) {
-			bGood=false;
-			ShowAndDeleteException(szExn,"OpenWrite",sMsg);
-			bExn=true;
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load"); bExn=true;
 		}
 		catch (...) {
 			bGood=false;
@@ -134,9 +129,7 @@ namespace ExpertMultimediaBase {
 				bGood=false;
 			}
 		}
-		catch (char* szExn) {
-			bGood=false;
-			ShowAndDeleteException(szExn,"OpenRead",sMsg);
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load");
 		}
 		catch (...) {
 			bGood=false;
@@ -177,7 +170,7 @@ namespace ExpertMultimediaBase {
 			byte* byDest=(byte*)Dest;
 			byte* bySrc=(byte*)&arrbyData[iPlace];
 			sMsg="reading data";
-			for (int iNow=0; iNow<u32BytesToRead; iNow++) {
+			for (Uint32 iNow=0; iNow<u32BytesToRead; iNow++) {
 				if (iPlace<iLength) {
 					*byDest=*bySrc;
 					u32NumBytesRead++;
@@ -198,8 +191,7 @@ namespace ExpertMultimediaBase {
 				}
 			}
 		}
-		catch (char* sExn) {
-			ShowAndDeleteException(sExn,"Byter::Read byte array");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Sprite::Load");
 		}
 		catch (...) {
 			ShowUnknownExn("Byter::Read byte array");
@@ -218,8 +210,7 @@ namespace ExpertMultimediaBase {
 				val=arrbyData[iPlace];
 				iPlace+=1;
 			}
-			catch (char* sExn) {
-				ShowAndDeleteException(sExn,"Byter::Read byte");
+			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
 			}
 			catch (...) {
 				ShowUnknownExn("Byter::Read byte");
@@ -238,8 +229,7 @@ namespace ExpertMultimediaBase {
 					iPlace+=1;
 				}
 			}
-			catch (char* sExn) {
-				ShowAndDeleteException(sExn,"Byter::Read ushort");
+			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
 			}
 			catch (...) {
 				ShowUnknownExn("Byter::Read ushort");
@@ -261,7 +251,7 @@ namespace ExpertMultimediaBase {
 			szNow[0]='\0';
 			szNow[1]='\0';
 			string sNow="";
-			for (int iNow=0; iNow<u32BytesToRead; iNow++) {
+			for (Uint32 iNow=0; iNow<u32BytesToRead; iNow++) {
 				if (iPlace<iLength) {
 					szNow[0]=arrbyData[iSrc];
 					sNow.assign(szNow);
@@ -284,20 +274,30 @@ namespace ExpertMultimediaBase {
 				}
 			}
 		}
-		catch (char* sExn) {
-			try {
-				bGood=false;
-				sMsg.assign(sExn);
-				free(sExn);
-			}
-			catch(...) {
-				bGood=false;
-				sMsg="Exception";
-			}
+		catch (exception& exn) {
+			bGood=false;
+			sMsg.assign(exn.what());
+			ShowExn(exn,"ReadAscii");
 		}
+		catch (...) {
+			bGood=false;
+			sMsg="Unknown Exception";
+			ShowUnknownExn("ReadAscii");
+		}
+		//catch (char* sExn) {
+		//	try {
+		//		bGood=false;
+		//		sMsg.assign(sExn);
+		//		free(sExn);
+		//	}
+		//	catch(...) {
+		//		bGood=false;
+		//		sMsg="Exception";
+		//	}
+		//}
 		if (!bGood) {
 			if (ShowErr()) {
-				Console::Error.WriteLine("Byter::Read("+RString_ToString(u32BytesToRead)+" bytes from \""+sFile+"\") Error: "+sMsg);
+				Console::Error.WriteLine("Byter::ReadAscii("+RString_ToString(u32BytesToRead)+" bytes from \""+sFile+"\") Error: "+sMsg);
 			}
 		}
 		return (bGood)?(u32NumBytesRead==u32BytesToRead):false;
@@ -360,8 +360,7 @@ namespace ExpertMultimediaBase {
 				}
 				else bGood=true;
 			}
-			catch (char* sExn) {
-				ShowAndDeleteException(sExn,"Byter::Write byte");
+			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
 			}
 			catch (...) {
 				ShowUnknownExn("Byter::Write byte");
@@ -379,8 +378,7 @@ namespace ExpertMultimediaBase {
 					iPlace+=1;
 				}
 			}
-			catch (char* sExn) {
-				ShowAndDeleteException(sExn,"Byter::Write ushort");
+			catch (exception& exn) { ShowExn(exn,"Sprite::Load");
 			}
 			catch (...) {
 				ShowUnknownExn("Byter::Write ushort");
@@ -463,6 +461,7 @@ namespace ExpertMultimediaBase {
 		if (!bGood) {
 			if (ShowErr()) Console::Error.WriteLine("Error in Byter::Save() \""+sFile+"\": "+sMsg);
 		}
+		return bGood;
 	}//end Byter::Save()
 	bool Byter::Save(string sFileNow) {
 		sFile=sFileNow;
@@ -497,20 +496,31 @@ namespace ExpertMultimediaBase {
 			//const char* szFile=sFileNow.c_str();
 			//bGood=OpenRead(szFile);
 		}
-		catch (char* sExn) {
-			try {
-				bGood=false;
-				sMsg.assign(sExn);
-				free(sExn);
-			}
-			catch(...) {
-				bGood=false;
-				sMsg="Exception";
-			}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"SetMax");
+			sMsg.assign(exn.what());
 		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("SetMax");
+			sMsg="Unknown Exception";
+		}
+		//catch (char* sExn) {
+		//	try {
+		//		bGood=false;
+		//		sMsg.assign(sExn);
+		//		free(sExn);
+		//	}
+		//	catch(...) {
+		//		bGood=false;
+		//		sMsg="Exception";
+		//	}
+		//}
 		if (!bGood) {
 			if (ShowErr()) Console::Error.WriteLine("Error in Byter::ResizeTo(): "+sMsg);
 		}
+		return bGood;
 	}//end Byter::ResizeTo
 	int Byter::BytesLeftUsed() {
 		return (Length()-Place()) + 1;

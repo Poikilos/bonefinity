@@ -2,8 +2,11 @@
 #define ANIM_CPP
 #include <RAnim_bgra32.h> //#include "E:\Projects-cpp\Base\RAnim_bgra32.h"
 #include <base.h>
+#include <RMath.h>
 
 using namespace std;
+//NEVER DO: using namespace RMath;
+
 //using System;
 //using System.Drawing;
 //using System.Drawing.Imaging;
@@ -26,7 +29,7 @@ namespace ExpertMultimediaBase {
 		try {
 			sReturn=sSetFileBaseName;
 			if (iDigitsMin>0) {
-				long lDivisor=SafeE10L((int)(iDigitsMin-1));//returns long since implied base is 10L
+				long lDivisor=RMath::SafeE10L((int)(iDigitsMin-1));//returns long since implied base is 10L
 				long lDestruct=lFrameTarget;
 				while (lDivisor>0) {
 					long lResult=lDestruct/lDivisor;
@@ -603,7 +606,7 @@ namespace ExpertMultimediaBase {
 			bGood=false;
 		}
 		//long iEnder=(long)iFrameCountToUseAndModify+(long)iStartFrame;
-		long iFrameRel=0;
+		//long iFrameRel=0;
 		string sFrameFileNow="";
 		if (bGood) {
 	       	if (bFirstRun) Console::Error.Write("buffer array...");
@@ -726,21 +729,21 @@ namespace ExpertMultimediaBase {
 							}
 							else if (gbFrame.iWidth==0) {
 								bGood=false;
-								ShowError("Bad frame data ("+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"x"+RString_ToString(gbFrame.iBytesPP*8)+")!","GotoFrame("+RString_ToString(lFrameX)+")");
+								ShowError("Bad frame data ("+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"X"+RString_ToString(gbFrame.iBytesPP*8)+")!","GotoFrame("+RString_ToString(lFrameX)+") {sFileBaseName:"+sFileBaseName+"}");
 							}
 							else if (bFirstRun) {
-								Console::Error.Write("GotoFrame dimensions:"+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"x"+RString_ToString(gbFrame.iBytesPP*8)+"... ");
+								Console::Error.Write("GotoFrame {sFileBaseName:"+sFileBaseName+"} dimensions:"+RString_ToString(gbFrame.iWidth)+"x"+RString_ToString(gbFrame.iHeight)+"X"+RString_ToString(gbFrame.iBytesPP*8)+"... ");
 							}
 						}
 						else {
 							bGood=false;
-							ShowError("Frame "+RString_ToString(lFrameX)+" is out of range!");
+							ShowError("Frame "+RString_ToString(lFrameX)+" is out of range! {sFileBaseName:"+sFileBaseName+"}");
 						}
 					}
 				}
 				else {//if ((sPathFile!=null) && (sPathFile.length()>0)) {
 					bGood=false;
-					ShowError("GotoFrame of non-cached sequence is not available in this version");//debug NYI
+					ShowError("GotoFrame of non-cached sequence is not available in this version {sFileBaseName:"+sFileBaseName+"}");//debug NYI
 					//image.SelectActiveFrame(image.FrameDimensionsList[lFrameX], (int)lFrameX);
 					//debug NYI load from file
 				}
@@ -901,8 +904,8 @@ namespace ExpertMultimediaBase {
 						GotoFrame(lFrameLoad);
 						for (int iLine=0; iLine<iHeight; iLine++) {
 							//TODO: finish this--make it safer:
-							if (gbFrame.arrbyData==null) {bGood=false; ShowErr("this->gbFrame: "+gbFrame.Description(true)+"!  ");}
-							else if (gbFrame.arrbyData==null) {bGood=false; ShowErr("gb source: "+gbSrc.Description(true)+"!  ");}
+							//if (gbFrame.arrbyData==null) {bGood=false; ShowErr("this->gbFrame: "+gbFrame.Description(true)+"!  ");}
+							if (gbFrame.arrbyData==null) {bGood=false; ShowErr("gb source: "+gbSrc.Description(true)+"!  ");}
 							else if (iDestStride<=0) {bGood=false; ShowErr("DestStride was "+RString_ToString(iDestStride)+"!  ");}
 							else if (iDestByte<0||iDestByte>=gbFrame.iBytesTotal) {bGood=false; ShowErr("dest loc "+RString_ToString(iDestByte)+" out of range!  ");}
 							else if (iSrcByte<0||iSrcByte>=gbSrc.iBytesTotal) {bGood=false; ShowErr("source loc "+RString_ToString(iSrcByte)+" out of range!  ");}

@@ -13,23 +13,7 @@ namespace FileMode {
 	extern string OpenWrite;
 }
 
-namespace ProtoArmor {
-	extern int iConsoleLinesMax;
-	extern int iConsoleLinesWritten;
-	extern bool bReverseEndian;
-	//#ifndef float_MaxValue
-	//#define float_MaxValue FLT_MAX
-	//#endif
-	//#ifndef double_MaxValue
-	//#define double_MaxValue DBL_MAX
-	//#endif
-	//#ifndef int_MaxValue
-	//#define int_MaxValue INT_MAX  //2147483647;
-	//#endif
-	//#ifndef long_MaxValue
-	//#define long_MaxValue LONG_MAX  //9223372036854775807
-	//#endif
-
+namespace System {
 	#ifndef null
 	#define null NULL
 	#endif
@@ -45,27 +29,214 @@ namespace ProtoArmor {
 	#ifndef UInt64
 	typedef unsigned long UInt64;
 	#endif
+	#ifndef ulong
+	typedef unsigned long ulong;
+	#endif
 	#ifndef ushort
 	typedef unsigned short ushort;
+	#endif
+
+	#ifndef ref_string
+	#define ref_string string&
+	#endif
+	#ifndef out_string
+	#define out_string string&
 	#endif
 	#ifndef ref_byte
 	#define ref_byte byte&
 	#endif
+	#ifndef out_byte
+	#define out_byte byte&
+	#endif
 	#ifndef ref_ushort
 	#define ref_ushort ushort&
+	#endif
+	#ifndef out_ushort
+	#define out_ushort ushort&
 	#endif
 	#ifndef ref_int
 	#define ref_int int&
 	#endif
+	#ifndef out_int
+	#define out_int int&
+	#endif
 	#ifndef ref_uint
 	#define ref_uint uint&
+	#endif
+	#ifndef out_uint
+	#define out_uint uint&
+	#endif
+	#ifndef ref_long
+	#define ref_long long&
+	#endif
+	#ifndef out_long
+	#define out_long long&
+	#endif
+	#ifndef ref_ulong
+	#define ref_ulong ulong&
+	#endif
+	#ifndef out_ulong
+	#define out_ulong ulong&
+	#endif
+	#ifndef ref_float
+	#define ref_float float&
+	#endif
+	#ifndef out_float
+	#define out_float float&
+	#endif
+	#ifndef ref_double
+	#define ref_double double&
+	#endif
+	#ifndef out_double
+	#define out_double double&
 	#endif
 	#ifndef ref_Rectangle
 	#define ref_Rectangle Rectangle&
 	#endif
+	#ifndef out_Rectangle
+	#define out_Rectangle Rectangle&
+	#endif
 	#ifndef ref_RectangleF
 	#define ref_RectangleF RectangleF&
 	#endif
+	#ifndef out_RectangleF
+	#define out_RectangleF RectangleF&
+	#endif
+
+	#ifndef decimal_MinValue
+	#define decimal_MinValue LDBL_MIN
+	#endif
+	#ifndef decimal_MaxValue
+	#define decimal_MaxValue LDBL_MAX
+	#endif
+
+	#ifndef System_Math_Asin
+	#define System_Math_Asin(x) asin(x)
+	#endif
+
+	#ifndef float_IsPositiveInfinity
+	#define float_IsPositiveInfinity(val)  ((isinf(val)&&(val)>0))
+	#endif
+	#ifndef float_IsNegativeInfinity
+	#define float_IsNegativeInfinity(val)  (isinf(val)&&((val)<0))
+	#endif
+	#ifndef float_IsNaN
+	#define float_IsNaN(val)  ((isnan(val)))
+	#endif
+	///NOTE: if fpclassify returns FP_SUBNORMAL, then number is so close zero as to be negligible!
+
+	#ifndef double_IsPositiveInfinity
+	#define double_IsPositiveInfinity(val) ((isinf(val)&&(val)>0))
+	#endif
+	#ifndef double_IsNegativeInfinity
+	#define double_IsNegativeInfinity(val) (isinf(val)&&((val)<0))
+	#endif
+	#ifndef double_IsNaN
+	#define double_IsNaN(val) ((isnan(val)))
+	#endif
+
+
+	#ifdef __float128
+	typedef __float128 decimal;
+	#elseif _Quad
+	typedef _Quad decimal;
+	#else
+	typedef long double decimal;
+	#endif
+
+
+	#ifndef ref_decimal
+	#define ref_decimal decimal&
+	#endif
+
+	#ifndef float_MaxValue
+	#define float_MaxValue FLT_MAX
+	#endif
+	#ifndef double_MaxValue
+	#define double_MaxValue DBL_MAX
+	#endif
+	#ifndef short_MinValue
+	#define short_MinValue SHRT_MIN
+	#endif
+	#ifndef short_MaxValue
+	#define short_MaxValue SHRT_MAX
+	#endif
+	#ifndef int_MinValue
+	#define int_MinValue INT_MIN  //2147483647;
+	#endif
+	#ifndef int_MaxValue
+	#define int_MaxValue INT_MAX  //2147483647;
+	#endif
+	#ifndef long_MinValue
+	#define long_MinValue LONG_MIN  //9223372036854775807
+	#endif
+	#ifndef long_MaxValue
+	#define long_MaxValue LONG_MAX  //9223372036854775807
+	#endif
+	#ifndef byte_MaxValue
+	#define byte_MaxValue 255
+	#endif
+	#ifndef ushort_MaxValue
+	#define ushort_MaxValue USHRT_MAX //65535
+	#endif
+	#ifndef uint_MaxValue
+	#define uint_MaxValue UINT_MAX  //2147483647;
+	#endif
+	#ifndef ulong_MaxValue
+	#define ulong_MaxValue ULONG_MAX  //9223372036854775807
+	#endif
+	#ifndef float_MinValue
+	#define float_MinValue FLT_MIN
+	#endif
+	#ifndef double_MinValue
+	#define double_MinValue DBL_MIN
+	#endif
+
+	#ifndef System_Math_Sqrt
+	#define System_Math_Sqrt(x) sqrt(x)
+	#endif
+	#ifndef System_Math_Min
+	#define System_Math_Min(val1,val2) min(val1,val2)
+	#endif
+
+	#ifndef string_Remove
+	#define string_Remove(s, start, len) ( ((s).substr(0,(start))+(s).substr((start)+(len),string::npos)) )
+	#endif
+
+}
+
+using namespace System;
+
+namespace ExpertMultimediaBase {
+	extern int iConsoleLinesMax;
+	extern int iConsoleLinesWritten;
+	extern bool bReverseEndian;
+
+	extern const decimal M_NEG1;//=(decimal)-1.0;
+	extern const decimal M_0;//=(decimal)0.0;
+	extern const decimal M_0_1;//=(decimal)0.1;
+	extern const decimal M_0_5;//=(decimal)0.5;
+	extern const decimal M_1;//=(decimal)1.0;
+	extern const decimal M_2;//=(decimal)2.0;
+
+	float System_Math_Round(float val);
+	double System_Math_Round(double val);
+	decimal System_Math_Round(decimal val);
+	float System_Math_Floor(float val);
+	double System_Math_Floor(double val);
+	decimal System_Math_Floor(decimal val);
+	float System_Math_Ceiling(float val);
+	double System_Math_Ceiling(double val);
+	decimal System_Math_Ceiling(decimal val);
+	int System_Math_Abs(int val);
+	float System_Math_Abs(float val);
+	double System_Math_Abs(double val);
+	decimal System_Math_Abs(decimal val);
+	float System_Math_Atan2(float,float);
+	double System_Math_Atan2(double,double);
+	decimal System_Math_Atan2(decimal,decimal);
+
+
 
 	class RectangleF {
 	public:
@@ -74,6 +245,12 @@ namespace ProtoArmor {
 		float Width;
 		float Height;
 		void Set(float x, float y, float width, float height);
+	};
+
+	class SizeF {
+	public:
+		float Width;
+		float Height;
 	};
 
 	class Rectangle {
@@ -105,6 +282,7 @@ namespace ProtoArmor {
 		//static string ToString(Decimal val);
 		static string ToString(float val);
 		static string ToString(double val);
+		static string ToString(decimal val);
 		static string ToString(short val);
 		static string ToString(int val);
 		static string ToString(__int64 val);

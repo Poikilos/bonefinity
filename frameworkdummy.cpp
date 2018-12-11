@@ -3,8 +3,10 @@
 
 #include "frameworkdummy.h"
 #include <fstream>
-//#include <cstdio>
+#include <cstdlib> //malloc etc
 #include <iostream>
+#include <cmath>
+//NOTE: do NOT include anything non-standard here--this should be completely portable
 //#include <cfloat> //<float.h> //maximums i.e. LONG_MAX
 //#include <climits> //<limits.h> //maximums i.e. INT_MAX
 //#include "E:\Projects-cpp\Base\frameworkdummy.h"
@@ -16,12 +18,18 @@ namespace FileMode {
 	string OpenWrite;//must be declared BEFORE staticconstructors
 }
 
-namespace ProtoArmor {
+namespace ExpertMultimediaBase {
 	bool bReverseEndian=false;
 	//string FileMode_OpenRead;//must be declared BEFORE staticconstructors
 	//string FileMode_OpenWrite;//must be declared BEFORE staticconstructors
 	int iConsoleLinesMax=3000;
 	int iConsoleLinesWritten=0;
+	const decimal M_NEG1=(decimal)-1.0;
+	const decimal M_0=(decimal)0.0;
+	const decimal M_0_1=(decimal)0.1;
+	const decimal M_0_5=(decimal)0.5;
+	const decimal M_1=(decimal)1.0;
+	const decimal M_2=(decimal)2.0;
 	StaticConstructors staticconstructors;
 
 	StaticConstructors::StaticConstructors() {
@@ -29,6 +37,8 @@ namespace ProtoArmor {
 		FileMode::OpenWrite="wb";//FileMode_OpenWrite="wb";//FileMode::OpenWrite="wb";
 		FileMode::OpenRead="rb";//FileMode_OpenRead="rb";//FileMode::OpenRead="rb";
 		//FileMode::staticconstructorFileMode();
+		cerr<<"iConsoleLinesWritten:"<<iConsoleLinesWritten<<"..."<<flush;
+		cerr<<"iConsoleLinesMax:"<<iConsoleLinesMax<<"..."<<flush;
 		cerr<<"done (loading static constructors)"<<endl;
 	}
 	StaticConstructors::~StaticConstructors() {
@@ -42,6 +52,62 @@ namespace ProtoArmor {
 	//const long long_MaxValue=LONG_MAX;//9223372036854775807
 	//FILE_FAKESTATIC_CLASS File;
 	//CONSOLE_FAKESTATIC_CLASS Console;
+	float System_Math_Round(float val) {
+		return (float)(round(val));//(float)( (val)>=0 ? (long double)((val)+.5) : (long double)((val)-.5) );
+	}
+	double System_Math_Round(double val) {
+		return round(val);//(double)( (val)>=0 ? (long double)((val)+.5) : (long double)((val)-.5) );
+	}
+	decimal System_Math_Round(decimal val) {
+		return (decimal)round((long double)val);//(decimal)( (val)>=0 ? (long double)((val)+.5) : (long double)((val)-.5) );
+	}
+	float System_Math_Floor(float val) {
+		return ( (float)((int)(val)) );
+	}
+	double System_Math_Floor(double val) {
+		return ( (double)((long)(val)) );
+	}
+	decimal System_Math_Floor(decimal val) {
+		return (decimal)( (long long)(val) );
+	}
+
+	float System_Math_Ceiling(float val) {
+		return (  (float)(  ( (int)((
+			(((val)>(1.0f)) ? ( (val) - (float)(int((val)/(1.0f)))*(1.0f)) : 0.0f )//floating modulus of 1
+			)>0.0f) ) ? ((int)(val))+1 : (int)(val) )  );
+	}
+	double System_Math_Ceiling(double val) {
+		return (  (double)(  ( (long)((
+			(((val)>(1.0d)) ? ( (val) - (double)(long((val)/(1.0d)))*(1.0d)) : 0.0d )//floating modulus of 1
+			)>0.0d) ) ? ((long)(val))+1 : (long)(val) )  );
+	}
+	decimal System_Math_Ceiling(decimal val) {
+		return (  (decimal)(  ( (long long)((
+			(((val)>(M_1)) ? ( (val) - (decimal)((long long)((val)/(M_1)))*(M_1)) : M_0 )//floating modulus of 1
+			)>M_0) ) ? ((long long)(val))+1 : (long long)(val) )  );
+	}
+	int System_Math_Abs(int val) {
+		return abs(val);
+	}
+	float System_Math_Abs(float val) {
+		return abs(val);
+	}
+	double System_Math_Abs(double val) {
+		return abs(val);
+	}
+	decimal System_Math_Abs(decimal val) {
+		return abs((long double)val);//TODO: fix truncation by checking how decimal is defined & calling appropriate method if exists
+	}
+
+	float System_Math_Atan2(float y, float x) {
+		return atan2(y,x);
+	}
+	double System_Math_Atan2(double y, double x) {
+		return atan2(y,x);
+	}
+	decimal System_Math_Atan2(decimal y, decimal x) {
+		return (decimal)atan2((double)y,(double)x);//TODO: fix truncation by checking how decimal is defined & calling appropriate method if exists
+	}
 
 /////////////////////////////  Rectangle  /////////////////////////////
 
@@ -74,7 +140,7 @@ namespace ProtoArmor {
 		return (val<=0) ? (0) : ((val>=255)?255:(byte)(val));
 	}
 	byte Convert::ToByte(size_t val) {
-		return (val<=0) ? (0) : ((val>=255)?255:(byte)(val));
+		return ((val>=255)?255:(byte)(val)); //(val<=0) ? (0) :
 	}
 	byte Convert::ToByte(float val) {
 		return (val<.5f) ? (0) : ((val>=254.5f)?255:(byte)(val+.5f));
@@ -125,6 +191,13 @@ namespace ProtoArmor {
 		return sReturn;
 	}
 	string Convert::ToString(double val) {
+		stringstream ssReturn;
+		string sReturn;
+		ssReturn << val;
+		ssReturn >> sReturn;
+		return sReturn;
+	}
+	string Convert::ToString(decimal val) {
 		stringstream ssReturn;
 		string sReturn;
 		ssReturn << val;
@@ -331,7 +404,7 @@ namespace ProtoArmor {
 		int iFound=0;
 		size_t ElementSize=1;
 		if (filestream!=NULL) {
-			int iFound=ElementSize*this->filestream->BaseStream.fread(&buffer[indexInBuffer],ElementSize,count);
+			iFound=ElementSize*this->filestream->BaseStream.fread(&buffer[indexInBuffer],ElementSize,count);
 		}
 		return iFound;
 	}
@@ -369,7 +442,7 @@ namespace ProtoArmor {
 	bool bShowElementSizeErr=true;
 	unsigned short BinaryReader::ReadUInt16(){
 		unsigned short valReturn=(unsigned short)0;
-		int iFound=0;
+		size_t iFound=0;
 		size_t ElementSize=2;
 		if (filestream!=NULL) {
 			iFound=ElementSize*this->filestream->BaseStream.fread(&valReturn,ElementSize,1);
@@ -384,7 +457,7 @@ namespace ProtoArmor {
 	}
 	unsigned int BinaryReader::ReadUInt32(){
 		unsigned int valReturn=(unsigned int)0;
-		int iFound=0;
+		size_t iFound=0;
 		size_t ElementSize=4;
 		if (filestream!=NULL) {
 			iFound=ElementSize*this->filestream->BaseStream.fread(&valReturn,ElementSize,1);

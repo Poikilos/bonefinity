@@ -76,7 +76,7 @@ namespace ExpertMultimediaBase {
 		void DrawSubpixelDot(float xDot, float yDot, byte* lpbySrcPixel);
 		void DrawSubpixelLine(float xStart, float yStart, float xEnd, float yEnd,
 				Pixel &pixelStart, Pixel* pixelEndOrNull, float fPrecisionIncrement);
-		void DrawSubpixelLine(FPOINT &pointStart, FPOINT &pointEnd,
+		void DrawSubpixelLine(FPoint &pointStart, FPoint &pointEnd,
 				Pixel &pixelStart, Pixel* pixelEndOrNull, float fPrecisionIncrement);
 		void DrawSubpixelArc(float xCenter, float yCenter,
 				float fRadius, float fWidthMultiplier, float fRotate,

@@ -19,8 +19,8 @@ namespace ExpertMultimediaBase {
 		bool InitNull();
 	public:
 		Gradient();
-		void Gradient::ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, byte bySrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, byte bySrcValue);
-		void Gradient::ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, Uint32 u32SrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, Uint32 u32SrcValue);
+		void ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, byte bySrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, byte bySrcValue);
+		void ShadeAlpha(GBuffer &gbDest, Uint32 u32DestBufferLoc, Uint32 u32SrcValue, int iDrawMode);//bool Shade(byte* arrbyDest, uint u32DestLoc, Uint32 u32SrcValue);
 	};
 }//end namespace
 #endif

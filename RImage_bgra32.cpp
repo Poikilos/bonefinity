@@ -2,6 +2,8 @@
 #define GBUFFER_CPP
 
 #include <RImage_bgra32.h>
+#include <PMath.h>//TODO: eliminate PMath
+#include <RMath.h>
 
 using namespace std;
 
@@ -494,8 +496,10 @@ namespace ExpertMultimediaBase {
 			if ((iChannel+2>=0) && (iChannel+2<iStride*iHeight))
 			if (((iChannel+3)/4)<(iWidth*iBytesPP*iHeight)) {
 				arrbyData[iChannel]=by3dAlphaLookup[b][arrbyData[iChannel]][a];
-				arrbyData[++iChannel]=by3dAlphaLookup[g][arrbyData[iChannel]][a];
-				arrbyData[++iChannel]=by3dAlphaLookup[r][arrbyData[iChannel]][a];
+				iChannel++;
+				arrbyData[iChannel]=by3dAlphaLookup[g][arrbyData[iChannel]][a];
+				iChannel++;
+				arrbyData[iChannel]=by3dAlphaLookup[r][arrbyData[iChannel]][a];
 			}
 		}
 		catch (...) {
@@ -503,6 +507,7 @@ namespace ExpertMultimediaBase {
 		}
 	}//
 	void GBuffer::DrawSubpixelDot(float xDot, float yDot, Pixel &pixelColor) {
+		//bool bGood=true;
 		try {
 			//TODO: finish this (finish subpixel accuracy)
 			// Begin header fields in order of writing //
@@ -510,7 +515,6 @@ namespace ExpertMultimediaBase {
 			//bySizeofID byMapType byTgaType wMapOrigin wMapLength byMapBitDepth
 			//xImageOrigin yImageOrigin width height byBitDepth bitsDescriptor sTag
 			//*arrbyColorMap *arrbyData footer;
-			bool bGood=true;
 			//LPIPOINT *lpipointarrNow=malloc(4*sizeof(LPIIPOINT));
 
 			int xMin=IFLOOR(xDot);
@@ -577,7 +581,7 @@ namespace ExpertMultimediaBase {
 		xRelMax=xEnd-xStart;
 		yRelMax=yEnd-yStart;
 		rRelMax=ROFXY(xRelMax,yRelMax);
-		theta=THETAOFXY(xRelMax,yRelMax);
+		theta=THETAOFXY_RAD(xRelMax,yRelMax);
 		rRel=0;
 		rRel-=fPrecisionIncrement; //the "0th" value
 		static Pixel pixelColor;
@@ -593,8 +597,8 @@ namespace ExpertMultimediaBase {
 				pixelColor.b=SafeByte(APPROACH(pixelStart.b,pixelEndOrNull->b,rRel/rRelMax));
 				pixelColor.a=SafeByte(APPROACH(pixelStart.a,pixelEndOrNull->a,rRel/rRelMax));
 			}
-			xNow=(XOFRTHETA(rRel,theta))+xStart;
-			yNow=(YOFRTHETA(rRel,theta))+yStart;
+			xNow=(XOFRTHETA_RAD(rRel,theta))+xStart;
+			yNow=(YOFRTHETA_RAD(rRel,theta))+yStart;
 			if (xNow>0&&yNow>0&&xNow<iWidth&&yNow<iHeight)
 				DrawSubpixelDot(xNow, yNow, pixelColor);
 			iLoops++;
@@ -606,7 +610,7 @@ namespace ExpertMultimediaBase {
 		}
 	}//end DrawSubpixelLine
 
-	void GBuffer::DrawSubpixelLine(FPOINT &pointStart, FPOINT &pointEnd,
+	void GBuffer::DrawSubpixelLine(FPoint &pointStart, FPoint &pointEnd,
 			Pixel &pixelStart, Pixel* pixelEndOrNull, float fPrecisionIncrement) {
 		DrawSubpixelLine(pointStart.X, pointStart.Y, pointEnd.X, pointEnd.Y,
 			pixelStart, pixelEndOrNull, fPrecisionIncrement);
@@ -626,10 +630,10 @@ namespace ExpertMultimediaBase {
 		int iLoops=0;
 		static int iMaxLoops=1000000;
 		for (float fNow=fDegStart; fNow<fDegEnd; fNow+=fPrecisionIncrement) {
-			xNow=(XOFRTHETA(fRadius,fNow));
-			yNow=-(YOFRTHETA(fRadius,fNow));//negative to flip to non-cartesian monitor loc
+			xNow=(FXOFRTHETA_DEG(fRadius,fNow));
+			yNow=-(FYOFRTHETA_DEG(fRadius,fNow));//negative to flip to non-cartesian monitor loc
 			xNow*=fWidthMultiplier;
-			Rotate(xNow,yNow,fRotate);
+			RMath::Rotate(xNow,yNow,fRotate);
 			xNow+=xCenter;
 			yNow+=yCenter;
 	        if (xNow>0&&yNow>0&&xNow<iWidth&&yNow<iHeight)
@@ -645,7 +649,7 @@ namespace ExpertMultimediaBase {
 	}//DrawSubpixelArc
 	bool GBuffer::Fill(byte byGrayVal) {
 		bool bGood=false;
-		int iNow=0;
+		//int iNow=0;
 		try {
 			if (arrbyData!=null) {
 				memset(arrbyData,byGrayVal,iBytesTotal);
@@ -745,12 +749,12 @@ namespace ExpertMultimediaBase {
 					register byte* lpbySrcNow=&this->arrbyData[ (ySrcStart*iSrcStride) + (xSrcStart*iSrcBytesPP) ];
 					register byte* lpbySrcLineNow=lpbySrcNow;
 
-					register byte alpha,blue,green,red;
-					register unsigned __int32 pixel;
-					int iSrcBytesPP=this->iBytesPP;
-					int iDestBytesPP=gbDest.iBytesPP;
-					int iSrcLineOffset=iSrcStride-this->iWidth*iSrcBytesPP;
-					int iDestLineOffset=iDestStride-gbDest.iWidth*iDestBytesPP;
+					register byte alpha;//,blue,green,red;
+					//register unsigned __int32 pixel;
+					//int iSrcBytesPP=this->iBytesPP;
+					//int iDestBytesPP=gbDest.iBytesPP;
+					//int iSrcLineOffset=iSrcStride-this->iWidth*iSrcBytesPP;
+					//int iDestLineOffset=iDestStride-gbDest.iWidth*iDestBytesPP;
 					if (bMegaDebug) {
 						Console::Error.WriteLine("drawing...");//if (bMegaDebug) { Console::Error.WriteLine("source lines..."); Console::Error.Flush(); }
 						Console::Error.Flush();
@@ -777,7 +781,7 @@ namespace ExpertMultimediaBase {
 							//blue=*lpbySrcNow++;
 							//green=*lpbySrcNow++;
 							//red=*lpbySrcNow++;
-							//alpha=*lpbySrcNow++;//must increment sinc next iteration of x needs to start at beginning of next pixel
+							//alpha=*lpbySrcNow++;//must increment sinc next iteration of X needs to start at beginning of next pixel
 							alpha=by2d_ByteAsByte_times_ByteAsFloatLookup[alpha][byOpacityMultiplier_ByteAsDecimal];//alpha=(byte)((float)alpha*fOpacityMultiplier);
 							//if (alpha>opacityCap) alpha=opacityCap; //"Cap" opacity off at opacityCap to create transparency if not 255
 
@@ -885,7 +889,7 @@ namespace ExpertMultimediaBase {
 							memcpy(gbDest.arrbyData,arrbyData,iBytesTotal);
 						}
 						else {
-							for (int y=0; y<iHeight; y++) {
+							for (int Y=0; Y<iHeight; Y++) {
 								memcpy(lpDestLine,lpSrcLine,iStrideMin);
 								lpDestLine+=gbDest.iStride;
 								lpSrcLine+=iStride;
@@ -898,12 +902,12 @@ namespace ExpertMultimediaBase {
 						//alpha result: ((Source-Dest)*alpha/255+Dest)
 						float fCookedAlpha;
                         //if (bFirstRun) Console::Error.WriteLine();
-                        register int x,y;
-						for (y=0; y<iHeight; y++) {
-                            //if (bFirstRun) Console::Error.Write(RString_ToString(y));
+                        register int X,Y;
+						for (Y=0; Y<iHeight; Y++) {
+                            //if (bFirstRun) Console::Error.Write(RString_ToString(Y));
 							lpDestPix=lpDestLine;
 							lpSrcPix=lpSrcLine;
-							for (x=0; x<iWidth; x++) {
+							for (X=0; X<iWidth; X++) {
 								//if (bFirstRun) Console::Error.Write(".");
 								if (lpSrcPix[3]==0) {
 									lpSrcPix+=4; lpDestPix+=4;//assumes 32-bit
@@ -930,10 +934,10 @@ namespace ExpertMultimediaBase {
 					case DrawModeKeepGreaterAlpha:
                 		if (bFirstRun) Console::Error.Write("DrawModeKeepGreaterAlpha...");
 						//alpha result: ((Source-Dest)*alpha/255+Dest)
-						for (int y=0; y<iHeight; y++) {
+						for (int Y=0; Y<iHeight; Y++) {
 							lpDestPix=lpDestLine;
 							lpSrcPix=lpSrcLine;
-							for (int x=0; x<iWidth; x++) {
+							for (int X=0; X<iWidth; X++) {
 								*lpDestPix=(*lpSrcPix>*lpDestPix)?*lpSrcPix:*lpDestPix; //B
 								lpSrcPix++; lpDestPix++;
 								*lpDestPix=(*lpSrcPix>*lpDestPix)?*lpSrcPix:*lpDestPix; //G
@@ -947,10 +951,10 @@ namespace ExpertMultimediaBase {
 						break;
 					case DrawModeKeepDestAlpha:
                 		if (bFirstRun) Console::Error.Write("DrawModeKeepDestAlpha...");
-						for (int y=0; y<iHeight; y++) {
+						for (int Y=0; Y<iHeight; Y++) {
 							lpDestPix=lpDestLine;
 							lpSrcPix=lpSrcLine;
-							for (int x=0; x<iWidth; x++) {
+							for (int X=0; X<iWidth; X++) {
 								memcpy(lpDestPix,lpSrcPix,3);
 								lpDestPix+=4; lpSrcPix+=4; //assumes 32-bit
 							}
@@ -1386,7 +1390,7 @@ namespace ExpertMultimediaBase {
 					dHeavyChannel=0;
 					dWeightTotal=0;
 					for (iQuad=0; iQuad<4; iQuad++) {
-						dWeightNow=dDiagonalUnit-DDist(dpSrc, dparrQuad[iQuad]);
+						dWeightNow=dDiagonalUnit-RMath::Dist(dpSrc, dparrQuad[iQuad]);
 						dWeightTotal+=dWeightNow; //debug performance, this number is always the same theoretically
 						dHeavyChannel+=(double)gbSrc.arrbyData[iarrLocOfQuad[iQuad]+iChan]*dWeightNow;
 					}
@@ -1429,12 +1433,12 @@ namespace ExpertMultimediaBase {
 			gbDest.iStride=gbSrc.iStride;
 			gbDest.iHeight=gbSrc.iHeight;
 			gbDest.iBytesTotal=gbDest.iStride*gbDest.iHeight;
-			if (gbDest.arrbyData==NULL || (gbDest.iBytesTotal!=gbDest.iBytesTotal))
+			if (gbDest.arrbyData==NULL || (gbSrc.iBytesTotal!=gbDest.iBytesTotal))
 				gbDest.Init((int)gbSrc.iWidth,(int)gbSrc.iHeight,(int)gbSrc.iBytesPP);
-			int iHeight2=gbDest.iHeight;
-			int iWidth2=gbDest.iWidth;
+			//int iHeight2=gbDest.iHeight;
+			//int iWidth2=gbDest.iWidth;
 			int iHeight1=gbSrc.iHeight;
-			int iWidth1=gbSrc.iWidth;
+			//int iWidth1=gbSrc.iWidth;
 			int iStride=gbSrc.iStride;
 			int iStride2=gbDest.iStride;
 			int iSrcByte=0;
@@ -1523,7 +1527,7 @@ namespace ExpertMultimediaBase {
 			gbDest.iStride=gbSrc.iStride;
 			gbDest.iHeight=gbSrc.iHeight;
 			gbDest.iBytesTotal=gbDest.iStride*gbDest.iHeight;
-			if (gbDest.arrbyData==NULL || (gbDest.iBytesTotal!=gbDest.iBytesTotal))
+			if (gbDest.arrbyData==NULL || (gbSrc.iBytesTotal!=gbDest.iBytesTotal))
 				gbDest.Init((int)gbSrc.iWidth,(int)gbSrc.iHeight,(int)gbSrc.iBytesPP);
 			iSrcByte=0;
 			iDestByte=0;//iDestByteStart;//TODO: Uncomment, and separate the blur code here and make alpha overlay version

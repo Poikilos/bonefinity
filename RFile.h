@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <base.h>
 //#include "E:\Projects-cpp\Base\base.h"
+#include <frameworkdummy.h>
 
 using namespace std;
 

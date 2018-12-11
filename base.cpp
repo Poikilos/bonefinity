@@ -1,6 +1,6 @@
 #ifndef BASE_CPP
 #define BASE_CPP
-#pragma once
+//#pragma once
 
 #include <cstdlib>
 #include <iostream>
@@ -12,11 +12,17 @@
 #include <frameworkdummy.h>
 #include <float.h>
 #include <limits.h>
+#include <RMath.h>
 
 using namespace std;
 
 namespace ExpertMultimediaBase {
+	const REAL Base_r0=(REAL)0.0;
+	const REAL Base_r1=(REAL)1.0;
+	const REAL Base_r1000=(REAL)1000.0;
 	int RString_iDecimalPlacesForToString=-1;
+	Uint32 dwTicksAcquiredOutsideOfGameState_Run=0;
+
 	int iLastErr=0; //each call of every function must reset this to track errors.
 	string sLastErr="";
 	string sLastFunc="";
@@ -40,33 +46,12 @@ namespace ExpertMultimediaBase {
 	int iMaxErrors=8000;
 	byte by3dAlphaLookup[256][256][256];
 	bool bDebug=false;//CHANGED during init to the value of the debugmode script variable
-	bool bMegaDebug=true; //true for debug only!
+	bool bMegaDebug=false; //true for debug only!
+	//IPoint ipZero;
 
 	///#endregion globals defined in base.h
 
 	///#region methods
-	/*
-	IPoint::IPoint() {
-		X=0;
-		Y=0;
-	}
-	IRect::IRect() {
-		top=0;
-		left=0;
-		bottom=0;
-		right=0;
-	}
-	*/
-
-	IRect::IRect() {
-		top=0;
-		left=0;
-		bottom=0;
-		right=0;
-	}
-	string IRect::ToString() {
-		return "("+RString_ToString(left)+","+RString_ToString(top)+")to("+RString_ToString(right)+","+RString_ToString(bottom)+")";
-	}
 	Pixel::Pixel() {
 		Set(0,0,0,0);
 	}
@@ -185,7 +170,7 @@ namespace ExpertMultimediaBase {
 				//stringstream ssboth(s3, ios_base::in | ios_base::out);
 				//ssboth+sVal;
 				//ssboth>>val;
-				char szTemp[2048];
+				//char szTemp[2048];
 				val=atoi(sVal.c_str());
 				bGood=true;
 			}
@@ -225,11 +210,11 @@ namespace ExpertMultimediaBase {
 		return CountCArrayNotationFields(sVal);
 	}
 	int Variable::Indeces(int i1stDimension) {//returns 0 if non-array.  Otherwise returns 1 or more.
-		string *psIgnored;
+		//string *psIgnored;
 		//Variable vTemp;
 		string sTemp;
 		bool bGood=GetForcedCArrayNotationSubstring(sTemp,sVal,i1stDimension);
-		Console::Error.Write("Checking "+sTemp+"...");
+		Console::Error.Write("Checking "+sTemp+"...GetForcedCArrayNotationSubstring..."+(bGood?"OK":"FAILED")+"...");
 		int iReturn=0;
 		iReturn=CountCArrayNotationFields(sTemp);
 		Console::Error.Write( "Found "+RString_ToString(iReturn)+RString_ToString("...") );
@@ -322,27 +307,27 @@ namespace ExpertMultimediaBase {
 	bool Variable::FromIniLine(string val) {
 		static bool bFirstRun=true;
 		bool bGood=true;
-		int iNowPrev;
+		int iNowPrev=-1;//is set later
 		SetActive();
 		string sFuncNow="FromIniLine";
 		try {
-			if (bFirstRun) Console::Error.Write(sFuncNow);
-			if (bFirstRun) Console::Error.WriteLine("(\""+val+"\")");
+			if (bFirstRun&&bMegaDebug) Console::Error.Write(sFuncNow);
+			if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("(\""+val+"\")");
 			sFuncNow+="(\""+val+"\")";
-			if (bFirstRun) Console::Error.WriteLine("  -about to analyze \""+val+"\"");
+			if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("  -about to analyze \""+val+"\"");
 			int iNow=val.find_first_of("=");
 			if (iNow>=0) {
-				if (bFirstRun) Console::Error.WriteLine("  -about to get first part from 0 to "+RString_ToString(iNow));
+				if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("  -about to get first part from 0 to "+RString_ToString(iNow));
 				sName=val.substr(0,iNow);
 				if (sName=="") ShowError("  -var name string is blank \"\"!",sFuncNow);
-				if (bGood && (iNow<val.length()-1)) {
+				if (bGood && (iNow<(int)val.length()-1)) {
 					iNowPrev=iNow;
 					iNow++;
-					if (bFirstRun) Console::Error.WriteLine("	-done get first part: "+sName);
-					if (bFirstRun) Console::Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString(val.length()-iNow));
+					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	-done get first part: "+sName);
+					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	-about to get next part from "+RString_ToString(iNow)+" length "+RString_ToString(val.length()-iNow));
 					sVal=val.substr(iNow,val.length()-iNow);
 					if (sVal=="") ShowError("	  -\"\" VALUE part is blank !",sFuncNow);
-					if (bFirstRun) Console::Error.WriteLine("	  -done getting next part");
+					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("	  -done getting next part");
 					//if (!bGood) ShowError("	  -get VALUE part failed!",sFuncNow);
 				}
 				else if (!bGood) ShowError("	-substr name failed!",sFuncNow);
@@ -404,6 +389,7 @@ namespace ExpertMultimediaBase {
 	}
 	bool Variables::Load(string sFile) {
 		static bool bFirstRun=true;
+		bool bGood=false;
 		try {
 			if (bFirstRun) Console::Error.WriteLine("About to load \""+sFile+"\"");//debug only
 			sFileName=sFile;
@@ -411,7 +397,7 @@ namespace ExpertMultimediaBase {
 			if (bFirstRun) Console::Error.WriteLine("Done trying to load \""+sFile+"\"");//debug only
 			int iChars=1;
 			bool bCheck;
-			int iMaxLine=varr[iVars].MaxChars()+varr[iVars].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
+			//int iMaxLine=varr[iVars].MaxChars()+varr[iVars].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
 
 			char sPtr[2048];
 			int iVarsNow=0;
@@ -433,9 +419,9 @@ namespace ExpertMultimediaBase {
 						bNew=true;
 					}
 					else bNew=false;
-					if (bFirstRun) Console::Error.WriteLine("  -about to get FromIniLine: "+sLine);
+					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("  -about to get FromIniLine: "+sLine);
 					bCheck=varr[iAt].FromIniLine(sLine);
-					if (bFirstRun) Console::Error.WriteLine("  -done get FromIniLine");
+					if (bFirstRun&&bMegaDebug) Console::Error.WriteLine("  -done get FromIniLine");
 					if (bCheck&&bNew) {
 						iVars++;
 						iVarsNow++;
@@ -445,29 +431,34 @@ namespace ExpertMultimediaBase {
 			}//end while sPtr line
 			if (bFirstRun) Console::Error.WriteLine("Done: Read "+RString_ToString(iVars)+" variables from "+RString_ToString(iLines)+" lines in "+sFile);
 			ifNow.close();
+			bGood=true;
 		}
-		catch (exception& exn) { ShowExn(exn,"Variables::Load");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Variables::Load");
 		}
-		catch (...) { ShowUnknownExn("Variables::Load");
+		catch (...) { bGood=false; ShowUnknownExn("Variables::Load");
 		}
 		bFirstRun=false;
+		return bGood;
 	}//end Variables::Load
 	bool Variables::Save(string sFile) {
+		bool bGood=false;
 		try {
 			sFileName=sFile;
 			ofstream ofNow(sFile.c_str());
-			int iMaxLine=varr[0].MaxChars()+varr[0].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
+			//int iMaxLine=varr[0].MaxChars()+varr[0].MaxNameChars()+2; //+2 not 1, to include '=' AND '\0'
 			string sLine="";
 			for (int iNow=0; iNow<iVars; iNow++) {
 				sLine=varr[iNow].ToIniLine();
 				ofNow<<sLine<<endl;
 			}
 			ofNow.close();
+			bGood=true;
 		}
-		catch (exception& exn) { ShowExn(exn,"Variables::Save(...)");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"Variables::Save(...)");
 		}
-		catch (...) { ShowUnknownExn("Variables::Save(...)");
+		catch (...) { bGood=false; ShowUnknownExn("Variables::Save(...)");
 		}
+		return bGood;
 	}//end Variables::Save
 	bool Variables::Save() {
 		bool bGood=false;
@@ -785,14 +776,14 @@ namespace ExpertMultimediaBase {
 		//return (zSize*.912);
 	//}
 	Mass3d::Mass3d() {
-		X=0;Y=0;z=0;
+		X=0;Y=0;Z=0;
 		xMin=-8;yMin=-8;zMin=0;
 		xMax=8;yMax=8;zMax=16;
 		xVel=0;yVel=0;zVel=0;
 		xRot=0;yRot=0;zRot=0;
 		xRotMin=0;yRotMin=0;zRotMin=0;
 		xRotMax=360;yRotMax=360;zRotMax=360;
-		xRotVel=90;yRotVel=90;zRotVel=90;
+		xRotVelDegreesPerSec=90;yRotVelDegreesPerSec=90;zRotVelDegreesPerSec=90;
 		xRotDest=xRot;yRotDest=yRot;zRotDest=zRot;
 		xSize=1;ySize=1;zSize=1;
 	}
@@ -810,8 +801,8 @@ namespace ExpertMultimediaBase {
 		else if (X>xMax) X=xMax;
 		if		(Y<yMin) Y=yMin;
 		else if (Y>yMax) Y=yMax;
-		if		(z<zMin) z=zMin;
-		else if (z>zMax) z=zMax;
+		if		(Z<zMin) Z=zMin;
+		else if (Z>zMax) Z=zMax;
 	}
 	void Mass3d::AngleDestToLimits() {
 		SafeDestAngles();
@@ -832,31 +823,62 @@ namespace ExpertMultimediaBase {
 		SafeAngle360ByRef(yRotDest);
 		SafeAngle360ByRef(zRotDest);
 	}
+	void Mass3d::RotateTowardDestByDegreesByRef(float& degToChange, float degDest, float degOperand) {
+		if (degOperand<0.0f) {
+			ShowErr("Error in RotateTowardDestByDegreesByRef: degOperand should not be negative (absolute value will be used instead)! {degOperand:"+RString_ToString(degOperand)+"}");
+			degOperand*=-1.0f;
+		}
+		if (degDest<degToChange) {
+			degToChange-=degOperand;
+			if (degToChange<degDest) degToChange=degDest;
+		}
+		else if (degDest>degToChange) {
+			degToChange+=degOperand;
+			if (degToChange>degDest) degToChange=degDest;
+		}
+	}//end RotateTowardDestByDegreesByRef float overload
+	void Mass3d::RotateTowardDestByDegreesByRef(double& degToChange, double degDest, double degOperand) {
+		if (degOperand<0.0) {
+			ShowErr("Error in RotateTowardDestByDegreesByRef: degOperand should not be negative (absolute value will be used instead)! {degOperand:"+RString_ToString(degOperand)+"}");
+			degOperand*=-1.0;
+		}
+		if (degDest<degToChange) {
+			degToChange-=degOperand;
+			if (degToChange<degDest) degToChange=degDest;
+		}
+		else if (degDest>degToChange) {
+			degToChange+=degOperand;
+			if (degToChange>degDest) degToChange=degDest;
+		}
+	}//end RotateTowardDestByDegreesByRef double overload
 	void Mass3d::RotateTowardDest(int iMillisecondsSinceLastCall) {
 		AngleToLimits();
 		AngleDestToLimits();
-		xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
-		register float xDegMove=((double)xRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
-		register float yDegMove=((double)yRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
-		register float zDegMove=((double)zRotVel*(double)iMillisecondsSinceLastCall) / 1000.0;
-		if (xDegMove>=FANGLEDIFFPOSITIVE(xRot,xRotDest)) xRot=xRotDest;
-		else xRot=APPROACH(xRot,xRotDest,xDegMove/(xRotDest-xRot));
-		if (yDegMove>=FANGLEDIFFPOSITIVE(yRot,yRotDest)) yRot=yRotDest;
-		else yRot=APPROACH(yRot,yRotDest,yDegMove/(yRotDest-yRot));
-		if (zDegMove>=FANGLEDIFFPOSITIVE(zRot,zRotDest)) zRot=zRotDest;
-		else zRot=APPROACH(zRot,zRotDest,zDegMove/(zRotDest-zRot));
+		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;
+		float xDegMove=(float)( (double)xRotVelDegreesPerSec * ((double)iMillisecondsSinceLastCall / 1000.0) );
+		float yDegMove=(float)( (double)yRotVelDegreesPerSec * ((double)iMillisecondsSinceLastCall / 1000.0) );
+		float zDegMove=(float)( (double)zRotVelDegreesPerSec * ((double)iMillisecondsSinceLastCall / 1000.0) );
+		RotateTowardDestByDegreesByRef(xRot, xRotDest, xDegMove);
+		RotateTowardDestByDegreesByRef(yRot, yRotDest, yDegMove);
+		RotateTowardDestByDegreesByRef(zRot, zRotDest, zDegMove);
+		//if (xDegMove>=ANGLEDIFFPOSITIVE(xRot,xRotDest)) xRot=xRotDest;
+		//else xRot=APPROACH(xRot,xRotDest,xDegMove/(xRotDest-xRot));
+		//if (yDegMove>=ANGLEDIFFPOSITIVE(yRot,yRotDest)) yRot=yRotDest;
+		//else yRot=APPROACH(yRot,yRotDest,yDegMove/(yRotDest-yRot));
+		//if (zDegMove>=ANGLEDIFFPOSITIVE(zRot,zRotDest)) zRot=zRotDest;
+		//else zRot=APPROACH(zRot,zRotDest,zDegMove/(zRotDest-zRot));
 	}//end RotateTowardDest
 	void Mass3d::RotateTowardDest(float rSecondsSinceLastCall) {
 		AngleToLimits();
 		AngleDestToLimits();
-		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
-		float xDegMove=xRotVel*rSecondsSinceLastCall;
-		float yDegMove=yRotVel*rSecondsSinceLastCall;
-		float zDegMove=zRotVel*rSecondsSinceLastCall;
+		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;
+		float xDegMove=xRotVelDegreesPerSec*rSecondsSinceLastCall;
+		float yDegMove=yRotVelDegreesPerSec*rSecondsSinceLastCall;
+		float zDegMove=zRotVelDegreesPerSec*rSecondsSinceLastCall;
 		float rApproach;
-		float xToDest=FANGLEDIFFPOSITIVE(xRot,xRotDest);
-		float yToDest=FANGLEDIFFPOSITIVE(yRot,yRotDest);
-		float zToDest=FANGLEDIFFPOSITIVE(zRot,zRotDest);
+		float xToDest=ANGLEDIFFPOSITIVE(xRot,xRotDest);
+		float yToDest=ANGLEDIFFPOSITIVE(yRot,yRotDest);
+		float zToDest=ANGLEDIFFPOSITIVE(zRot,zRotDest);
 
 		if (xDegMove>=xToDest) xRot=xRotDest;
 		else {
@@ -878,13 +900,13 @@ namespace ExpertMultimediaBase {
 		AngleToLimits();
 		AngleDestToLimits();
 		//xRot=xRotDest;yRot=yRotDest;zRot=zRotDest;return;//debug only
-		double xDegMove=xRotVel*rSecondsSinceLastCall;
-		double yDegMove=yRotVel*rSecondsSinceLastCall;
-		double zDegMove=zRotVel*rSecondsSinceLastCall;
+		double xDegMove=xRotVelDegreesPerSec*rSecondsSinceLastCall;
+		double yDegMove=yRotVelDegreesPerSec*rSecondsSinceLastCall;
+		double zDegMove=zRotVelDegreesPerSec*rSecondsSinceLastCall;
 		double rApproach;
-		double xToDest=FANGLEDIFFPOSITIVE(xRot,xRotDest);
-		double yToDest=FANGLEDIFFPOSITIVE(yRot,yRotDest);
-		double zToDest=FANGLEDIFFPOSITIVE(zRot,zRotDest);
+		double xToDest=ANGLEDIFFPOSITIVE(xRot,xRotDest);
+		double yToDest=ANGLEDIFFPOSITIVE(yRot,yRotDest);
+		double zToDest=ANGLEDIFFPOSITIVE(zRot,zRotDest);
 
 		if (xDegMove>=xToDest) xRot=xRotDest;
 		else {
@@ -910,13 +932,39 @@ namespace ExpertMultimediaBase {
 	void Mass3d::HardLocation(float xTo, float yTo, float zTo) {
 		X=xTo;//xDest=xTo;
 		Y=yTo;//yDest=yTo;
-		z=zTo;//zDest=zTo;
+		Z=zTo;//zDest=zTo;
 	}
-	void Mass3d::SetRotMaxSpeed(float xSpeed, float ySpeed, float zSpeed) {
-		xVel=xSpeed;
-		yVel=ySpeed;
-		zVel=zSpeed;
+	void Mass3d::CopyLocationOnlyTo(Mass3d& m3dTo) {
+		m3dTo.X=X;
+		m3dTo.Y=Y;
+		m3dTo.Z=Z;
 	}
+	void Mass3d::CopyTo(Mass3d& m3dTo) {
+		m3dTo.X=X;
+		m3dTo.Y=Y;
+		m3dTo.Z=Z;
+		m3dTo.xMin=xMin;m3dTo.yMin=yMin;m3dTo.zMin=zMin;
+		m3dTo.xMax=xMax;m3dTo.yMax=yMax;m3dTo.zMax=zMax;
+		m3dTo.xVel=xVel;m3dTo.yVel=yVel;m3dTo.zVel=zVel;
+		m3dTo.xRot=xRot;m3dTo.yRot=yRot;m3dTo.zRot=zRot;
+		m3dTo.xRotMin=xRotMin;m3dTo.yRotMin=yRotMin;m3dTo.zRotMin=zRotMin;
+		m3dTo.xRotMax=xRotMax;m3dTo.yRotMax=yRotMax;m3dTo.zRotMax=zRotMax;
+		m3dTo.xRotVelDegreesPerSec=xRotVelDegreesPerSec;m3dTo.yRotVelDegreesPerSec=yRotVelDegreesPerSec;m3dTo.zRotVelDegreesPerSec=zRotVelDegreesPerSec;
+		m3dTo.xRotDest=xRotDest;m3dTo.yRotDest=yRotDest;m3dTo.zRotDest=zRotDest;
+		m3dTo.zSize=xSize;m3dTo.zSize=ySize;m3dTo.zSize=zSize;
+	}
+
+	void Mass3d::OffsetSomethingByMyLocation(Mass3d& m3dSomethingToMove) {
+		m3dSomethingToMove.X+=X;
+		m3dSomethingToMove.Y+=Y;
+		m3dSomethingToMove.Z+=Z;
+	}
+
+	//void Mass3d::SetRotMaxSpeed(float xSpeed, float ySpeed, float zSpeed) {
+	//	xVel=xSpeed;
+	//	yVel=ySpeed;
+	//	zVel=zSpeed;
+	//}
 	string Mass3d::ToString() {
 		return ToString(false);
 	}
@@ -929,13 +977,24 @@ namespace ExpertMultimediaBase {
 			Console::Error.Flush();
 		}
 		if (bShowAll) {
-			sReturn=RString_ToString("At(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")")
-			+RString_ToString(":AtVelocity")+RString_ToString("(")+RString_ToString(xVel)+RString_ToString(",")+RString_ToString(yVel)+RString_ToString(",")+RString_ToString(zVel)+RString_ToString(")")
-			+RString_ToString("\n  Rot")+RString_ToString("(")+RString_ToString(xRot)+RString_ToString(",")+RString_ToString(yRot)+RString_ToString(",")+RString_ToString(zRot)+RString_ToString(")")
-			+RString_ToString(":RotDest")+RString_ToString("(")+RString_ToString(xRotDest)+RString_ToString(",")+RString_ToString(yRotDest)+RString_ToString(",")+RString_ToString(zRotDest)+RString_ToString(")");
+			bool bWholeNumbers=true;
+			if (bWholeNumbers) {
+				sReturn=RString_ToString("{At(")+RString_ToString((int)X)+RString_ToString(",")+RString_ToString((int)Y)+RString_ToString(",")+RString_ToString((int)Z)+RString_ToString(")")
+				+RString_ToString(" ~ Velocity")+RString_ToString("(")+RString_ToString((int)xVel)+RString_ToString(",")+RString_ToString((int)yVel)+RString_ToString(",")+RString_ToString((int)zVel)+RString_ToString(")")
+				+RString_ToString("\n Rot")+RString_ToString("(")+RString_ToString((int)xRot)+RString_ToString(",")+RString_ToString((int)yRot)+RString_ToString(",")+RString_ToString((int)zRot)+RString_ToString(")")
+				+RString_ToString(" ~ RotDest")+RString_ToString("(")+RString_ToString((int)xRotDest)+RString_ToString(",")+RString_ToString((int)yRotDest)+RString_ToString(",")+RString_ToString((int)zRotDest)+RString_ToString(")")
+				+"}";
+			}
+			else {
+				sReturn=RString_ToString("{At(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(Z)+RString_ToString(")")
+				+RString_ToString(" ~ Velocity")+RString_ToString("(")+RString_ToString(xVel)+RString_ToString(",")+RString_ToString(yVel)+RString_ToString(",")+RString_ToString(zVel)+RString_ToString(")")
+				+RString_ToString("\n Rot")+RString_ToString("(")+RString_ToString(xRot)+RString_ToString(",")+RString_ToString(yRot)+RString_ToString(",")+RString_ToString(zRot)+RString_ToString(")")
+				+RString_ToString(" ~ RotDest")+RString_ToString("(")+RString_ToString(xRotDest)+RString_ToString(",")+RString_ToString(yRotDest)+RString_ToString(",")+RString_ToString(zRotDest)+RString_ToString(")")
+				+"}";
+			}
 		}
 		else {
-			sReturn=RString_ToString("(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(z)+RString_ToString(")");
+			sReturn=RString_ToString("(")+RString_ToString(X)+RString_ToString(",")+RString_ToString(Y)+RString_ToString(",")+RString_ToString(Z)+RString_ToString(")");
 		}
 		RString_iDecimalPlacesForToString=iDecimalPlacesPrev;
 		if (Mass3d_ToString_bFirstRun) {
@@ -946,7 +1005,7 @@ namespace ExpertMultimediaBase {
 		return sReturn;
 	}//end RString_ToString
 
-
+	///Mass2d:
 	int Mass2d::CenterXAbsScaled() {
 		return IROUNDF(FCenterXAbsScaled());
 	}
@@ -1022,45 +1081,44 @@ namespace ExpertMultimediaBase {
 		Init(0,0,100.0f);
 		fScale=1.0f;
 	}
-/*
-	bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, byte bySrcValue) {
-		return Shade(arrbyDest, u32DestLoc, (Uint32)bySrcValue);
-	}
-	bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, Uint32 u32SrcValue) {
-		try {
-			if (lpbyShade!=null) {
-				arrbyDest[u32DestLoc]=lpbyShade[u32SrcValue];
-			}
-		}
-		catch (exception& exn) {
-			ShowExn(exn,"Gradient::Shade");
-		}
-		catch (...) {
-			ShowUnknownExn("Gradient::Shade");
-		}
-	}//end Gradient::Shade
-	Gradient::Gradient() {
-		InitNull();
-		Init(256);
-	}
-	bool Gradient::InitNull() {
-		u32Levels=0;
-		lpbyShade=NULL;
-	}
-	bool Gradient::Init(Uint32 u32SetLevels) {
-		try {
-			SafeFree(lpbyShade);
-			lpbyShade=(byte*)malloc(sizeof(byte)*u32SetLevels);
-			u32Levels=u32SetLevels;
-		}
-		catch (exception& exn) {
-			ShowExn(exn,"Gradient::Init");
-		}
-		catch (...) {
-			ShowUnknownExn("Gradient::Init");
-		}
-	}
-*/
+	//bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, byte bySrcValue) {
+	//	return Shade(arrbyDest, u32DestLoc, (Uint32)bySrcValue);
+	//}
+	//bool Gradient::Shade(byte* arrbyDest, Uint32 u32DestLoc, Uint32 u32SrcValue) {
+	//	try {
+	//		if (lpbyShade!=null) {
+	//			arrbyDest[u32DestLoc]=lpbyShade[u32SrcValue];
+	//		}
+	//	}
+	//	catch (exception& exn) {
+	//		ShowExn(exn,"Gradient::Shade");
+	//	}
+	//	catch (...) {
+	//		ShowUnknownExn("Gradient::Shade");
+	//	}
+	//}//end Gradient::Shade
+	//Gradient::Gradient() {
+	//	InitNull();
+	//	Init(256);
+	//}
+	//bool Gradient::InitNull() {
+	//	u32Levels=0;
+	//	lpbyShade=NULL;
+	//}
+	//bool Gradient::Init(Uint32 u32SetLevels) {
+	//	try {
+	//		SafeFree(lpbyShade);
+	//		lpbyShade=(byte*)malloc(sizeof(byte)*u32SetLevels);
+	//		u32Levels=u32SetLevels;
+	//	}
+	//	catch (exception& exn) {
+	//		ShowExn(exn,"Gradient::Init");
+	//	}
+	//	catch (...) {
+	//		ShowUnknownExn("Gradient::Init");
+	//	}
+	//}
+
 	///#endregion methods
 
 	///#region memory
@@ -1166,7 +1224,7 @@ namespace ExpertMultimediaBase {
 	string ToUpper(string val) {
 		const char* szNow=val.c_str();
 		char* szTemp=(char*)malloc(sizeof(char)*val.length());
-		for (int iNow=0; iNow<val.length(); iNow++) {
+		for (size_t iNow=0; iNow<val.length(); iNow++) {
 			//TODO: fix SLOWness
 			char cNow=LowercaseElseZeroIfNotUppercase(szNow[iNow]);
 			if ((int)cNow>0) szTemp[iNow]=cNow;
@@ -1318,6 +1376,9 @@ namespace ExpertMultimediaBase {
 		bFirstRun=false;
 		return sReturn;
 	}
+	string RString_ToString(const char* val) {
+		return RString_ToString((char*)val);
+	}
 	string RString_ToString(char val) {
 		static bool bFirstRun=false;//false to prevent crap from showing inside other debugs
 		if (bFirstRun) Console::Error.Write("RString_ToString(char)--");
@@ -1367,7 +1428,7 @@ namespace ExpertMultimediaBase {
 			int iLenNow=0;
 			string sCharNow;
 			Console::Error.Write("Parsing "+RString_ToString(val.length())+RString_ToString(" chars..."));
-			for (int iNow=0; iNow<val.length(); iNow++) {
+			for (size_t iNow=0; iNow<val.length(); iNow++) {
 				sCharNow=val.substr(iNow,1);
 				Console::Error.Write(" '"+sCharNow+RString_ToString("'"));
 				if (sCharNow=="\"") { bInQuotes=!bInQuotes; iLenNow++; }
@@ -1403,10 +1464,11 @@ namespace ExpertMultimediaBase {
 			iCols++;
 			if (bCountOnlyAndDontTouchArray) Console::Error.Write("done parsing "+RString_ToString(iCols)+RString_ToString(" cols..."));
 		}
-		catch (exception& exn) { ShowExn(exn,"GetCSVRow");
+		catch (exception& exn) { bGood=false; ShowExn(exn,"GetCSVRow");
 		}
-		catch (...) { ShowUnknownExn("GetCSVRow");
+		catch (...) { bGood=false; ShowUnknownExn("GetCSVRow");
 		}
+		if (!bGood) Console::Error.WriteLine("GetCSVRow: Failed, but caller didn't check on that problem.  Fix this code so it returns negative when went wrong instead of having an unused bGood var set to false.  Then program the caller to check on that.");
 		return iCols;
 	}//end GetCSVRow
 	int CountCArrayNotationFields(string val) { //return 0 for non-array
@@ -1427,13 +1489,13 @@ namespace ExpertMultimediaBase {
 		try {
 			bool bInQuotes=false;
 			int iInCurleyBraces=0;
-			int iStartThatOne;
-			int iLenThatOne;
-			int iStartNow=0;
-			int iLenNow=0;
+			size_t iStartThatOne;
+			size_t iLenThatOne;
+			size_t iStartNow=0;
+			size_t iLenNow=0;
 			int iCol=0;
 			string sCharNow;
-			for (int iNow=0; iNow<val.length(); iNow++) {
+			for (size_t iNow=0; iNow<val.length(); iNow++) {
 				sCharNow=val.substr(iNow,1);
 				if (sCharNow=="\"") { bInQuotes=!bInQuotes; iLenNow++; }
 				else if (bAllowCurleyBracesRecursively_FalseIgnoresThem && !bInQuotes && sCharNow=="{") { iInCurleyBraces++; iLenNow++; }
@@ -1855,6 +1917,7 @@ namespace ExpertMultimediaBase {
 				//don't report this
 			}
 		}
+		return bGood;
 	}//substrcpy
 	bool Crop(char* &sVal, int iStart) {
 		bool bGood=false;
@@ -1957,6 +2020,7 @@ namespace ExpertMultimediaBase {
 	}
 	bool ExistsAt(char* sHaystack, char* sNeedle, int iAtHaystack) {
 		bool bMatch=false;
+		//bool bGood=false;
 		try {
 			int iMatchingChars=0;
 			int iLen=strlen(sNeedle);
@@ -1969,9 +2033,16 @@ namespace ExpertMultimediaBase {
 			}
 			if (iMatchingChars==iLen) bMatch=true;
 		}
-		catch (...) {
-			ShowError("Exception in ExistsAt");
+		catch (exception& exn) {
+			ShowExn(exn,"ExistsAt(char* sHaystack, char* sNeedle, int iAtHaystack)");
 		}
+		catch (...) {
+			ShowUnknownExn("ExistsAt(char* sHaystack, char* sNeedle, int iAtHaystack)");
+		}
+		//catch (...) {
+		//	ShowError("Exception in ExistsAt");
+		//}
+		return bMatch;
 	}
 
 	/*inline*/ int IndexOf(char* sHaystack, char* sNeedle) {
@@ -1991,9 +2062,9 @@ namespace ExpertMultimediaBase {
 		catch (exception& exn) {
 			ShowExn(exn,"IndexOf");
 		}
-		catch (char* szExn) {
-			ShowAndDeleteException(szExn,"IndexOf");
-		}
+		//catch (char* szExn) {
+		//	ShowAndDeleteException(szExn,"IndexOf");
+		//}
 		catch (...) {
 			ShowUnknownExn("IndexOf");
 		}
@@ -2016,9 +2087,11 @@ namespace ExpertMultimediaBase {
 		}
 		else if (iErrors==iMaxErrors) {
 			Console::Error.WriteLine("Too many errors ("+RString_ToString(iErrors)+")--this is the last one that will be shown:");
-			bPermission=true;
+			bPermission=true;//TODO: should this be false???
 		}
+		else bPermission=false;
 		iErrors++;
+		return bPermission;//TODO: should this return bGood???
 	}
 	bool ShowErr(string sMsg) {
 		return ShowError(sMsg,"");
@@ -2075,14 +2148,14 @@ namespace ExpertMultimediaBase {
 		}
 		return bGood;
 	}
-	void ShowAndDeleteException(char* &sExn, string sFuncNow) {
-		ShowAndDeleteException(sExn,sFuncNow,"");
-	}
-	void ShowAndDeleteException(char* &sExn, string sFuncNow, string sVerbNow) {
-		if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
-		if (ShowErr()) Console::Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+sExn);
-		SafeFree(sExn);
-	}
+	//void ShowAndDeleteException(char* &sExn, string sFuncNow) {
+	//	ShowAndDeleteException(sExn,sFuncNow,"");
+	//}
+	//void ShowAndDeleteException(char* &sExn, string sFuncNow, string sVerbNow) {
+	//	if (sVerbNow.length()>0) sVerbNow=" "+sVerbNow;
+	//	if (ShowErr()) Console::Error.WriteLine("Could not finish "+sFuncNow+sVerbNow+": "+sExn);
+	//	SafeFree(sExn);
+	//}
 	void ShowExn(exception& exn, string sFuncNow) {
 		ShowExn(exn,sFuncNow,"");
 	}
@@ -2274,53 +2347,87 @@ namespace ExpertMultimediaBase {
 	///#endregion reporting
 
 	///#region math
+	///NEXT TWO METHODS SHOULD BE THE ONLY CALLS TO SDL_GetTicks in the WHOLE PROGRAM
+	/*inline*/ int Base_GetTicks_Absolute() {
+		return SDL_GetTicks();
+	}
+	/*inline*/Uint32 Base_GetTicks_Relative() {
+		return SDL_GetTicks()-dwTicksAcquiredOutsideOfGameState_Run;
+	}
+	REAL Base_GetSeconds_Relative() {
+		return ((REAL)Base_GetTicks_Relative())/Base_r1000;
+	}
+	UInt32 Base_TicksSince_Relative(int iTickCount) {
+		return  (UInt32) (Base_GetTicks_Relative()-iTickCount);
+	}
+
+	REAL Base_SecondsSince_Relative(REAL rSecondCount) {
+		return  (REAL) (Base_GetSeconds_Relative()-rSecondCount);
+	}
+	REAL Base_GetSeconds_Absolute() {
+		return ((REAL)Base_GetTicks_Absolute())/Base_r1000;
+	}
+	REAL Base_SecondsSince_Absolute(REAL rSecondCount) {
+		return  (REAL) (Base_GetSeconds_Absolute()-rSecondCount);
+	}
 	float MirrorOnYLine(float fAngle) {
 		SafeAngle360ByRef(fAngle);
 		if (fAngle<90.0f) fAngle+=180.0f-fAngle;
 		else if (fAngle<180.0f) fAngle=180.0f-fAngle;
 		else if (fAngle<270.0f) fAngle=360.0f-(fAngle-180.0f);
 		else fAngle=360.0f-(fAngle-180.0f);
+		return fAngle;
 	}
 	float AngleToward(float xDest, float yDest, float xSrc, float ySrc) {
 		register float xRel=xDest-xSrc, yRel=yDest-xSrc;
-		float fReturn=THETAOFXY(xRel,yRel);
+		float fReturn=FTHETAOFXY_DEG(xRel,yRel);
 		if (fReturn<0.0f) fReturn+=360.0f;
 		return fReturn;
 	}
-	double DDist(DPoint &point1, DPoint &point2) {
-		register double xSquaring=(point1.X-point2.X);
-		register double ySquaring=(point1.Y-point2.Y);
-		register double dSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
-		return ((dSumOfSquares>0)?sqrt(dSumOfSquares):0);
-	}
-	/*inline*/ void Rotate(float &xToMove, float &yToMove, float fRotate) {
-		float rTemp=ROFXY(xToMove,yToMove), thetaTemp=THETAOFXY(xToMove,yToMove);
-		thetaTemp+=fRotate;
-		xToMove=XOFRTHETA(rTemp,thetaTemp);
-		yToMove=YOFRTHETA(rTemp,thetaTemp);
-	}
-	/*inline*/ void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate) {
-		xToMove-=xCenter;
-		yToMove-=yCenter;
-		float rTemp=ROFXY(xToMove,yToMove), thetaTemp=THETAOFXY(xToMove,yToMove);
-		thetaTemp+=fRotate;
-		xToMove=XOFRTHETA(rTemp,thetaTemp);
-		yToMove=YOFRTHETA(rTemp,thetaTemp);
-		xToMove+=xCenter;
-		yToMove+=yCenter;
-	}
+	///*inline*/ void Rotate(float &xToMove, float &yToMove, float fRotate) {
+	//	float rTemp=ROFXY(xToMove,yToMove), thetaTemp=FTHETAOFXY_DEG(xToMove,yToMove);
+	//	thetaTemp+=fRotate;
+	//	xToMove=DXOFRTHETA_DEG(rTemp,thetaTemp);
+	//	yToMove=DYOFRTHETA_DEG(rTemp,thetaTemp);
+	//}
+	///*inline*/ void Rotate(float &xToMove, float &yToMove, float xCenter, float yCenter, float fRotate) {
+	//	xToMove-=xCenter;
+	//	yToMove-=yCenter;
+	//	float rTemp=ROFXY(xToMove,yToMove), thetaTemp=FTHETAOFXY_DEG(xToMove,yToMove);
+	//	thetaTemp+=fRotate;
+	//	xToMove=DXOFRTHETA_DEG(rTemp,thetaTemp);
+	//	yToMove=DYOFRTHETA_DEG(rTemp,thetaTemp);
+	//	xToMove+=xCenter;
+	//	yToMove+=yCenter;
+	//}
 	/*inline*/ void Crop(float &fToModify, float fMin, float fMax) {
 		if (fToModify>fMax) fToModify=fMax;
 		else if (fToModify<fMin) fToModify=fMin;
 	}
-	/*inline*/ float SafeAngle360(float fToLimitBetweenZeroAnd360) {
-		SafeAngle360ByRef(fToLimitBetweenZeroAnd360);
-		return fToLimitBetweenZeroAnd360;
-	}
+	///*inline*/ float SafeAngle360(float fToLimitBetweenZeroAnd360) {
+	//	SafeAngle360ByRef(fToLimitBetweenZeroAnd360);
+	//	return fToLimitBetweenZeroAnd360;
+	//}
+	///*inline*/ double SafeAngle360(double fToLimitBetweenZeroAnd360) {
+	//	SafeAngle360ByRef(fToLimitBetweenZeroAnd360);
+	//	return fToLimitBetweenZeroAnd360;
+	//}
 	/*inline*/ void SafeAngle360ByRef(float &fToLimitBetweenZeroAnd360) {
 		//float fAngleTest=fToLimitBetweenZeroAnd360;//debug only
 		fToLimitBetweenZeroAnd360-=( FFLOOR(fToLimitBetweenZeroAnd360/360.0f) * 360.0f );
 		if (fToLimitBetweenZeroAnd360<0.0f) fToLimitBetweenZeroAnd360+=360.0f;
+		if (fToLimitBetweenZeroAnd360<0.0f) Console::Error.WriteLine("Programmer error: SafeAngle360ByRef returning negative!");
+		//static int iTest=0;//debug only
+		//if (iTest<1000) {
+		//	Console::Error.WriteLine("SafeAngle360 of "+RString_ToString(fAngleTest)+" is "+RString_ToString(fToLimitBetweenZeroAnd360)+".");
+		//}
+		//iTest++;
+	}
+	/*inline*/ void SafeAngle360ByRef(double &fToLimitBetweenZeroAnd360) {
+		//double fAngleTest=fToLimitBetweenZeroAnd360;//debug only
+		fToLimitBetweenZeroAnd360-=( DFLOOR(fToLimitBetweenZeroAnd360/360.0) * 360.0 );
+		if (fToLimitBetweenZeroAnd360<0.0) fToLimitBetweenZeroAnd360+=360.0;
+		if (fToLimitBetweenZeroAnd360<0.0) Console::Error.WriteLine("Programmer error: SafeAngle360ByRef returning negative!");
 		//static int iTest=0;//debug only
 		//if (iTest<1000) {
 		//	Console::Error.WriteLine("SafeAngle360 of "+RString_ToString(fAngleTest)+" is "+RString_ToString(fToLimitBetweenZeroAnd360)+".");
@@ -2344,19 +2451,62 @@ namespace ExpertMultimediaBase {
 		}
 		return lpiPoint;
 	}
-	/*inline*/ void FPOLAROFRECT(float &r,float &theta, float X, float Y) {
-		//uses double since trig functions are double
+	/*inline*/ void RConvert_RectToPolar(int &r,int &theta, int X, int Y) {
+		r=(int)(sqrt((double)(X*X+Y*Y))+.5); //+.5 to round // ROFXY is ( sqrt( (X) * (X) + (Y) * (Y) ) )
+		float x1=X, y1=Y;
+		theta=(int)(DTHETAOFXY_DEG((double)x1,(double)y1)+.5); //+.5 to round
+	}
+	/*inline*/ void RConvert_RectToPolar(float &r,float &theta, float X, float Y) {
 		r=(float)ROFXY(X,Y);
 		float x1=X, y1=Y;
-		theta=DTHETAOFXY(x1,y1);
+		theta=FTHETAOFXY_DEG(x1,y1);
 	}
 
-	/*inline*/ void DPOLAROFRECT(double &r,double &theta, double X, double Y) {
+	/*inline*/ void RConvert_RectToPolar(double &r,double &theta, double X, double Y) {
 		r=ROFXY(X,Y);
 		double x1=X, y1=Y;
-		theta=DTHETAOFXY(x1,y1);
+		theta=DTHETAOFXY_DEG(x1,y1);
 	}
-	/*inline*/ float FANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
+	float RConvert_ToFloat(float val) {
+		return val;
+	}
+	float RConvert_ToFloat(double val) {
+		try { return (float)val; }
+		catch (exception& exn) { return (val<0.0)?float_MinValue:float_MaxValue; }
+	}
+	float RConvert_ToFloat(decimal val) {
+		try { return (float)val; }
+		catch (exception& exn) { return (val<M_0)?float_MinValue:float_MaxValue; }
+	}
+	float RConvert_THETAOFXY_RAD(float x, float y) {
+		return THETAOFXY_RAD(x,y);
+	}
+	double RConvert_THETAOFXY_RAD(double x, double y) {
+		return THETAOFXY_RAD(x,y);
+	}
+	decimal RConvert_THETAOFXY_RAD(decimal x, decimal y) {
+		return THETAOFXY_RAD(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
+	}
+	float RConvert_THETAOFXY_DEG(float x, float y) {
+		return FTHETAOFXY_DEG(x,y);
+	}
+	double RConvert_THETAOFXY_DEG(double x, double y) {
+		return DTHETAOFXY_DEG(x,y);
+	}
+	decimal RConvert_THETAOFXY_DEG(decimal x, decimal y) {
+		return LDTHETAOFXY_DEG(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
+	}
+	float RConvert_ROFXY(float x, float y) {
+		return ROFXY(x,y);
+	}
+	double RConvert_ROFXY(double x, double y) {
+		return ROFXY(x,y);
+	}
+	decimal RConvert_ROFXY(decimal x, decimal y) {
+		return ROFXY(((long double)x),((long double)y));//TODO: fix truncation of value where LD is less than 128-bit
+	}
+
+	/*inline*/ float ANGLEDIFFPOSITIVE(float f1, float f2) { //returns 0 to 180
 		SafeAngle360ByRef(f1);
 		SafeAngle360ByRef(f2);
 		if (f1<f2) {
@@ -2366,6 +2516,18 @@ namespace ExpertMultimediaBase {
 		}
 		register float fDiff=fabs(f1-f2);
 		if (fDiff>180.0f) fDiff=(360.0f-fDiff);
+		return(fDiff);
+	}
+	/*inline*/ double ANGLEDIFFPOSITIVE(double f1, double f2) { //returns 0 to 180
+		SafeAngle360ByRef(f1);
+		SafeAngle360ByRef(f2);
+		if (f1<f2) {
+			double fTemp=f1;
+			f1=f2;
+			f2=fTemp;
+		}
+		register double fDiff=fabs(f1-f2);
+		if (fDiff>180.0) fDiff=(360.0-fDiff);
 		return(fDiff);
 	}
 	/*inline*/ float FANGLEDIFF(float end, float start) { //returns 0 to 180
@@ -2383,12 +2545,6 @@ namespace ExpertMultimediaBase {
 		return(fDiff);
 	}
 
-	/*inline*/ float FDist(FPoint &point1, FPoint &point2) {
-		register float xSquaring=(point1.X-point2.X);
-		register float ySquaring=(point1.Y-point2.Y);
-		register float fSumOfSquares=xSquaring*xSquaring+ySquaring*ySquaring;
-		return ((fSumOfSquares>0)?sqrt(fSumOfSquares):0);
-	}
 	/*inline*/ float FPDIST(float x1, float y1, float x2,  float y2) {
 		register float xSquaring=(x1-x2);
 		register float ySquaring=(y1-y2);
@@ -2421,27 +2577,27 @@ namespace ExpertMultimediaBase {
 
 	/*inline*/ float DIST3D(Mass3d &pointA, Mass3d &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(FPOINT3D &pointA, FPOINT3D &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(FPOINT3D &pointA, Mass3d &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(Mass3d &pointA, FPOINT3D &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(DPOINT3D &pointA, DPOINT3D &pointB) {
 		register float fSquare;
-		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.z-pointA.z);
+		fSquare=DSQUARED(pointB.X-pointA.X) + DSQUARED(pointB.Y-pointA.Y) + DSQUARED(pointB.Z-pointA.Z);
 		return (fSquare>0)?sqrt(fSquare):0;
 	}
 	/*inline*/ float DIST3D(float x1, float y1, float z1, float x2, float y2, float z2) {
@@ -2454,44 +2610,110 @@ namespace ExpertMultimediaBase {
 	//}
 	/*inline*/ bool Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel) {
 		register float xRel,yRel,zRel;
-		//notes:
-		//--Roll, though not used here, would be done first (X rotation)
-		//--setting pitch first DOES matter (?)
-		//--Y-rotation (fPitch==Altitude) is on the X-z plane (SINCE zrot of zero makes it point toward +X!!!!)
-		//  --(an azimuth of zero touches this plane)
-		//--z-rotation (fYaw==Azimuth) is on the X-Y plane; (an altitude of zero touches this plane)
-		yRel=0;
-		xRel=FXOFRTHETA(fDistanceTravel,fPitch);
-		zRel=FYOFRTHETA(fDistanceTravel,fPitch);
-		if (xRel!=0.0f) { //if rotation would modify location from this view
-			Rotate(xRel,yRel,fYaw);
+		bool bGood=false;
+		try {
+			//notes:
+			//--Roll, though not used here, would be done first (X rotation)
+			//--setting pitch first DOES matter (?)
+			//--Y-rotation (fPitch==Altitude) is on the X-Z plane (SINCE zrot of zero makes it point toward +X!!!!)
+			//  --(an azimuth of zero touches this plane)
+			//--Z-rotation (fYaw==Azimuth) is on the X-Y plane; (an altitude of zero touches this plane)
+			yRel=0;
+			xRel=FXOFRTHETA_DEG(fDistanceTravel,fPitch);
+			zRel=FYOFRTHETA_DEG(fDistanceTravel,fPitch);
+			if (xRel!=0.0f) { //if rotation would modify location from this view
+				RMath::Rotate(xRel,yRel,fYaw);
+			}
+			//else do nothing since xRel and yRel are zero
+			pointToSlide.X+=xRel;
+			pointToSlide.Y+=yRel;
+			pointToSlide.Z+=zRel;
+			bGood=true;
 		}
-		//else do nothing since xRel and yRel are zero
-		pointToSlide.X+=xRel;
-		pointToSlide.Y+=yRel;
-		pointToSlide.z+=zRel;
-	}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn, "Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		return bGood;
+
+	}//end Travel3d(Mass3d &pointToSlide, float fPitch, float fYaw, float fDistanceTravel)
 	/*inline*/ bool Travel3dAbs(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravel) {
 		return Travel3d(pointToSlide,pointDest,fDistanceTravel/DIST3D(pointToSlide,pointDest));
 	}
 	/*inline*/ bool Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio) {
-		pointToSlide.X=APPROACH(pointToSlide.X,pointDest.X,fDistanceTravelRatio);
-		pointToSlide.Y=APPROACH(pointToSlide.Y,pointDest.Y,fDistanceTravelRatio);
-		pointToSlide.z=APPROACH(pointToSlide.z,pointDest.z,fDistanceTravelRatio);
-	}
-	/*inline*/ bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel) {
-		register float xRel,yRel,zRel;
-		yRel=0;
-		xRel=FXOFRTHETA(fDistanceTravel,fPitch);
-		zRel=FYOFRTHETA(fDistanceTravel,fPitch);
-		if (xRel!=0.0f) { //if rotation would modify location from this view
-			Rotate(xRel,yRel,fYaw);
+		bool bGood=false;
+		try {
+			pointToSlide.X=APPROACH(pointToSlide.X,pointDest.X,fDistanceTravelRatio);
+			pointToSlide.Y=APPROACH(pointToSlide.Y,pointDest.Y,fDistanceTravelRatio);
+			pointToSlide.Z=APPROACH(pointToSlide.Z,pointDest.Z,fDistanceTravelRatio);
+			bGood=true;
 		}
-		//else do nothing since xRel and yRel are zero
-		xToMove+=xRel;
-		yToMove+=yRel;
-		zToMove+=zRel;
-	}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn, "Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)");
+		}
+		return bGood;
+	}//end Travel3d(Mass3d &pointToSlide, Mass3d &pointDest, float fDistanceTravelRatio)
+	/*inline*/ bool Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel) {
+		bool bGood=false;
+		register float xRel,yRel,zRel;
+		try {
+			yRel=0.0f;
+			xRel=FXOFRTHETA_DEG(fDistanceTravel,fPitch);
+			zRel=FYOFRTHETA_DEG(fDistanceTravel,fPitch);
+			if (xRel!=0.0f) { //if rotation would modify location from this view
+				RMath::Rotate(xRel,yRel,fYaw);
+			}
+			//else do nothing since xRel and yRel are zero
+			xToMove+=xRel;
+			yToMove+=yRel;
+			zToMove+=zRel;
+			bGood=true;
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)");
+		}
+		return bGood;
+	}//end Travel3d(float &xToMove, float &yToMove, float &zToMove, float fPitch, float fYaw, float fDistanceTravel)
+	/*inline*/ bool Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel) {
+		bool bGood=false;
+		register double xRel,yRel,zRel;
+		try {
+			yRel=0.0d;
+			xRel=DXOFRTHETA_DEG(fDistanceTravel,fPitch);
+			zRel=DYOFRTHETA_DEG(fDistanceTravel,fPitch);
+			if (xRel!=0.0d) { //if rotation would modify location from this view
+				RMath::Rotate(xRel,yRel,fYaw);
+			}
+			//else do nothing since xRel and yRel are zero
+			xToMove+=xRel;
+			yToMove+=yRel;
+			zToMove+=zRel;
+			bGood=true;
+		}
+		catch (exception& exn) {
+			bGood=false;
+			ShowExn(exn,"Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)");
+		}
+		catch (...) {
+			bGood=false;
+			ShowUnknownExn("Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)");
+		}
+		return bGood;
+	}//end Travel3d(double &xToMove, double &yToMove, double &zToMove, double fPitch, double fYaw, double fDistanceTravel)
 	/*inline*/ float FSQUARED(float val) {
 		return val*val;
 	}
@@ -2499,106 +2721,106 @@ namespace ExpertMultimediaBase {
 		return val*val;
 	}
 
-	/*inline*/ int SafePow(int basenum, int exp) {
-		int result;
-		bool bNeg;
-		if (exp<0) {
-			bNeg=true;
-			exp*=-1;
-		}
-		if (exp==0) return 1;
-		else {
-			bNeg=false;
-			result=basenum;
-			for (int iCount=1; iCount<exp; iCount++) {
-				if (result<INT_MAX-basenum) result*=basenum;
-				else return INT_MAX;
-			}
-		}
-		if (bNeg) {
-			result=1/result;
-			exp*=-1;//leaves it the way we found it
-		}
-		return result;
-	}
-	/*inline*/ long SafePow(long basenum, int exp) {
-		long result;
-		bool bNeg;
-		if (exp<0) {
-			bNeg=true;
-			exp*=-1;
-		}
-		if (exp==0) return 1;
-		else {
-			bNeg=false;
-			result=basenum;
-			for (int iCount=1; iCount<exp; iCount++) {
-				if (result<LONG_MAX-basenum) result*=basenum;
-				else return LONG_MAX;
-			}
-		}
-		if (bNeg) {
-			result=1L/result;
-			exp*=-1;//leaves it the way we found it
-		}
-		return result;
-	}
-	/*inline*/ float SafePow(float basenum, int exp) {
-		float result;
-		bool bNeg;
-		if (exp<0) {
-			bNeg=true;
-			exp*=-1;
-		}
-		if (exp==0) return 1;
-		else {
-			bNeg=false;
-			result=basenum;
-			for (int iCount=1; iCount<exp; iCount++) {
-				if (result<FLT_MAX-basenum) result*=basenum;
-				else return FLT_MAX;
-			}
-		}
-		if (bNeg) {
-			result=1.0f/result;
-			exp*=-1;//leaves it the way we found it
-		}
-		return result;
-	}
-	/*inline*/ double SafePow(double basenum, int exp) {
-		double result;
-		bool bNeg;
-		if (exp<0) {
-			bNeg=true;
-			exp*=-1;
-		}
-		if (exp==0) return 1;
-		else {
-			bNeg=false;
-			result=basenum;
-			for (int iCount=1; iCount<exp; iCount++) {
-				if (result<DBL_MAX-basenum) result*=basenum;
-				else return DBL_MAX;
-			}
-		}
-		if (bNeg) {
-			result=1.0/result;
-			exp*=-1; //leaves it the way we found it
-		}
-		return result;
-	}
-	/*inline*/ int SafeE10I(int exp) {
-		return SafePow(i10, exp);
-	}
-	/*inline*/ long SafeE10L(int exp) {
-		return SafePow(l10, exp);
-	}
-	/*inline*/ float SafeE10F(int exp) {
-		return SafePow(f10, exp);
-	}
-	/*inline*/ double SafeE10D(int exp) {
-		return SafePow(d10, exp);
-	}
+	///*inline*/ int SafePow(int basenum, int exp) {
+	//	int result;
+	//	bool bNeg;
+	//	if (exp<0) {
+	//		bNeg=true;
+	//		exp*=-1;
+	//	}
+	//	if (exp==0) return 1;
+	//	else {
+	//		bNeg=false;
+	//		result=basenum;
+	//		for (int iCount=1; iCount<exp; iCount++) {
+	//			if (result<INT_MAX-basenum) result*=basenum;
+	//			else return INT_MAX;
+	//		}
+	//	}
+	//	if (bNeg) {
+	//		result=1/result;
+	//		exp*=-1;//leaves it the way we found it
+	//	}
+	//	return result;
+	//}
+	///*inline*/ long SafePow(long basenum, int exp) {
+	//	long result;
+	//	bool bNeg;
+	//	if (exp<0) {
+	//		bNeg=true;
+	//		exp*=-1;
+	//	}
+	//	if (exp==0) return 1;
+	//	else {
+	//		bNeg=false;
+	//		result=basenum;
+	//		for (int iCount=1; iCount<exp; iCount++) {
+	//			if (result<LONG_MAX-basenum) result*=basenum;
+	//			else return LONG_MAX;
+	//		}
+	//	}
+	//	if (bNeg) {
+	//		result=1L/result;
+	//		exp*=-1;//leaves it the way we found it
+	//	}
+	//	return result;
+	//}
+	///*inline*/ float SafePow(float basenum, int exp) {
+	//	float result;
+	//	bool bNeg;
+	//	if (exp<0) {
+	//		bNeg=true;
+	//		exp*=-1;
+	//	}
+	//	if (exp==0) return 1;
+	//	else {
+	//		bNeg=false;
+	//		result=basenum;
+	//		for (int iCount=1; iCount<exp; iCount++) {
+	//			if (result<FLT_MAX-basenum) result*=basenum;
+	//			else return FLT_MAX;
+	//		}
+	//	}
+	//	if (bNeg) {
+	//		result=1.0f/result;
+	//		exp*=-1;//leaves it the way we found it
+	//	}
+	//	return result;
+	//}
+	///*inline*/ double SafePow(double basenum, int exp) {
+	//	double result;
+	//	bool bNeg;
+	//	if (exp<0) {
+	//		bNeg=true;
+	//		exp*=-1;
+	//	}
+	//	if (exp==0) return 1;
+	//	else {
+	//		bNeg=false;
+	//		result=basenum;
+	//		for (int iCount=1; iCount<exp; iCount++) {
+	//			if (result<DBL_MAX-basenum) result*=basenum;
+	//			else return DBL_MAX;
+	//		}
+	//	}
+	//	if (bNeg) {
+	//		result=1.0/result;
+	//		exp*=-1; //leaves it the way we found it
+	//	}
+	//	return result;
+	//}
+	///*inline*/ int SafeE10I(int exp) {
+	//	return SafePow(i10, exp);
+	//}
+	///*inline*/ long SafeE10L(int exp) {
+	//	return SafePow(l10, exp);
+	//}
+	///*inline*/ float SafeE10F(int exp) {
+	//	return SafePow(f10, exp);
+	//}
+	///*inline*/ double SafeE10D(int exp) {
+	//	return SafePow(d10, exp);
+	//}
 	/*inline*/ byte SafeByRoundF(float val) {
 		val+=.5f;
 		if (val<0.0f) return 0;
@@ -2608,15 +2830,53 @@ namespace ExpertMultimediaBase {
 	/*inline*/ byte SafeByte(float val) {
 		return (val>255.0f)?255:((val<0.0f)?0:(byte)val);
 	}
-	/*inline*/ int SafeAddWrappedPositiveOnly(int val1, int val2) {
-		if (val1<0) val1*=-1;
-		if (val2<0) val2*=-1;
-		int max=2147483647;
+	const int INT_MAX_TIMES_NEG1=INT_MAX*-1;
+	/*inline*/ int SafeAddWrappedPositiveOnly(int val1, int val2) { //formerly SafeAddWrapped
+		///REMEMBER: the absolute value of MIN_INT (0x80000000==-2147483648) is 1 GREATER THAN MAX_INT (0x7fffffff (2147483647))
+		if (val1<0) {
+			ShowErr("WARNING: Caller attempted SafeAddWrappedPositiveOnly using a negative operand 1 (will be changed to absolute value)");
+			if (val1<INT_MAX_TIMES_NEG1) val1=(val1+INT_MAX)*-1;//do solo wrap before wrapped add, starting at zero using the range of the positive
+			else val1*=-1;
+		}
+		if (val2<0) {
+			ShowErr("WARNING: Caller attempted SafeAddWrappedPositiveOnly using a negative operand 2 (will be changed to absolute value)");
+			if (val2<INT_MAX_TIMES_NEG1) val2=(val2+INT_MAX)*-1;//do solo wrap before wrapped add, starting at zero using the range of the positive
+			else val2*=-1;
+		}
+		static const int max=INT_MAX;//2147483647 //this var exists only to ease overloading this method
 		int val3=0;
-		int maxdiff=max-val1;
-		if (maxdiff<val2) val3=val1+val2;
-		else val3=val2-maxdiff;
+		int roomleft=max-val1;
+		if (val2<=roomleft) val3=val1+val2; //roomleft<val2
+		else val3=val2-(max-val1); //e.g. on a scale of 5, "4+3 == 3-(5-4) == 2"
+		//else val3=val2-roomleft+val1;///NOTE: won't work this is an UNSIGNED overload //=val2-roomleft;
+		if (val3<0) {
+			ShowErr("Programmer error: SafeAddWrappedPositiveOnly returning a negative");
+		}
 		return val3;
+	}
+	float MetersToMoveThisManyMS(float fMetersPerSecondX, int iForThisManyMilliseconds) {
+		return (float)(  (double)fMetersPerSecondX * ((double)(iForThisManyMilliseconds)) / 1000.0  );
+	}
+	double MetersToMoveThisManyMS(double fMetersPerSecondX, int iForThisManyMilliseconds) {
+		return (  (double)fMetersPerSecondX * ((double)(iForThisManyMilliseconds)) / 1000.0  );
+	}
+	float DegreesToMoveThisManyMS(float fDegreesPerSecondX, int iForThisManyMilliseconds) {//TODO: finish this--check this asdf
+		return (float)(  (double)fDegreesPerSecondX * ((double)(iForThisManyMilliseconds)) / 1000.0  );
+	}
+	double DegreesToMoveThisManyMS(double fDegreesPerSecondX, int iForThisManyMilliseconds) {//TODO: finish this--check this asdf
+		return (  (double)fDegreesPerSecondX * ((double)(iForThisManyMilliseconds)) / 1000.0  );
+	}
+	float MetersToMoveThisManyS(float fMetersPerSecondX, float rSeconds) {
+		return fMetersPerSecondX*rSeconds;
+	}
+	double MetersToMoveThisManyS(double fMetersPerSecondX, double rSeconds) {
+		return fMetersPerSecondX*rSeconds;
+	}
+	float DegreesToMoveThisManyS(float fDegreesPerSecondX, float rSeconds) {
+		return fDegreesPerSecondX*rSeconds;
+	}
+	double DegreesToMoveThisManyS(double fDegreesPerSecondX, double rSeconds) {
+		return fDegreesPerSecondX*rSeconds;
 	}
 	///#endregion math
 
