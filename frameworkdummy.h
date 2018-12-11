@@ -1,14 +1,22 @@
-#ifndef DOTNETFAKE_H
-#define DOTNETFAKE_H
+#ifndef FRAMEWORKDUMMY_H
+#define FRAMEWORKDUMMY_H
 
-#include <SDL/SDL_types.h> //gives us Uint32 etc
 #include <cstdio>
 #include <string>
-#include <float.h> //maximums i.e. LONG_MAX
-#include <limits.h> //maximums i.e. INT_MAX
+#include <sstream>
+#include <cfloat> //<float.h> //maximums i.e. LONG_MAX
+#include <climits> //<limits.h> //maximums i.e. INT_MAX
 using namespace std;
 
-namespace ExpertMultimediaBase {
+namespace FileMode {
+	extern string OpenRead;
+	extern string OpenWrite;
+}
+
+namespace ProtoArmor {
+	extern int iConsoleLinesMax;
+	extern int iConsoleLinesWritten;
+	extern bool bReverseEndian;
 	//#ifndef float_MaxValue
 	//#define float_MaxValue FLT_MAX
 	//#endif
@@ -58,6 +66,7 @@ namespace ExpertMultimediaBase {
 	#ifndef ref_RectangleF
 	#define ref_RectangleF RectangleF&
 	#endif
+
 	class RectangleF {
 	public:
 		float X;
@@ -66,6 +75,7 @@ namespace ExpertMultimediaBase {
 		float Height;
 		void Set(float x, float y, float width, float height);
 	};
+
 	class Rectangle {
 	public:
 		int X;
@@ -74,38 +84,203 @@ namespace ExpertMultimediaBase {
 		int Height;
 		void Set(int x, int y, int width, int height);
 	};
-	class FILE_FAKESTATIC_CLASS {
+
+	class Convert {
 	public:
-		bool Exists(string sFile);
+		static byte ToByte(int val);
+		static byte ToByte(long val);
+		static byte ToByte(__int64 val);
+		static byte ToByte(size_t val);
+		static byte ToByte(float val);
+		static byte ToByte(double val);
+		static byte ToByte(char val);
+		static char ToChar8(float val); //only "__wchar_t ToChar()" and "unsigned char ToByte()" exist in actual framework (has no 8-bit ToChar method)
+		static char ToChar8(double val);
+
+		static string ToString(const char* val);
+		static string ToString(bool val);
+		static string ToString(unsigned char val);
+		//static string ToString(__wchar_t val);
+		//static string ToString(DateTime val);
+		//static string ToString(Decimal val);
+		static string ToString(float val);
+		static string ToString(double val);
+		static string ToString(short val);
+		static string ToString(int val);
+		static string ToString(__int64 val);
+		//static string ToString(Object* val);
+		static string ToString(char val);
+		//static string ToString(String* val);
+		static string ToString(unsigned short val);
+		static string ToString(unsigned int val);
+		static string ToString(unsigned __int64 val);
+ 
+		//static string ToString(bool val, IFormatProvider* pifmtp); //and so on with IFormatProvider* for each type
 	};
+
+
+	//extern string FileMode_OpenRead;
+	//extern string FileMode_OpenWrite;
+
+	//class FileMode {
+	//public:
+	//	//static string OpenRead;
+	//	//static string OpenWrite;
+	//	////static string Open;
+	//	static void staticconstructorFileMode();
+	//};
+
+	class StaticConstructors {
+	public:
+		StaticConstructors();//runs equivalent of static constructors
+		~StaticConstructors();//runs equivalent of static deconstructors
+	};
+
+	class Stream {
+	private:
+		FILE* pfile;
+		long long Position;
+		string sModePrev;
+	public:
+		long long getPosition();
+		Stream();
+		~Stream();
+		void Close();
+		void Open(const char* _Filename, const char* _Mode);
+		size_t fread(void* _DstBuf, size_t _ElementSize, size_t _Count);
+		size_t fwrite(const void* _Str, size_t _ElementSize, size_t _Count);
+		bool CanRead();
+		bool CanWrite();
+	};
+
+	class FileStream {
+	public:
+		Stream BaseStream;
+		FileStream();
+		void Close();
+	};
+
+	class File {
+	public:
+		static bool Exists(string sFile);
+		static FileStream* Open(string sFile, string filemode);
+	};
+
+	//class ref_BaseStream {
+	//	long long Position;
+	//};
+
+	//class ref_Stream {
+	//public:
+	//	long long Position;
+	//};
+
+//TODO: allow binReader->BaseStream->Seek(0, SeekOrigin::Begin);
+
+	class BinaryReader {
+	private:
+		bool bDeleteFileStream;
+		FileStream* filestream; //aka InStream
+	public:
+		BinaryReader();
+		~BinaryReader();
+		BinaryReader(FileStream* filestreamNew, bool AllowThisToDeleteFileStream);
+		//Stream* BaseStream;
+		void Dispose(bool bDeleteFileStreamIfNonNull);
+		void Close();
+		long long BaseStream_Position();
+		bool BaseStream_CanRead();
+		//void Close();
+		//void Dispose();
+		//bool Equals(Object^ obj);
+		//void FillBuffer(int numBytes);
+		//int PeekChar(); //this is really int in real framework
+		//int Read();//one byte //this is really int in the real framework
+		int Read_octets(unsigned char* buffer, int indexInBuffer, int count);
+		//int Read(array<unsigned char>^ buffer, int indexInBuffer, int count);
+		//int Read(array<wchar_t>^ buffer, int index, int count);
+		//int Read7BitEncodedInt();
+		//bool ReadBoolean(); //one byte
+		unsigned char ReadByte();
+		//array<unsigned char> ReadBytes(int count);//array<unsigned char>^ ReadBytes(int count);
+
+		char ReadChar_octect();
+		string ReadChars_octects(int count);
+		//__wchar_t ReadChar();
+		//array<wchar_t> ReadChars();//array<wchar_t>^ ReadChars();
+		//Decimal ReadDecimal();
+		//double ReadDouble();
+		//short ReadInt16();
+		//int ReadInt32();
+		//long long ReadInt64();
+		//signed char ReadSByte();
+		//float ReadSingle();
+		//String^ ReadString(); //The string is prefixed with the length, encoded as an integer seven bits at a time. //framework version really doesn't have any params
+		unsigned short ReadUInt16();
+		unsigned int ReadUInt32();
+		//unsigned long long ReadUInt64();
+	};
+
+	class BinaryWriter {
+	private:
+		bool bDeleteFileStream;
+		FileStream* filestream; //aka OutStream
+	public:
+		BinaryWriter();
+		~BinaryWriter();
+		BinaryWriter(FileStream* filestreamNew, bool AllowThisToDeleteFileStream);
+		//Stream* BaseStream;
+		void Dispose(bool bDeleteFileStreamIfNonNull);
+		void Close();
+		long long BaseStream_Position();
+		void Write(unsigned char val);
+		//void Write(array<unsigned char>^ arr);
+		//void Write(wchar_t val);
+		//void Write(Decimal val);
+		//void Write(double val);
+		//void Write(short val);
+		//void Write(int val);
+		//void Write(long long val);
+		//void Write(signed char val);
+		//void Write(float val);
+		void Write(string val);//originally String^
+		void Write(unsigned short val);
+		void Write(unsigned int val);
+		//void Write(unsigned long long val);
+		void Write(unsigned char* arr, int index, int count);
+		//void Write(array<unsigned char>^ arr, int index, int count);
+		//void Write(array<wchar_t>^ arr, int index, int count);
+	};
+
 	class ref_ERROR_TEXTWRITER {
 	public:
-        void Write(string val);
-        void WriteLine();
-        void WriteLine(string val);
-        void Flush();
+		static void Write(string val);
+		static void WriteLine();
+		static void WriteLine(string val);
+		static void Flush();
 	};
+
 	class ERROR_TEXTWRITER {
 	public:
-        void Write(string val);
-        void WriteLine();
-        void WriteLine(string val);
-        void Flush();
-        ref_ERROR_TEXTWRITER Out;
+		static void Write(string val);
+		static void WriteLine();
+		static void WriteLine(string val);
+		static void Flush();
+		static ref_ERROR_TEXTWRITER Out;
 	};
-	class CONSOLE_TEXTWRITER {
+
+	class ref_CONSOLE_TEXTWRITER {
 	public:
-        void Flush();
+		void Flush();
 	};
-	class CONSOLE_FAKESTATIC_CLASS {
+
+	class Console {
 	public:
-		void Write(string val);
-		void WriteLine();
-		void WriteLine(string val);
-		ERROR_TEXTWRITER Error;
-		CONSOLE_TEXTWRITER Out;
+		static void Write(string val);
+		static void WriteLine();
+		static void WriteLine(string val);
+		static ERROR_TEXTWRITER Error;
+		static ref_CONSOLE_TEXTWRITER Out;
 	};
-	extern CONSOLE_FAKESTATIC_CLASS Console;
-	extern FILE_FAKESTATIC_CLASS File;
 }//end namespace
 #endif
