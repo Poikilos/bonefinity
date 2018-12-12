@@ -1,3 +1,8 @@
+# codeblocks-generated files
+*.layout
+/bin
+/obj
+
 # OS-generated files
 .directory
 *.kate-swp
@@ -34,3 +39,4 @@
 *.exe
 *.out
 *.app
+
