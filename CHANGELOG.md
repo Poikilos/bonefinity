@@ -1,7 +1,8 @@
 # Changelog
-
+(see also "Changes to ExpertMultimediaBase" in namdax)
 
 ## [2010-02-07] - 2010-02-07
+(based on deprecated C# version from unknown date [all files from copy used are dated 2009-02-16])
 ### Changed
 - Uses `Console.`
 - Uses `int` variables in `GetForcedCSVNotationSubstring`
