@@ -2,7 +2,7 @@
 (should shrink over time where overlaps Standard Library) This is a 2.5D game engine that uses 3D physics, and some 3D drawing.
 
 ## Compiling
-* Make sure Code::Blocks is installed (on GNU+Linux systems, install the `codeblocks` package; on Windows, download & install the program from codeblocks.org)
+* Make sure Code::Blocks is installed (on GNU+Linux systems, install the `codeblocks` package; on Windows, download & install the program from [codeblocks.org](http://codeblocks.org))
 * Make sure the Boost library is in your path on your platform
 * Open "base.workspace" (or "Base.cbp" in your own workspace) using Code::Blocks
 * Click "Build," "Build and run"
@@ -17,7 +17,7 @@
 * eliminate use of frameworkdummy
 * (base.*) deprecate char* methods: trunc, Upperstring, (many more) and Crop IntOfString DoubleOfString FloatOfString IsExt ExistsAt IndexOf
 * use boost in scope of `catch (...)`: `std::cerr << "Unexpected exception, diagnostic information follows:\n" << current_exception_diagnostic_information();`
-
+* use Standard Library for date&time (use general utilities for dates, and localization for formatting and parsing)
 
 ## Developer Notes
 * (already done) IF undefined reference to `boost::system::generic_category()`:
