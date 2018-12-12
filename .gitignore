@@ -1,5 +1,6 @@
 # codeblocks-generated files
 *.layout
+*.depend
 /bin
 /obj
 

@@ -1,12 +1,6 @@
 #ifndef MAIN_C
 #define MAIN_C
 
-#include <cstdlib>
-#include <iostream>
-#include <string>
-#include <ctime>
-#include <SDL2/SDL.h>
-
 #include <RSprite_bgra32.h>
 //#include <RWorld.h>
 #include <RAnim_bgra32.h>
@@ -16,13 +10,22 @@
 #include <Targa.h>
 #include <RFile.h>
 #include <camera.h> //only needed for using 3D features of ExpertMultimediaBase
-#include <limits> //std::numeric_limits<T>::min() etc
 #include <base.h> //RString_iDecimalPlacesForToString etc
-//#include <base.cpp>
-//#include <frameworkdummy.cpp>
 #include <frameworkdummy.h>
 
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <SDL2/SDL.h>
+#include <limits>  // std::numeric_limits<T>::min() etc
+#include <string>
+//#include <filesystem>
+#include <boost/filesystem.hpp>
+
 using namespace std;
+// namespace fs = std::filesystem;
+namespace fs = boost::filesystem;
 
 namespace ExpertMultimediaBase {
 
@@ -69,6 +72,7 @@ namespace ExpertMultimediaBase {
 	float yPlayer=1.0f;
 	float xDest=std::numeric_limits<float>::min();
 	float yDest=std::numeric_limits<float>::min();
+	string dat_path_s;
 	//int yTextLine=16;
 	//int LineOffset=16;//pixels between bottom of each line and the next
 
@@ -95,9 +99,9 @@ namespace ExpertMultimediaBase {
 	Pixel pixelWhite(255,255,255,255);
 	Pixel pixelLightGray(192,192,192,255);
 	Pixel pixelDarkGray(64,64,64,255);
-	//#endregion program-related input vars
+	// #endregion program-related input vars
 
-	//#region debugging vars
+	// #region debugging vars
 	ExpertMultimediaBase::Pixel debugStartPixel(128,128,128,255); //r,g,b,a
 	ExpertMultimediaBase::Pixel debugEndPixel(255,255,255,255); //r,g,b,a
 	IPoint textPoint;
@@ -109,8 +113,8 @@ namespace ExpertMultimediaBase {
 	Mass3d startMass;
 	FPoint endPoint;
 	Mass3d endMass;
-	//Mass3d startTrail;
-	//Mass3d endTrail;
+	// Mass3d startTrail;
+	// Mass3d endTrail;
 	Mass3d followTrailMass;
 	Mass3d followMass;
 	float followUnitsPerFrame=.01f;
@@ -120,7 +124,7 @@ namespace ExpertMultimediaBase {
 	float anglediffpositiveStartAngle=0.0f;
 	float anglediffpositiveEndAngle=0.0f;
 	float anglediffpositiveRadius=1.0f;//changed later
-	//#endregion debugging vars
+	// #endregion debugging vars
 
 	int AssumedTextHeight=12;
 
@@ -131,8 +135,48 @@ namespace ExpertMultimediaBase {
 		Console::Error.Write("main Init...");
 		bool bGood=true;
 		int iFrames=16;
+		//cerr << endl << endl << "current_path: " << std::filesystem::current_path() << endl;  // C++17 only
+		//dat_path_s="/usr/local/share/bonefinity";
+		std::deque<string> try_paths;
+		try_paths.push_back("/usr/local/share/bonefinity");
+		try_paths.push_back("/usr/share/bonefinity");
+		try_paths.push_back(".");
+		try_paths.push_back("..");
+		try_paths.push_back("../..");
+		try_paths.push_back("../../..");
+		// C++17 only: std::filesystem::path::concat, std::filesystem::path::operator+=
+
+		fs::path images_dir_name("images");
+		fs::path images_path;
+		fs::path dat_path;
+		bool bFoundDat = false;
+		cerr << endl << endl;
+		for (std::deque<string>::iterator it = try_paths.begin(); it!=try_paths.end(); ++it) {
+			dat_path_s = *it;
+			dat_path = fs::path(dat_path_s);
+			images_path = dat_path / images_dir_name;
+			if (!Byter::IsDir(images_path.string())) {
+				//cerr << "no '" << dat_path_s << "'" << endl;
+			}
+			else {
+				//cerr << "found '" << dat_path_s << "'" << endl;
+				bFoundDat=true;
+				break;
+			}
+		}
+
+		//cerr << endl << endl << "dat_path:" << dat_path_s << endl;
+		cerr << "images_path: '" << images_path << "'" << endl;
+		cerr << "IsDir(images_path): " << ((bFoundDat)?"true":"false") << endl;
 		//animTest.LoadSeq("D:\\Projects-cpp\\dxman\\dxman-crossplatform\\bin\\images\\hero*.tga");
-		animTest.LoadSeq("images/spin*.tga");
+		bool bLoadedSeq=false;
+		int iFrameCount=0;
+		if (Byter::Exists((images_path / "spin0001.tga").string())) bLoadedSeq=animTest.LoadSeq((images_path / "spin*.tga").string());
+		else if (Byter::Exists((images_path / "wait-sweep-openings1.tga").string())) {
+			//iFrameCount=20;
+			bLoadedSeq=animTest.LoadSeq((images_path / "wait-sweep-openings").string(),"tga",iFrameCount,1,1);
+			cerr << "iFrameCount: " << iFrameCount << endl;
+		}
 		iFrames=animTest.IFrames(); //TODO: change to lFramesCached?
 		Console::Error.Write("Found "+RString_ToString(iFrames)+" frames...");
 		Console::Error.WriteLine();
@@ -191,12 +235,12 @@ namespace ExpertMultimediaBase {
 		Console::Error.Write("Loading font...");
 		Console::Error.Flush();
 		gfontDefault.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16); //gfontDefault.FromImageAsPredefinedColorFont("images/ascii256-dos-fixed.png",8,12,16,16);
-		//gfontBlue.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16);
-		//gfontBlue.SetColor(0,0,255);
-		//gfontGreen.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16);
-		//gfontGreen.SetColor(0,255,0);
-		//gfontDefault.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16);
-		//gfontDefault.SetColor(255,255,0);
+		// gfontBlue.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16);
+		// gfontBlue.SetColor(0,0,255);
+		// gfontGreen.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16);
+		// gfontGreen.SetColor(0,255,0);
+		// gfontDefault.FromImageValue("images/ascii256-dos-fixed.tga",7,AssumedTextHeight,16,16);
+		// gfontDefault.SetColor(255,255,0);
 		Console::Error.WriteLine("Done.");
 		return bGood;
 	}
@@ -235,10 +279,10 @@ namespace ExpertMultimediaBase {
 				lpSrcLine=gbScreen.BytePtrStart();
 				if (bFirstRun) Console::Error.Write("debug test...");
 
-				//Uint8* lpbyScreen=(Uint8*)screen->pixels;//debug only
-				//*((Uint32*)lpbyScreen)=0xFFFFFF; //debug only
-				//*(Uint32*)(&lpbyScreen[32*iDestStride+32*iDestBytesPP])=0xFFFFFF; //debug only
-				//gbScreen.Fill(255);//debug only
+				// Uint8* lpbyScreen=(Uint8*)screen->pixels;//debug only
+				// *((Uint32*)lpbyScreen)=0xFFFFFF; //debug only
+				// *(Uint32*)(&lpbyScreen[32*iDestStride+32*iDestBytesPP])=0xFFFFFF; //debug only
+				// gbScreen.Fill(255);//debug only
 
 				if (bFirstRun) Console::Error.Write("copy...");
 				lpDestLine=(Uint8*)screen->pixels;//8bit in order to use stride
@@ -249,7 +293,7 @@ namespace ExpertMultimediaBase {
 							lpSrcPix=lpSrcLine;
 							for (int x=0; x<gbScreen.iWidth; x++) {
 								*lpDestPix = (Uint8)SDL_MapRGB(screen->format, lpSrcPix[2], lpSrcPix[1], *lpSrcPix);
-								lpSrcPix+=4;//assumes 32-bit GBuffer
+								lpSrcPix+=4;  // assumes 32-bit GBuffer
 								lpDestPix++;
 							}
 							lpDestLine+=iDestStride;
@@ -263,8 +307,8 @@ namespace ExpertMultimediaBase {
 							lpSrcPix=lpSrcLine;
 							for (int x=0; x<gbScreen.iWidth; x++) {
 								*lpwDestPix = (Uint16)SDL_MapRGB(screen->format, lpSrcPix[2], lpSrcPix[1], *lpSrcPix);
-								lpSrcPix+=4;//assumes 32-bit GBuffer
-								lpwDestPix++;//ok since Uint16 ptr
+								lpSrcPix+=4;  // assumes 32-bit GBuffer
+								lpwDestPix++;  // ok since Uint16 ptr
 							}
 							lpDestLine+=iDestStride;
 							lpSrcLine+=iSrcStride;
@@ -281,7 +325,7 @@ namespace ExpertMultimediaBase {
 									*lpDestPix=(byte)color;
 									lpDestPix[1]=(byte)(color>>8);
 									lpDestPix[2]=(byte)(color>>16);
-									lpSrcPix+=4;//assumes 32-bit GBuffer
+									lpSrcPix+=4;  // assumes 32-bit GBuffer
 									lpDestPix+=3;
 								}
 								lpDestLine+=iDestStride;
@@ -297,7 +341,7 @@ namespace ExpertMultimediaBase {
 									lpDestPix[2]=(byte)color;
 									lpDestPix[1]=(byte)(color>>8);
 									*lpDestPix=(byte)(color>>16);
-									lpSrcPix+=4;//assumes 32-bit GBuffer
+									lpSrcPix+=4;  // assumes 32-bit GBuffer
 									lpDestPix+=3;
 								}
 								lpDestLine+=iDestStride;
@@ -311,10 +355,10 @@ namespace ExpertMultimediaBase {
 							lpu32DestPix=(Uint32*)lpDestLine;
 							lpSrcPix=lpSrcLine;
 							for (int x=0; x<gbScreen.iWidth; x++) {
-								//*lpu32DestPix=*((Uint32*)lpSrcPix);
+								// *lpu32DestPix=*((Uint32*)lpSrcPix);
 								*lpu32DestPix = (Uint32)SDL_MapRGB(screen->format, lpSrcPix[2], lpSrcPix[1], *lpSrcPix);
-								lpSrcPix+=4;//assumes 32-bit GBuffer
-								lpu32DestPix++;//ok since Uint32*
+								lpSrcPix+=4;  // assumes 32-bit GBuffer
+								lpu32DestPix++;  // ok since Uint32*
 							}
 							lpDestLine+=iDestStride;
 							lpSrcLine+=iSrcStride;
@@ -329,12 +373,12 @@ namespace ExpertMultimediaBase {
 						}
 						*/
 						break;
-				}//end switch
+				}  // end switch
 				if (SDL_MUSTLOCK(screen)!=0) {
 					SDL_UnlockSurface(screen);
 				}
-			}//end if bGood
-			//else already showed an error
+			}  // end if bGood
+			// else already showed an error
 		}
 		catch (exception& exn) {
 			ShowExn(exn, "DrawScreen");
@@ -345,7 +389,7 @@ namespace ExpertMultimediaBase {
 			bGood=false;
 		}
 		return bGood;
-	}//end DrawScreen
+	}  // end DrawScreen
 
 	static void Iterate() {
 		iTickLastIteration=SDL_GetTicks();
@@ -399,7 +443,7 @@ namespace ExpertMultimediaBase {
 		sdlrectPixelNow.h = screen->h / 2;
 		sdlrectPixelNow.x = (screen->w / 2) - (sdlrectPixelNow.w / 2);
 		sdlrectPixelNow.y = (screen->h / 2) - (sdlrectPixelNow.h / 2);
-		//SDL_FillRect (screen, &sdlrectPixelNow, u32Color);
+		// SDL_FillRect (screen, &sdlrectPixelNow, u32Color);
 		if (bFirstRun) Console::Error.WriteLine("Done.");
 		if (bFirstRun) Console::Error.Write("Clearing gbScreen...");
 		bool bTest=gbScreen.Fill(0);
@@ -408,7 +452,7 @@ namespace ExpertMultimediaBase {
 
 		int AssumedIntersectionDebugStringWidth=gbScreen.iWidth/2;
 
-		//draw a line 3/8 from the left:
+		// draw a line 3/8 from the left:
 		float line0_x1=(float)gbScreen.iWidth/8.0f*3.0f;
 		float line0_y1=(float)gbScreen.iHeight/2.0f - (float)gbScreen.iHeight/4.0f;
 		float line0_x2=(float)gbScreen.iWidth/8.0f*3.0f;
@@ -423,7 +467,7 @@ namespace ExpertMultimediaBase {
 		iLastLineRelationshipType=RMath::IntersectionAndRelationship(xInterD,yInterD, (double)line0_x1,(double)line0_y1,(double)line0_x2,(double)line0_y2, (double)xfCursorDown,(double)yfCursorDown,(double)xfCursor,(double)yfCursor);
 		xInter=(float)xInterD;
 		yInter=(float)yInterD;
-		//iLastLineRelationshipType=RMath::IntersectionAndRelationship(xInter,yInter, line0_x1,line0_y1,line0_x2,line0_y2, xfCursorDown,yfCursorDown,xfCursor,yfCursor);
+		// iLastLineRelationshipType=RMath::IntersectionAndRelationship(xInter,yInter, line0_x1,line0_y1,line0_x2,line0_y2, xfCursorDown,yfCursorDown,xfCursor,yfCursor);
 
 		float RelationshipText_X=xInter;
 		float RelationshipText_Y=yInter;
@@ -446,8 +490,8 @@ namespace ExpertMultimediaBase {
 
 		bool bReturn1IfWithinSegmentElseIfNotThen2_IfThisVarIsFalseOrMissingAndDoesIntersectThenReturn1 = true;//line relationship method calls it with FALSE
 		iLastIntersection=RMath::Intersection(xInter, yInter, line0_x1, line0_y1, line0_x2, line0_y2, xfCursorDown,yfCursorDown,xfCursor,yfCursor, bReturn1IfWithinSegmentElseIfNotThen2_IfThisVarIsFalseOrMissingAndDoesIntersectThenReturn1);
-		//iLastIntersection=RMath::Intersection(xInter, yInter, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2, bReturn1IfWithinSegmentElseIfNotThen2_IfThisVarIsFalseOrMissingAndDoesIntersectThenReturn1);
-		//iLastIntersection=RMath::Intersection(xInter, yInter, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2)
+		// iLastIntersection=RMath::Intersection(xInter, yInter, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2, bReturn1IfWithinSegmentElseIfNotThen2_IfThisVarIsFalseOrMissingAndDoesIntersectThenReturn1);
+		// iLastIntersection=RMath::Intersection(xInter, yInter, Line1_x1, Line1_y1, Line1_x2, Line1_y2, Line2_x1, Line2_y1, Line2_x2, Line2_y2)
 		float IntersectionText_X=xInter;
 		float IntersectionText_Y=yInter+AssumedTextHeight+gfontDefault.lineGap;
 		if ((int)IntersectionText_X<0) IntersectionText_X=0;
@@ -463,12 +507,12 @@ namespace ExpertMultimediaBase {
 			gbScreen.DrawSubpixelArc(xInter,yInter,fRadius,fWidthMultiplier1UnlessEllipse,fRotate,0.0f,360.0f,pixelDarkGray,fPrecisionIncrement,fPushSpiralPixPerRotation);
 
 
-		//bTest=DrawDebug();
+		// bTest=DrawDebug();
 		bTest=true;
 		try {
-			//gbScreen.SetBrushColor(255,255,255);
-			//if (xCursorDown>0 && yCursorDown>0) gbScreen.DrawRect(xCursorDown,yCursorDown,xCursor-xCursorDown,yCursor-yCursorDown);
-			//DEBUG THIS--previous line crashes without "if" statement
+			// gbScreen.SetBrushColor(255,255,255);
+			// if (xCursorDown>0 && yCursorDown>0) gbScreen.DrawRect(xCursorDown,yCursorDown,xCursor-xCursorDown,yCursor-yCursorDown);
+			// DEBUG THIS--previous line crashes without "if" statement
 			gbScreen.DrawSubpixelLine(xfCursorDown,yfCursorDown,xfCursor,yfCursor,debugStartPixel,&debugEndPixel,.5);
 		}
 		catch (exception& exn) {
@@ -499,16 +543,16 @@ namespace ExpertMultimediaBase {
 			yPlayer+=yToMove;
 		}
 		else playerIsMoving=false;
-		//GBuffer* this_frame_ptr = animTest.GetFramePtr();
+		// GBuffer* this_frame_ptr = animTest.GetFramePtr();
 		if (animTest.frame_ptr!=nullptr) bTest=animTest.DrawToLargerWithoutCropElseCancel(&gbScreen,IROUNDF(xPlayer-((float)animTest.frame_ptr->iWidth/2.0f)),IROUNDF(yPlayer-((float)animTest.frame_ptr->iHeight/2.0f)),DrawModeBlendAlpha);
 		else {
 			bTest=false;
-			Console::Error.WriteLine("ERROR: current frame is nullptr in animTest, draw not attempted.");
+			if (bFirstRun) Console::Error.WriteLine("ERROR: current frame is nullptr in animTest, draw not attempted.");
 		}
 		if (bFirstRun) Console::Error.WriteLine((bTest)?"Success.":"Failed.");
 
 		if (bFirstRun) Console::Error.Write("Drawing extra debug info...");
-		//yTextLine=32;
+		// yTextLine=32;
 
 
 		stringstream ss;
@@ -519,72 +563,72 @@ namespace ExpertMultimediaBase {
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint, ss.str());
 
 
-		//yTextLine+=(AssumedTextHeight+gfontDefault.lineGap);
-		//textPoint.Set(16,yTextLine);
-		//ss.str(std::string());//same as ("") but faster
-		//ss << "line:((" << RString_ToString(line0_x1)<<","<<RString_ToString(line0_y1)<<"),"
+		// yTextLine+=(AssumedTextHeight+gfontDefault.lineGap);
+		// textPoint.Set(16,yTextLine);
+		// ss.str(std::string());//same as ("") but faster
+		// ss << "line:((" << RString_ToString(line0_x1)<<","<<RString_ToString(line0_y1)<<"),"
 		//	<<"(" << RString_ToString(line0_x2)<<","<<RString_ToString(line0_y2)<<"))";
-		//gfontBlue.TypeFast(gbScreen,textPoint,MoveThePoint, ss.str());
+		// gfontBlue.TypeFast(gbScreen,textPoint,MoveThePoint, ss.str());
 
 		IPoint tempPoint;
 
 		tempPoint.Set(line0_x1,line0_y1);
-		ss.str(std::string());//same as ss.str("") but faster
+		ss.str(std::string());  // same as ss.str("") but faster
 		ss << "(" << RString_ToString(line0_x1)<<","<<RString_ToString(line0_y1)<<")";
 		gfontDefault.SetColor(0,0,255);
 		gfontDefault.TypeFast(&gbScreen,tempPoint,MoveThePoint, ss.str());
 
 		tempPoint.Set(line0_x2,line0_y2);
-		ss.str(std::string());//same as ss.str("") but faster
+		ss.str(std::string());  // same as ss.str("") but faster
 		ss <<"(" << RString_ToString(line0_x2)<<","<<RString_ToString(line0_y2)<<")";
 		gfontDefault.TypeFast(&gbScreen,tempPoint,MoveThePoint, ss.str());
 		gfontDefault.SetColor(255,255,255);
 
 		gfontDefault.marginLeftX=textPoint.X;
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
-		ss.str(std::string());//same as ss.str("") but faster
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
+		ss.str(std::string());  // same as ss.str("") but faster
 		ss << "cursor:(" << RString_ToString(xfCursor)<<","<<RString_ToString(yfCursor)<<")";
 		ss << " cursorDown:(" << RString_ToString(xCursorDown)<<","<<RString_ToString(yCursorDown)<<")";
 		ss << " cursorDownR:(" << RString_ToString(xDest)<<","<<RString_ToString(yDest)<<")";
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint, ss.str());
 
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
-		ss.str(std::string());//same as ss.str("") but faster
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
+		ss.str(std::string());  // same as ss.str("") but faster
 		ss << "bMouseDown:" << RString_ToString(bMouseDown);
 		ss << " bMouseDownR:" << RString_ToString(bMouseDownR);
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint, ss.str());
 
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
-		ss.str(std::string());//same as ss.str("") but faster
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
+		ss.str(std::string());  // same as ss.str("") but faster
 		ss << "RConvert_THETAOFXY_DEG(clicked.x,clicked.y,x,y):" << RString_ToString(RConvert_THETAOFXY_DEG(xfCursor-(float)xCursorDown,yfCursor-(float)yCursorDown));
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint, ss.str());
 
 
 		cursor3d.HardLocation(0.0f,0.0f,0.0f);
 		float apertureDegrees=40.0f;
-		///default is 		640,							480,								0.0f,		-14.836f,5.376f,	0.0f,		-11.77,	90.0f,39.2025f);
+		/// default is 		640,							480,								0.0f,		-14.836f,5.376f,	0.0f,		-11.77,	90.0f,39.2025f);
 		///																						x			y			z			xRot,		yRot,		zRot,	fApertureAngleHeight
 		bool Z_UP=true;
 		bool X_FORWARD=true;
 		camera.SetCamera((float)gbScreen.iWidth,	(float)gbScreen.iHeight,	0.0f,		-14.836f,5.376f,	0.0f,		-11.77f,	90.0f,apertureDegrees, Z_UP, X_FORWARD);
 
-		///DRAW GRID:
-		//startMass.HardLocation(-2.0f,0.0f,0.0f);
+		/// DRAW GRID:
+		// startMass.HardLocation(-2.0f,0.0f,0.0f);
 		for (float yGridIndex=-10.0f; yGridIndex<11.0f; yGridIndex+=1.0f) {
 			for (float xGridIndex=-10.0f; xGridIndex<11.0f; xGridIndex+=1.0f) {
-				///ACROSS:
+				/// ACROSS:
 				endMass.HardLocation(xGridIndex,yGridIndex,0.0f);
 				startMass.HardLocation(xGridIndex+1.0f,yGridIndex,0.0f);
 				camera.Point2dFrom3d(startPoint, startMass);
 				camera.Point2dFrom3d(endPoint, endMass);
 				gbScreen.DrawSubpixelLine(startPoint,endPoint,pixelLightGray,NULL,1.0f);
-				///UP:
+				/// UP:
 				endMass.HardLocation(xGridIndex,yGridIndex,0.0f);
 				startMass.HardLocation(xGridIndex,yGridIndex+1.0f,0.0f);
 				camera.Point2dFrom3d(startPoint, startMass);
@@ -593,8 +637,8 @@ namespace ExpertMultimediaBase {
 			}
 		}
 
-		///Move & Draw follower (3D one):
-		camera.DrawBox(&gbScreen, followMass, pixelLightGray, pixelDarkGray); //gbScreen.DrawMass(followMass);
+		/// Move & Draw follower (3D one):
+		camera.DrawBox(&gbScreen, followMass, pixelLightGray, pixelDarkGray);  // gbScreen.DrawMass(followMass);
 		float followPitch=0.0f;
 		float followYaw=0.0f;
 		float followTrailUnitsPerFrame=followUnitsPerFrame*.1f;
@@ -603,38 +647,38 @@ namespace ExpertMultimediaBase {
 		Travel3d(followMass.X,      followMass.Y,      followMass.Z,      (double)followPitch,(double)followYaw,(double)followUnitsPerFrame,      make_orientation_Z_UP, make_orientation_X_FORWARD);
 		Travel3d(followTrailMass.X, followTrailMass.Y, followTrailMass.Z, (double)followPitch,(double)followYaw,(double)followTrailUnitsPerFrame,	make_orientation_Z_UP, make_orientation_X_FORWARD);
 
-		///DRAW 3D cursor:
-		float maximumPitchDegrees=-5.0f; //behavior of Point3dFrom2dAssumingHeight changes according to whether past this value (maximum is zero)
+		/// DRAW 3D cursor:
+		float maximumPitchDegrees=-5.0f;  // behavior of Point3dFrom2dAssumingHeight changes according to whether past this value (maximum is zero)
 		float targetingHeight=0.0f;
 		int iLineRelationshipType=RMath::LineRelationshipIntersectionNotCrossingInRangeCouldNotFinish;
 		camera.Point3dFrom2dAssumingHeight(cursor3d,iLineRelationshipType,xfCursor,yfCursor,targetingHeight,maximumPitchDegrees);
 
 		float fMetersFromCamera=15;
-		//camera.Point3dFrom2d(Mass3d &pointReturn, float x2D, float y2D, float fMetersFromCamera) //debug only
-		//camera.Point3dFrom2d(cursor3d, xfCursor, yfCursor, fMetersFromCamera); //debug only
+		// camera.Point3dFrom2d(Mass3d &pointReturn, float x2D, float y2D, float fMetersFromCamera) //debug only
+		// camera.Point3dFrom2d(cursor3d, xfCursor, yfCursor, fMetersFromCamera); //debug only
 
 		camera.DrawBox(&gbScreen,cursor3d,pixelCyan,pixelDarkCyan);
-		//cursor3d.HardLocation(cursor3d.X+1.0f,cursor3d.Y,cursor3d.Z); //debug only
-		//camera.DrawBox(gbScreen,cursor3d,pixelCyan,pixelDarkCyan);//debug only
-		//cursor3d.HardLocation(cursor3d.X-2.0f,cursor3d.Y,cursor3d.Z); //debug only
-		//camera.DrawBox(gbScreen,cursor3d,pixelCyan,pixelDarkCyan);//debug only
+		// cursor3d.HardLocation(cursor3d.X+1.0f,cursor3d.Y,cursor3d.Z); //debug only
+		// camera.DrawBox(gbScreen,cursor3d,pixelCyan,pixelDarkCyan);//debug only
+		// cursor3d.HardLocation(cursor3d.X-2.0f,cursor3d.Y,cursor3d.Z); //debug only
+		// camera.DrawBox(gbScreen,cursor3d,pixelCyan,pixelDarkCyan);//debug only
 		camera.DrawDebug(&gbScreen);
 
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
-		gfontDefault.SetColor(0,255,255);//Cyan
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
+		gfontDefault.SetColor(0,255,255);  // Cyan
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint,"cursor3d:"+cursor3d.ToString(true));
 
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=gfontDefault.arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight*2+LineOffset;
-		//textPoint.Set(16,yTextLine);
-		gfontDefault.SetColor(255,255,255);//White
+		// yTextLine+=gfontDefault.arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight*2+LineOffset;
+		// textPoint.Set(16,yTextLine);
+		gfontDefault.SetColor(255,255,255);  // White
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint,"camera:"+camera.ToString(true));
 
-		gfontDefault.SetColor(255,255,0);//Yellow
+		gfontDefault.SetColor(255,255,0);  // Yellow
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
@@ -645,24 +689,24 @@ namespace ExpertMultimediaBase {
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=gfontDefault.arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight*10+LineOffset;
-		//textPoint.Set(16,yTextLine);
+		// yTextLine+=gfontDefault.arranimGlyphType[GFont_GlyphTypePlain].gbFrame.iHeight*10+LineOffset;
+		// textPoint.Set(16,yTextLine);
 		gfontDefault.TypeFast(&gbScreen,textPoint, MoveThePoint, "startAngle:"+RString_ToString(anglediffpositiveStartAngle) );
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
 		gfontDefault.TypeFast(&gbScreen,textPoint, MoveThePoint, "endAngle:SafeAngle360("+RString_ToString(anglediffpositiveEndAngle) +"):"+RString_ToString(RMath::SafeAngle360(anglediffpositiveEndAngle)) );
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
 		gfontDefault.TypeFast(&gbScreen,textPoint, MoveThePoint, "FANGLEDIFF(startAngle,endAngle):"+RString_ToString(FANGLEDIFF(anglediffpositiveStartAngle,anglediffpositiveEndAngle)) );
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
 		gfontDefault.TypeFast(&gbScreen,textPoint, MoveThePoint, "ANGLEDIFFPOSITIVE((float)startAngle, (float)endAngle):"+RString_ToString( ANGLEDIFFPOSITIVE((float)anglediffpositiveStartAngle, (float)anglediffpositiveEndAngle) ) );
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
 		gfontDefault.TypeFast(&gbScreen,textPoint, MoveThePoint, "ANGLEDIFFPOSITIVE((double)startAngle, (double)endAngle):"+RString_ToString( ANGLEDIFFPOSITIVE((double)anglediffpositiveStartAngle, (double)anglediffpositiveEndAngle) ) );
 
 		anglediffStartAngleIntersectsRadiusAtPoint.X=angleDiffPositivePoint.X;
@@ -673,20 +717,20 @@ namespace ExpertMultimediaBase {
 		Travel2d_Polar_Deg(anglediffEndAngleIntersectsRadiusAtPoint.X,anglediffEndAngleIntersectsRadiusAtPoint.Y,anglediffpositiveRadius,anglediffpositiveEndAngle,true);
 
 		gfontDefault.TypeFast_NewLine(&gfontDefault, textPoint);
-		//yTextLine+=LineOffset;
-		//textPoint.Set(16,yTextLine);
-		gfontDefault.SetColor(0,255,0);//Green
-		///Green arcs:
+		// yTextLine+=LineOffset;
+		// textPoint.Set(16,yTextLine);
+		gfontDefault.SetColor(0,255,0);  // Green
+		/// Green arcs:
 		gbScreen.DrawSubpixelArc(angleDiffPositivePoint.X,angleDiffPositivePoint.Y,fRadius,fWidthMultiplier1UnlessEllipse,fRotate,0.0f,360.0f,pixelDarkGreen,fPrecisionIncrement,fPushSpiralPixPerRotation);
 		gbScreen.DrawSubpixelArc(anglediffStartAngleIntersectsRadiusAtPoint.X,anglediffStartAngleIntersectsRadiusAtPoint.Y,fRadius,fWidthMultiplier1UnlessEllipse,fRotate,0.0f,360.0f,pixelGreen,fPrecisionIncrement,fPushSpiralPixPerRotation);
 		gfontDefault.TypeFast(&gbScreen,textPoint,MoveThePoint,"result of AngleToward resulting start point (should be same as StartAngle%360):"+RString_ToString(
 				AngleTowardDestFromSrc_Deg(anglediffStartAngleIntersectsRadiusAtPoint.X,anglediffStartAngleIntersectsRadiusAtPoint.Y,angleDiffPositivePoint.X,angleDiffPositivePoint.Y,true)) );
-		gfontDefault.SetColor(255,255,0);//Yellow
+		gfontDefault.SetColor(255,255,0);  // Yellow
 
-		///Yellow lines:
+		/// Yellow lines:
 		gbScreen.DrawSubpixelLine(angleDiffPositivePoint.X,angleDiffPositivePoint.Y,anglediffStartAngleIntersectsRadiusAtPoint.X,anglediffStartAngleIntersectsRadiusAtPoint.Y,pixelYellow,nullptr,1.0f);
 		gbScreen.DrawSubpixelLine(angleDiffPositivePoint.X,angleDiffPositivePoint.Y,anglediffEndAngleIntersectsRadiusAtPoint.X,anglediffEndAngleIntersectsRadiusAtPoint.Y,pixelYellow,nullptr,1.0f);
-		///Yellow arc:
+		/// Yellow arc:
 		gbScreen.DrawSubpixelArc(angleDiffPositivePoint.X,angleDiffPositivePoint.Y,anglediffpositiveRadius,1.0f,0.0f,anglediffpositiveStartAngle,anglediffpositiveEndAngle,pixelYellow,1.0f,0.0f);
 
 		anglediffpositiveStartAngle+=.1f;
@@ -709,18 +753,19 @@ namespace ExpertMultimediaBase {
 			if (bFirstRun) Console::Error.WriteLine((bTest)?"Success.":"Failed.");
 		}
 		if (bFirstRun) Console::Error.Write("Flip backbuffer...");
-		//SDL_Flip(screen); //deprecated in SDL2
+		// SDL_Flip(screen);  // deprecated in SDL2
 		SDL_UpdateTexture(sdlTexture, NULL, screen->pixels, screen->pitch);
 		SDL_RenderClear(sdlRenderer);
 		SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
 		SDL_RenderPresent(sdlRenderer);
 		if (bFirstRun) Console::Error.WriteLine("Done.");
-		SDL_Delay(1);//TODO: remove this and do timing outside of iterate
-	}//end Iterate
-	}//end namespace
-	using namespace ExpertMultimediaBase;
-	//int main(int argc, char *argv[]) {
-	int main(int iArgs, char** lpsArg) {
+		SDL_Delay(1);  // TODO: remove this and do timing outside of iterate
+	}  // end Iterate
+}  // end namespace
+
+using namespace ExpertMultimediaBase;
+// int main(int argc, char *argv[]) {
+int main(int iArgs, char** lpsArg) {
 	Console::Error.Write("Initializing display...");
 	if (SDL_Init (SDL_INIT_VIDEO) < 0) {
 		string sMsg="Couldn't initialize SDL: ";
@@ -740,33 +785,33 @@ namespace ExpertMultimediaBase {
 	Console::Error.Write("Setting video mode...");
 	Console::Error.Flush();
 	string sMsg="";
-	bool bGood=true;//debug unused except by video initialization
-	//screen=SDL_SetVideoMode (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE | SDL_DOUBLEBUF); //deprecated in SDL2
+	bool bGood=true;  // debug unused except by video initialization
+	// screen=SDL_SetVideoMode (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE | SDL_DOUBLEBUF); //deprecated in SDL2
 	sdlWindow = SDL_CreateWindow("ExpertMultimediaBase Regression Suite",
 						  SDL_WINDOWPOS_UNDEFINED,
 						  SDL_WINDOWPOS_UNDEFINED,
 						  iSetScreenW, iSetScreenH,
-						  SDL_WINDOW_OPENGL);//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL
+						  SDL_WINDOW_OPENGL);  // SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL
 	if (sdlWindow == NULL) {
 		sMsg="Couldn't set "+RString_ToString(iSetScreenW)+"x"+RString_ToString(iSetScreenH)+"x32 video mode: \n";
 		sMsg+=RString_ToString(SDL_GetError());
 		Console::Error.WriteLine("In GameInit -- "+sMsg);
 		iErrors++;
-		//MessageBox (0, sMsg, "Error", MB_ICONHAND); //TODO: re-implement w/o windows api
+		// MessageBox (0, sMsg, "Error", MB_ICONHAND); //TODO: re-implement w/o windows api
 		bGood=false;
 		return bGood;
 	}
-	//SDL_WM_SetCaption ("DXMan", NULL); //deprecated in SDL2
+	// SDL_WM_SetCaption ("DXMan", NULL);  // deprecated in SDL2
 	Console::Error.WriteLine("done.");
 	Console::Error.Write("Loading SDL renderer...");
 	Console::Error.Flush();
-	sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);//window, index, flags
+	sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);  // window, index, flags
 	Console::Error.WriteLine("done.");
 
 	Console::Error.Write("Creating SDL screen surface (screen)...");
 	Console::Error.Flush();
 	// "if all this hex scares you, check out SDL_PixelFormatEnumToMasks()!" -- http://wiki.libsdl.org/MigrationGuide#Moving_from_SDL_1.2_to_2.0
-	//The four last params below are			RED mask,	GREEN mask,	BLUE mask,	ALPHA mask:
+	// The four last params below are			RED mask,	GREEN mask,	BLUE mask,	ALPHA mask:
 	screen = SDL_CreateRGBSurface(0, iSetScreenW, iSetScreenH, 32,
 														0x00FF0000,	0x0000FF00,	0x000000FF,	0xFF000000);
 	if (screen!=NULL) {
@@ -788,16 +833,16 @@ namespace ExpertMultimediaBase {
 	Console::Error.Write("Creating SDL screen texture (sdlTexture)...");
 	Console::Error.Flush();
 	sdlTexture = SDL_CreateTexture(sdlRenderer,
-															  SDL_PIXELFORMAT_ARGB8888,
-															  SDL_TEXTUREACCESS_STREAMING,
-															  iSetScreenW, iSetScreenH);
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			iSetScreenW, iSetScreenH);
 	Console::Error.WriteLine("done.");
 
 	if (screen==NULL) {
 		Console::Error.WriteLine("Fail!");
 		string sMsg="Couldn't set "+RString_ToString(iSetScreenW)+"x"
-			+RString_ToString(iSetScreenH)+"x"
-			+RString_ToString(iSetScreenBytesPP*8);
+				+RString_ToString(iSetScreenH)+"x"
+				+RString_ToString(iSetScreenBytesPP*8);
 		sMsg+=" video mode: ";
 		string sTemp="";
 		sTemp.assign(SDL_GetError());
@@ -807,7 +852,7 @@ namespace ExpertMultimediaBase {
 		exit(2);
 	}
 	else Console::Error.WriteLine("Done.");
-	//SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
+	// SDL_WM_SetCaption ("SDL MultiMedia Application", NULL);
 	Init();
 	bDone=false;
 	iTickLastIteration=SDL_GetTicks();
@@ -817,66 +862,66 @@ namespace ExpertMultimediaBase {
 		int iSetWidth;
 		int iSetHeight;
 		static bool bFirstResize=true;
-		while (SDL_PollEvent (&event)) { //can also do OnEvent(SDL_Event* Event) //then later use if (Event->type == SDL_Quit) {} //etc
+		while (SDL_PollEvent (&event)) {  // can also do OnEvent(SDL_Event* Event) //then later use if (Event->type == SDL_Quit) {} //etc
 			switch (event.type) {
 				case SDL_KEYDOWN:
 					if (event.key.keysym.sym==SDLK_a) {
-						//DirKeyDown();
-						//u32Pressing|=GAMEKEY_LEFT;
+						// DirKeyDown();
+						// u32Pressing|=GAMEKEY_LEFT;
 					}
 					else if (event.key.keysym.sym==SDLK_d) {
-						//DirKeyDown();
-						//u32Pressing|=GAMEKEY_RIGHT;
+						// DirKeyDown();
+						// u32Pressing|=GAMEKEY_RIGHT;
 					}
 					else if (event.key.keysym.sym==SDLK_w) {
-						//DirKeyDown();
-						//u32Pressing|=GAMEKEY_UP;
+						// DirKeyDown();
+						// u32Pressing|=GAMEKEY_UP;
 					}
 					else if (event.key.keysym.sym==SDLK_s) {
-						//DirKeyDown();
-						//u32Pressing|=GAMEKEY_DOWN;
+						// DirKeyDown();
+						// u32Pressing|=GAMEKEY_DOWN;
 					}
 					else if (event.key.keysym.sym==SDLK_DELETE) {
-						////laser keydown
-						//u32Pressing|=GAMEKEY_FIRE;
+						// // laser keydown
+						// u32Pressing|=GAMEKEY_FIRE;
 					}
 					else if (event.key.keysym.sym==SDLK_END) {
-						//u32Pressing|=GAMEKEY_JUMP;
+						// u32Pressing|=GAMEKEY_JUMP;
 					}
 					else if (event.key.keysym.sym==SDLK_ESCAPE) {
-						//u32Pressing|=GAMEKEY_EXIT;
+						// u32Pressing|=GAMEKEY_EXIT;
 					}
 					break;
 				case SDL_KEYUP:
 					if (event.key.keysym.sym==SDLK_a) {
-						//DirKeyUp();
-						//u32Pressing&=(GAMEKEY_LEFT^0xFFFFFFFF);
+						// DirKeyUp();
+						// u32Pressing&=(GAMEKEY_LEFT^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_d) {
-						//DirKeyUp();
-						//u32Pressing&=(GAMEKEY_RIGHT^0xFFFFFFFF);
+						// DirKeyUp();
+						// u32Pressing&=(GAMEKEY_RIGHT^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_w) {
-						//DirKeyUp();
-						//u32Pressing&=(GAMEKEY_UP^0xFFFFFFFF);
+						// DirKeyUp();
+						// u32Pressing&=(GAMEKEY_UP^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_s) {
-						//DirKeyUp();
-						//u32Pressing&=(GAMEKEY_DOWN^0xFFFFFFFF);
+						// DirKeyUp();
+						// u32Pressing&=(GAMEKEY_DOWN^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_DELETE) {
-						////iChanLaser=Mix_PlayChannel(2, mcLaser, 0);//chan, sound, num of loops
-						//u32Pressing&=(GAMEKEY_FIRE^0xFFFFFFFF);
+						// // iChanLaser=Mix_PlayChannel(2, mcLaser, 0);//chan, sound, num of loops
+						// u32Pressing&=(GAMEKEY_FIRE^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_END) {
-						//u32Pressing&=(GAMEKEY_JUMP^0xFFFFFFFF);
+						// u32Pressing&=(GAMEKEY_JUMP^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_ESCAPE) {
-						//u32Pressing&=(GAMEKEY_EXIT^0xFFFFFFFF);
+						// u32Pressing&=(GAMEKEY_EXIT^0xFFFFFFFF);
 					}
 					else if (event.key.keysym.sym==SDLK_F2) {
 						stringstream timeSS;
-						time_t t = time(0);   // get time now
+						time_t t = time(0);  // get time now
 						struct tm * now = localtime( & t );
 						timeSS << (now->tm_year + 1900) << '-'
 							<<  ((now->tm_mon<10)?"0":"") << now->tm_mon << "-"
@@ -893,7 +938,7 @@ namespace ExpertMultimediaBase {
 					}
 					break;
 				case SDL_MOUSEBUTTONDOWN:
-					//SDL_GetRelativeMouseState(&xCursorDown, &yCursorDown);//SDL_GetMouseState(&m3dEnt.X, &m3dEnt.Y);
+					// SDL_GetRelativeMouseState(&xCursorDown, &yCursorDown);  // SDL_GetMouseState(&m3dEnt.X, &m3dEnt.Y);
 					if (event.button.button == SDL_BUTTON_LEFT) {
 						xCursorDown = event.motion.x;
 						yCursorDown = event.motion.y;
@@ -905,7 +950,7 @@ namespace ExpertMultimediaBase {
 						bMouseDownR=true;
 						xDest=(float)event.motion.x;
 						yDest=(float)event.motion.y;
-						//u32Pressing|=GAMEKEY_JUMP;
+						// u32Pressing|=GAMEKEY_JUMP;
 						static bool bFirstRightClick=true;
 						if (bFirstRightClick) Console::Error.WriteLine("Detected the first right-click.");
 						bFirstRightClick=false;
@@ -917,7 +962,7 @@ namespace ExpertMultimediaBase {
 					}
 					else {
 						bMouseDownR=false;
-						//u32Pressing&=GAMEKEY_JUMP^0xFFFFFFFF;
+						// u32Pressing&=GAMEKEY_JUMP^0xFFFFFFFF;
 					}
 					break;
 				case SDL_MOUSEMOTION:
@@ -930,7 +975,7 @@ namespace ExpertMultimediaBase {
 				case SDL_QUIT:
 					bDone=true;
 					break;
-				//case SDL_VIDEORESIZE:
+				// case SDL_VIDEORESIZE:
 					/* commented for debug only
 					iSetWidth=event.resize.w;
 					iSetHeight=event.resize.h;
@@ -943,15 +988,15 @@ namespace ExpertMultimediaBase {
 						bFirstResize=false;
 					}
 					*/
-				//	break;
+				// break;
 				default:
 					break;
 			}
 		}
 		Iterate();
 		bFirstRun=false;
-	}//end while !bDone
+	}  // end while !bDone
 	Shutdown();
 	return 0;
-}//end main (using ExpertMultimediaBase [see above for part of it])
+}  // end main (using ExpertMultimediaBase [see above for part of it])
 #endif

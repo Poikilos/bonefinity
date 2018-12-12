@@ -7,6 +7,7 @@
 // for cpp:
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 namespace ExpertMultimediaBase {
 	class Byter {
@@ -17,7 +18,8 @@ namespace ExpertMultimediaBase {
 	public:
 		byte* arrbyData;
 		string sFile;
-
+		static bool Exists(const std::string& filename);
+		static bool IsDir(const std::string& filename);
 		bool OpenRead(string sFileNow);
 		bool OpenRead(const char* szFile);
 		int Place();

@@ -162,3 +162,14 @@
 - correctly defines `static constexpr double PI` in the Math class (frameworkdummy.h)
 - defines `Rectangle` and `RectangleF`
 - defines C#-like out_* and ref_* for builtin and additional types
+
+
+## [Unreleased] - 2018-12-11
+### Added
+- require boost (path operations)
+- detect data directory
+- implement `Exists` & `IsDir` static methods in `Byter`
+
+### Changed
+- (RAnim_bgra32.cpp) detect frame count; no longer warn if `iFrameCountToUseAndModify<=0`
+- (main.cpp) improve spacing of comments

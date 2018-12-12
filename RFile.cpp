@@ -16,6 +16,18 @@ namespace ExpertMultimediaBase {
 	Byter::~Byter() {
 		SafeFree(arrbyData, "~Byter");
 	}
+	bool Byter::Exists(const std::string& filename) {
+		struct stat buf;
+		return (stat(filename.c_str(), &buf) == 0);
+		//if (stat(filename.c_str(), &buf) != -1) return true;
+		//return false;
+	}
+	bool Byter::IsDir(const std::string& filename) {
+		struct stat info;
+		if ( stat( filename.c_str(), &info ) != 0 ) return false;  // cannot access
+		return ( info.st_mode & S_IFDIR );  // S_ISDIR() doesn't exist on my windows
+		//else ;  // is no directory
+	}
 	bool Byter::OpenRead(string sFileNow) {
 		bool bGood=true;
 		sFile=sFileNow;

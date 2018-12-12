@@ -56,6 +56,7 @@ namespace ExpertMultimediaBase {
 		std::vector<GBuffer*> frame_ptrs;
 		long lFrame;
 		long lFrames;
+		bool bShowErr_EmptyFrameArray;
 	public:
 		GBuffer* frame_ptr;
 		bool bLoop;

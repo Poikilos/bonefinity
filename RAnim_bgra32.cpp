@@ -116,6 +116,7 @@ namespace ExpertMultimediaBase {
 		InitNull();
 		iMaxEffects=200;//debug hard-coded limitation
 		frame_ptr=nullptr;
+		this->bShowErr_EmptyFrameArray=true;
 	}
 	void Anim::InitNull() {
 		//targaLoaded;
@@ -638,10 +639,6 @@ namespace ExpertMultimediaBase {
 		static bool bFirstRun=true;
 		if (bFirstRun) Console::Error.Write("starting LoadSeq");
 		if (bFirstRun) Console::Error.Write("("+sSetFileBaseName+","+sSetFileExt+","+RString_ToString(iFrameCountToUseAndModify)+","+RString_ToString(iSeqDigitCountNow)+","+RString_ToString(iStartFrame)+")...");
-		if (iFrameCountToUseAndModify<=0) {
-			ShowError("Tried to load zero-length frame array!","LoadSeq("+sSetFileBaseName+","+sSetFileExt+","+RString_ToString(iFrameCountToUseAndModify)+",...)");
-			bGood=false;
-		}
 		//long iEnder=(long)iFrameCountToUseAndModify+(long)iStartFrame;
 		//long iFrameRel=0;
 		string sFrameFileNow="";
@@ -664,7 +661,13 @@ namespace ExpertMultimediaBase {
 			}
 			if (bFoundAny) {
 				iAbsFrame=iFirstFrame;
+				lFrames=0;
+				while (  File::Exists( ExpertMultimediaBase::PathFileOfSeqFrame(sSetFileBaseName,sSetFileExt,iFirstFrame+lFrames,iSeqDigitCountNow) )  ) {
+					lFrames++;
+				}
 			}
+
+
 
 			this->reserve(lFrames);
 			for (long iNow=0; iNow<lFrames; iNow++) {
@@ -796,7 +799,10 @@ namespace ExpertMultimediaBase {
 				}
 			}
 			else {
-				ShowError("empty frame array!","GotoFrame {sFileBaseName:"+sFileBaseName+"}");
+				if (this->bShowErr_EmptyFrameArray || ExpertMultimediaBase::bMegaDebug) {
+                    ShowError("empty frame array!","GotoFrame {sFileBaseName:'"+sFileBaseName+"'}");
+                    this->bShowErr_EmptyFrameArray=false;
+				}
 				bGood=false;
 			}
 		}
